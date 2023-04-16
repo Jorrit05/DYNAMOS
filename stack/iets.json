@@ -1,0 +1,20 @@
+{
+    "requestor_config": [
+        {
+            "name": "uva",
+            "current_archetype": "Archetype1",
+            "allowed_partners": [
+                "unl1",
+                "unl2"
+            ]
+        },
+        {
+            "name": "vu",
+            "current_archetype": "Archetype1",
+            "allowed_partners": [
+                "unl1",
+                "unl2"
+            ]
+        }
+    ]
+}

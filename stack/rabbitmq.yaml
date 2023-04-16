@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      - ./config/rabbitmq.conf:/etc/rabbitmq/conf.d/11-custom.conf
+      - ./config/definitions.json:/opt/definitions.json
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "mysecretcookie"
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+      RABBITMQ_LOGS: "-"
+    networks:
+      core_network:
+        aliases:
+          - rabbit
+      unl_1:
+        aliases:
+          - rabbit
+      unl_2:
+        aliases:
+          - rabbit
+      third_party:
+        aliases:
+          - rabbit
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+networks:
+  core_network:
+    external: true
+  unl_1:
+    external: true
+  unl_2:
+    external: true
+  third_party:
+    external: true
+
+volumes:
+  service_logs:
+    external: true
+
+secrets:
+  db_root_password:
+    external: true
+  db_dba_password:
+    external: true
+  rabbitmq_user:
+    external: true
+

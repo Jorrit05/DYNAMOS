@@ -1,0 +1,124 @@
+version: '3.9'
+
+services:
+  gateway_service:
+    image: gateway_service
+    volumes:
+      - ./gateway_service/log.txt:/app/log.txt
+    networks:
+      - appnet
+    ports:
+      - 3000:3000
+    depends_on:
+      - rabbitmq
+    environment:
+      INPUT_QUEUE: anonymize_service
+      AMQ_PASSWORD_FILE: /run/secrets/rabbitmq_user
+      AMQ_USER: normal_user
+    secrets:
+      - rabbitmq_user
+  anonymize_service:
+    image: anonymize_service
+    volumes:
+      - ./anonymize_service/log.txt:/app/log.txt
+    networks:
+      - appnet
+    environment:
+      INPUT_QUEUE: query_service
+      AMQ_PASSWORD_FILE: /run/secrets/rabbitmq_user
+      AMQ_USER: normal_user
+    secrets:
+      - rabbitmq_user
+  query_service:
+    image: query_service
+    volumes:
+      - ./query_service/log.txt:/app/log.txt
+    networks:
+      - appnet
+    depends_on:
+      - db
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_dba_password
+      MYSQL_DATABASE: mydb
+      DB_USER: root
+      INPUT_QUEUE: gateway_service
+      AMQ_PASSWORD_FILE: /run/secrets/rabbitmq_user
+      AMQ_USER: normal_user
+    secrets:
+      - db_root_password
+      - db_dba_password
+      - rabbitmq_user
+  db:
+    image: mysql
+    secrets:
+      - db_root_password
+      - db_dba_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        reservations:
+          memory: 128M
+        limits:
+          memory: 256M
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_USER: dba
+      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_dba_password
+    networks:
+      appnet:
+        aliases:
+          - mysql
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /Users/jorrit/Documents/master-software-engineering/thesis/swarm_setup/db/:/docker-entrypoint-initdb.d
+      - type: bind
+        source: /Users/jorrit/Documents/mysql
+        target: /var/lib/mysql
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/conf.d/11-custom.conf
+      - ./definitions.json:/opt/definitions.json
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "mysecretcookie"
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+      RABBITMQ_LOGS: "-"
+    networks:
+      appnet:
+        aliases:
+          - rabbit
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+    networks:
+      - appnet
+
+secrets:
+  db_root_password:
+    external: true
+  db_dba_password:
+    external: true
+  rabbitmq_user:
+    external: true
+
+networks:
+  appnet:
+    external: true

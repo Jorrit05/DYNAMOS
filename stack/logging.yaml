@@ -1,0 +1,122 @@
+version: '3.9'
+
+services:
+
+  # zipkin:
+  #   image: openzipkin/zipkin:2.24.0
+  #   ports:
+  #     - 9411:9411
+  #   networks:
+  #     core_network:
+  #       aliases:
+  #         - zipkin
+
+  loki:
+    image: grafana/loki:2.8.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./config/loki-config.yaml:/etc/loki/local-config.yaml
+    networks:
+      core_network:
+        aliases:
+          - loki
+
+  promtail:
+    image: grafana/promtail:2.8.0
+    volumes:
+      - service_logs:/var/log/service_logs
+      - ./config/promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      core_network:
+        aliases:
+          - promtail
+
+  grafana:
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    ports:
+      - 3000:3000
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    image: grafana/grafana:latest
+    networks:
+      core_network:
+        aliases:
+          - grafana
+  db:
+    image: mysql
+    secrets:
+      - db_root_password
+      - db_dba_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        reservations:
+          memory: 128M
+        limits:
+          memory: 256M
+    environment:
+      MYSQL_USER: dba
+      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_dba_password
+    networks:
+      unl_1:
+        aliases:
+          - mysql
+      unl_2:
+        aliases:
+          - mysql
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /Users/jorrit/Documents/master-software-engineering/thesis/swarm_setup/db/:/docker-entrypoint-initdb.d
+      - type: bind
+        source: /Users/jorrit/Documents/mysql
+        target: /var/lib/mysql
+
+networks:
+  core_network:
+    external: true
+  unl_1:
+    external: true
+  unl_2:
+    external: true
+  third_party:
+    external: true
+
+volumes:
+  service_logs:
+    external: true
+
+secrets:
+  db_root_password:
+    external: true
+  db_dba_password:
+    external: true
+  rabbitmq_user:
+    external: true
+
