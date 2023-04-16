@@ -1,0 +1,148 @@
+[
+    {
+        "name": "unl1_agent",
+        "services": null,
+        "ActiveSince": null,
+        "ConfigUpdated": null,
+        "RoutingKeyOutput": "service.agent-80b1690f",
+        "RoutingKeyInput": "service.agent-80b1690f-input",
+        "InputQueueName": "agent-80b1690f_service-input",
+        "ServiceName": "agent-80b1690f_service",
+        "AgentDetails": {
+            "Tag": "latest",
+            "Image": "agent_service",
+            "Ports": {},
+            "EnvVars": {
+                "AMQ_PASSWORD_FILE": "/run/secrets/rabbitmq_user",
+                "AMQ_USER": "normal_user",
+                "HOSTNAME": "unl1_agent"
+            },
+            "Networks": {
+                "core_network": {
+                    "Name": "",
+                    "Aliases": [
+                        "unl1_agent"
+                    ]
+                },
+                "unl_1": {
+                    "Name": "",
+                    "Aliases": [
+                        "unl1_agent"
+                    ]
+                }
+            },
+            "Secrets": [
+                "rabbitmq_user"
+            ],
+            "Volumes": {
+                "/Users/jorrit/Documents/master-software-engineering/thesis/swarm_setup/stack/": "/var/log/stack-files",
+                "/var/run/docker.sock": "/var/run/docker.sock",
+                "service_logs": "/var/log/service_logs"
+            },
+            "Deploy": {
+                "replicas": 1,
+                "placement": {},
+                "resources": {
+                    "reservations": {},
+                    "limits": {}
+                }
+            }
+        }
+    },
+    {
+        "name": "unl2_agent",
+        "services": null,
+        "ActiveSince": null,
+        "ConfigUpdated": null,
+        "RoutingKeyOutput": "service.agent-b2a3e655",
+        "RoutingKeyInput": "service.agent-b2a3e655-input",
+        "InputQueueName": "agent-b2a3e655_service-input",
+        "ServiceName": "agent-b2a3e655_service",
+        "AgentDetails": {
+            "Tag": "latest",
+            "Image": "agent_service",
+            "Ports": {},
+            "EnvVars": {
+                "AMQ_PASSWORD_FILE": "/run/secrets/rabbitmq_user",
+                "AMQ_USER": "normal_user",
+                "HOSTNAME": "unl2_agent",
+                "INPUT_QUEUE": "core_queue_agent"
+            },
+            "Networks": {
+                "core_network": {
+                    "Name": "",
+                    "Aliases": [
+                        "unl2_agent"
+                    ]
+                },
+                "unl_2": {
+                    "Name": "",
+                    "Aliases": [
+                        "unl2_agent"
+                    ]
+                }
+            },
+            "Secrets": [
+                "rabbitmq_user"
+            ],
+            "Volumes": {
+                "/Users/jorrit/Documents/master-software-engineering/thesis/swarm_setup/stack/": "/var/log/stack-files",
+                "/var/run/docker.sock": "/var/run/docker.sock",
+                "service_logs": "/var/log/service_logs"
+            },
+            "Deploy": {
+                "replicas": 1,
+                "placement": {},
+                "resources": {
+                    "reservations": {},
+                    "limits": {}
+                }
+            }
+        }
+    },
+    {
+        "name": "ArcheType1",
+        "request_type": "datarequest",
+        "io_config": {
+            "service_io": {
+                "anonymize_service": "query_service",
+                "query_service": "start"
+            },
+            "finish": "anonymize_service",
+            "third_party_name": "",
+            "third_party": null
+        }
+    },
+    {
+        "name": "ArcheType2",
+        "request_type": "datarequest",
+        "io_config": {
+            "service_io": {
+                "anonymize_service": "query_service",
+                "query_service": "start"
+            },
+            "finish": "algorithm",
+            "third_party_name": "ttp",
+            "third_party": {
+                "aggregation_service": "anonymize_service",
+                "algorithm": "aggregation_service"
+            }
+        }
+    },
+    {
+        "name": "uva",
+        "current_archetype": "Archetype1",
+        "allowed_partners": [
+            "unl1",
+            "unl2"
+        ]
+    },
+    {
+        "name": "vu",
+        "current_archetype": "Archetype1",
+        "allowed_partners": [
+            "unl1",
+            "unl2"
+        ]
+    }
+]

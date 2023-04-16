@@ -1,0 +1,71 @@
+openapi: 3.0.0
+info:
+  title: Agent Service API
+  version: 1.0.0
+paths:
+  /create-service:
+    post:
+      summary: Create a new service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServicePayload'
+      responses:
+        '200':
+          description: Service created successfully
+        '400':
+          description: Invalid request payload
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    CreateServicePayload:
+      type: object
+      properties:
+        type:
+          type: string
+          example: CreateService
+        imageName:
+          type: string
+          description: The name of the Docker image
+          example: example/image
+        imageVersion:
+          type: string
+          description: The version of the Docker image
+          example: '1.0.0'
+        envVars:
+          type: object
+          additionalProperties:
+            type: string
+          description: A map of environment variables for the Docker container
+        networks:
+          type: array
+          items:
+            type: string
+          description: A list of networks to attach the service to
+          example:
+            - network1
+            - network2
+        secrets:
+          type: array
+          items:
+            type: string
+          description: A list of secret names to include in the service
+          example:
+            - secret1
+            - secret2
+        volumes:
+          type: object
+          additionalProperties:
+            type: string
+          description: A map of volume bindings for the Docker container
+        ports:
+          type: object
+          additionalProperties:
+            type: string
+          description: A map of published ports to target ports for the Docker container
+      required:
+        - type
+        - imageName

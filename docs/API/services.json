@@ -1,0 +1,44 @@
+[
+    {
+      "type": "CreateService",
+      "image_name": "anonymize_service",
+      "env_vars": {
+        "INPUT_QUEUE": "query_service",
+        "AMQ_PASSWORD_FILE": "/run/secrets/rabbitmq_user",
+        "AMQ_USER": "normal_user"
+      },
+      "networks": [
+        "unl_1"
+      ],
+      "secrets": [
+        "rabbitmq_user"
+      ],
+      "volumes": {
+        "service_logs":"/var/log/service_logs"
+      }
+    },
+    {
+      "type": "CreateService",
+      "image_name": "query_service",
+      "env_vars": {
+        "MYSQL_ROOT_PASSWORD_FILE": "/run/secrets/db_root_password",
+        "MYSQL_PASSWORD_FILE": "/run/secrets/db_dba_password",
+        "MYSQL_DATABASE": "mydb",
+        "DB_USER": "root",
+        "INPUT_QUEUE": "service.agent-39925a27",
+        "AMQ_PASSWORD_FILE": "/run/secrets/rabbitmq_user",
+        "AMQ_USER": "normal_user"
+      },
+      "networks": [
+        "unl_1"
+      ],
+      "secrets": [
+        "db_root_password",
+        "db_dba_password",
+        "rabbitmq_user"
+      ],
+      "volumes": {
+        "service_logs":"/var/log/service_logs"
+      }
+    }
+  ]
