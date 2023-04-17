@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": "cmd/agent_service"
+		},
+		{
+			"path": "cmd/orchestrator_service"
+		},
+		{
+			"path": "cmd/reasoner_service"
+		},
+		{
+			"path": "cmd/test"
+		},
+		{
+			"path": "docs"
+		},
+		{
+			"path": "pkg/lib"
+		},
+		{
+			"path": "stack"
+		}
+	],
+	"settings": {}
+}
