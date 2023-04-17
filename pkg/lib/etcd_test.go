@@ -10,6 +10,10 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
+var (
+	serviceName string = "test_etcd"
+)
+
 func setupEtcdClient(t *testing.T) *clientv3.Client {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{"localhost:2379"},
@@ -30,6 +34,9 @@ func (m *mockEtcdClient) Put(ctx context.Context, key, val string, opts ...clien
 
 // main_test.go
 func TestSetMicroservicesEtcd(t *testing.T) {
+	log, logFile = InitLogger(serviceName)
+	defer HandlePanicAndFlushLogs(log, logFile)
+
 	// Mock the etcd client
 	mockClient := &mockEtcdClient{
 		data: make(map[string]string),

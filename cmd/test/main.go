@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"sort"
 
 	"github.com/Jorrit05/micro-recomposer/pkg/lib"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -15,31 +14,6 @@ var (
 	log, logFile = lib.InitLogger(serviceName)
 	etcdClient   *clientv3.Client
 )
-
-func unmarshalStackFile(fileLocation string) lib.MicroServiceData {
-
-	yamlFile, err := os.ReadFile(fileLocation)
-	if err != nil {
-		log.Errorf("Failed to read the YAML file: %v", err)
-	}
-
-	fmt.Println("1")
-	service := lib.MicroServiceData{}
-	err = yaml.Unmarshal(yamlFile, &service)
-	if err != nil {
-		fmt.Errorf("ERRRRR: %s", err)
-		log.Errorf("Failed to unmarshal the YAML file: %v", err)
-	}
-
-	fmt.Println("AHA: " + service.Services["unl1_agent"].Image)
-	fmt.Println(service.Services["unl1_agent"].Networks)
-	// for k, v := range service.Services["unl1_agent"].Networks {
-	// 	fmt.Println(k)
-	// 	fmt.Println(v)
-	// 	fmt.Println("--------------------------")
-	// }
-	return service
-}
 
 func main() {
 	// etcdClient, err := clientv3.New(clientv3.Config{
@@ -50,8 +24,18 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 	// hostname := "unl1_agent"
-	var _ lib.MicroServiceData = unmarshalStackFile("/Users/jorrit/Documents/master-software-engineering/thesis/swarm_setup/stack/agents.yaml")
 
+	// sliceA := []string{"unl1_agent", "unl2_agent", "unl3"}
+	// sliceB := []string{"unl2_agent", "unl5"}
+
+	sliceA := []string{"apple", "banana", "cherry", "apple", "grape"}
+	sliceB := []string{"banana", "cherry", "kiwi", "mango"}
+	sort.Strings(sliceA)
+	// sliceA := []string{"apple", "banana", "cherry", "apple", "grape"}
+	// sliceB := []string{"banana", "cherry", "kiwi", "mango"}
+	matched, notMatched := lib.SliceIntersectAndDifference(sliceA, sliceB)
+	fmt.Println("Matched:", matched)
+	fmt.Println("Not Matched:", notMatched)
 	// for k, v := range service.Services {
 	// 	fmt.Println(k)
 	// 	fmt.Println(v)

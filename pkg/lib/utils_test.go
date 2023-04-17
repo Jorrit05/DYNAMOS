@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -98,5 +100,41 @@ func TestSplitImageAndTag(t *testing.T) {
 				t.Errorf("Expected tag '%s', got '%s'", testCase.expectedTag, tag)
 			}
 		})
+	}
+}
+
+func TestSliceIntersectAndDifference(t *testing.T) {
+	testCases := []struct {
+		sliceA             []string
+		sliceB             []string
+		expectedMatched    []string
+		expectedNotMatched []string
+	}{
+		{
+			sliceA:             []string{"apple", "banana", "cherry", "apple", "grape"},
+			sliceB:             []string{"banana", "cherry", "kiwi", "mango"},
+			expectedMatched:    []string{"banana", "cherry"},
+			expectedNotMatched: []string{"apple", "grape"},
+		},
+		{
+			sliceA:             []string{"apple", "orange", "grape"},
+			sliceB:             []string{"banana", "orange", "kiwi", "mango"},
+			expectedMatched:    []string{"orange"},
+			expectedNotMatched: []string{"apple", "grape"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		matched, notMatched := SliceIntersectAndDifference(testCase.sliceA, testCase.sliceB)
+		sort.Strings(matched)
+		sort.Strings(notMatched)
+		sort.Strings(testCase.expectedMatched)
+		sort.Strings(testCase.expectedNotMatched)
+		if !reflect.DeepEqual(matched, testCase.expectedMatched) {
+			t.Errorf("expected matched %v, got %v", testCase.expectedMatched, matched)
+		}
+		if !reflect.DeepEqual(notMatched, testCase.expectedNotMatched) {
+			t.Errorf("expected notMatched %v, got %v", testCase.expectedNotMatched, notMatched)
+		}
 	}
 }

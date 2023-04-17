@@ -89,8 +89,8 @@ func handler(w http.ResponseWriter, req *http.Request) {
 			}
 
 			// Filter out which providers aren't online currently
-			nonExistingProviders := strings.Join(lib.SliceDifferenceString(orchestratorRequest.Providers, agentList), ",")
-			w.Write([]byte(fmt.Sprintf("Providers %s, currently not available. Other requests, if any, are accepted.", nonExistingProviders)))
+			matched, notMatched := lib.SliceIntersectAndDifference(orchestratorRequest.Providers, agentList)
+			w.Write([]byte(fmt.Sprintf("Provider(s) %s, currently not available. Requests for %s accepted, check output queue.", strings.Join(notMatched, ","), strings.Join(matched, ","))))
 
 			return
 		} else {

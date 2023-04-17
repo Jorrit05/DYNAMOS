@@ -94,19 +94,33 @@ func SplitImageAndTag(fullImageName string) (string, string) {
 	return splitted[0], splitted[1]
 }
 
-func SliceDifferenceString(sliceA, sliceB []string) []string {
-	diff := make([]string, 0)
-	elementsInB := make(map[string]bool)
+// SliceIntersectAndDifference takes two slices of strings and returns two slices:
+// one containing the matched elements (set intersection), and the other containing
+// the elements that did not match (set difference). This function treats the input slices
+// as sets and removes duplicate elements from the output slices.
+//
+// Example 1:
+// sliceA := []string{"unl1_agent", "unl2_agent", "unl3"}
+// sliceB := []string{"unl2_agent", "unl5"}
+// matched, notMatched := SliceIntersectAndDifference(sliceA, sliceB)
+// Output: matched = [unl2_agent], notMatched = [unl1_agent unl3]
+func SliceIntersectAndDifference(sliceA, sliceB []string) (matched []string, notMatched []string) {
+	mapA := make(map[string]bool)
 
-	for _, item := range sliceB {
-		elementsInB[item] = true
+	for _, a := range sliceA {
+		mapA[a] = true
 	}
 
-	for _, item := range sliceA {
-		if !elementsInB[item] {
-			diff = append(diff, item)
+	for _, b := range sliceB {
+		if mapA[b] {
+			matched = append(matched, b)
+			delete(mapA, b)
 		}
 	}
 
-	return diff
+	for key := range mapA {
+		notMatched = append(notMatched, key)
+	}
+
+	return matched, notMatched
 }
