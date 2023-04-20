@@ -35,7 +35,8 @@ func CreateServiceSpec(
 	imageName string,
 	tag string,
 	envVars map[string]string,
-	networks []string,
+	Networks map[string]Network,
+	NetworkList []string,
 	secrets []string,
 	volumes map[string]string,
 	ports map[string]string,
@@ -51,13 +52,30 @@ func CreateServiceSpec(
 		env = append(env, k+"="+v)
 	}
 
+	// Network can be either defined as a list or map
+	// handle both cases.
 	networkConfigs := []swarm.NetworkAttachmentConfig{}
-	alias := LastPartAfterSlash(imageName)
-	for _, network := range networks {
-		networkConfigs = append(networkConfigs, swarm.NetworkAttachmentConfig{
-			Target:  network,
-			Aliases: []string{alias},
-		})
+
+	var alias string = ""
+	if len(NetworkList) > 0 {
+		alias = LastPartAfterSlash(imageName)
+
+		for _, network := range NetworkList {
+			networkConfigs = append(networkConfigs, swarm.NetworkAttachmentConfig{
+				Target:  network,
+				Aliases: []string{alias},
+			})
+		}
+	} else if len(Networks) > 0 {
+
+		for key, value := range Networks {
+			networkConfigs = append(networkConfigs, swarm.NetworkAttachmentConfig{
+				Target:  key,
+				Aliases: value.Aliases,
+			})
+		}
+	} else {
+		log.Error("No network config defined")
 	}
 
 	secretRefs := []*swarm.SecretReference{}

@@ -43,15 +43,16 @@ func (c *ExternalDockerConfig) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 func (ms *MicroServiceData) UnmarshalYAML(unmarshal func(interface{}) error) error {
+
 	temp := struct {
 		Services map[string]struct {
-			Image    string             `yaml:"image"`
-			EnvVars  map[string]string  `yaml:"environment"`
-			Networks map[string]Network `yaml:"networks"`
-			Secrets  []string           `yaml:"secrets"`
-			Volumes  []string           `yaml:"volumes"`
-			Ports    []string           `yaml:"ports,omitempty"`
-			Deploy   Deploy             `yaml:"deploy"`
+			Image    string            `yaml:"image"`
+			EnvVars  map[string]string `yaml:"environment"`
+			Networks interface{}       `yaml:"networks"`
+			Secrets  []string          `yaml:"secrets"`
+			Volumes  []string          `yaml:"volumes"`
+			Ports    []string          `yaml:"ports,omitempty"`
+			Deploy   Deploy            `yaml:"deploy"`
 		} `yaml:"services"`
 	}{}
 
@@ -62,9 +63,10 @@ func (ms *MicroServiceData) UnmarshalYAML(unmarshal func(interface{}) error) err
 		return err
 	}
 
-	ms.Services = make(map[string]MicroServiceDetails)
+	ms.Services = make(map[string]MicroService)
 
 	for serviceName, serviceDetails := range temp.Services {
+
 		imageName, tag := SplitImageAndTag(serviceDetails.Image)
 
 		volumes := make(map[string]string)
@@ -83,19 +85,53 @@ func (ms *MicroServiceData) UnmarshalYAML(unmarshal func(interface{}) error) err
 			}
 		}
 
-		payload := MicroServiceDetails{
-			Image:    imageName,
-			Tag:      tag,
-			EnvVars:  serviceDetails.EnvVars,
-			Secrets:  serviceDetails.Secrets,
-			Networks: serviceDetails.Networks,
-			Volumes:  volumes,
-			Ports:    ports,
-			Deploy:   serviceDetails.Deploy,
+		networks, networkMap := parseNetwork(serviceDetails.Networks)
+
+		payload := MicroService{
+			Image:       imageName,
+			Tag:         tag,
+			EnvVars:     serviceDetails.EnvVars,
+			Secrets:     serviceDetails.Secrets,
+			Networks:    networkMap,
+			NetworkList: networks,
+			Volumes:     volumes,
+			Ports:       ports,
+			Deploy:      serviceDetails.Deploy,
 		}
 
 		ms.Services[serviceName] = payload
 	}
 
 	return nil
+}
+
+func parseNetwork(networkInterface interface{}) ([]string, map[string]Network) {
+
+	var networks []string
+	var networkMap map[string]Network
+
+	switch v := networkInterface.(type) {
+	case []interface{}:
+		for _, network := range v {
+			networks = append(networks, network.(string))
+		}
+	case map[interface{}]interface{}:
+		networkMap = make(map[string]Network)
+		for k, v := range v {
+			networkName := k.(string)
+			networkData := v.(map[interface{}]interface{})
+			aliases := make([]string, 0)
+			if aliasList, ok := networkData["aliases"]; ok {
+				for _, alias := range aliasList.([]interface{}) {
+					aliases = append(aliases, alias.(string))
+				}
+			}
+			networkMap[networkName] = Network{Aliases: aliases}
+		}
+	default:
+		log.Errorf("Unsupported network type")
+		return networks, networkMap
+	}
+
+	return networks, networkMap
 }

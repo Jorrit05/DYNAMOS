@@ -4,7 +4,8 @@ type OrchestratorRequest struct {
 	Type         string   `json:"type"`
 	Providers    []string `json:"providers"`
 	Query        string   `json:"query"`
-	Architecture string   `json:"architecture"`
+	Architecture IoConfig `json:"architecture"`
+	Name         string   `json:"name"`
 }
 
 type DetachAttachServicePayload struct {

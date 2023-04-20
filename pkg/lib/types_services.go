@@ -9,13 +9,13 @@ type AgentData struct {
 }
 
 type AgentDetails struct {
-	Name             string    `json:"name"`
-	ActiveServices   *[]string `json:"services"`
-	ActiveSince      *time.Time
-	ConfigUpdated    *time.Time
-	RoutingKeyOutput string
-	RoutingKeyInput  string
-	InputQueueName   string
-	ServiceName      string
-	AgentDetails     MicroServiceDetails
+	Name           string    `json:"name"`
+	ActiveServices *[]string `json:"services"`
+	ActiveSince    *time.Time
+	ConfigUpdated  *time.Time
+	// RoutingKeyOutput string
+	RoutingKey string
+	// QueueName    string
+	ServiceName  string
+	AgentDetails MicroService
 }

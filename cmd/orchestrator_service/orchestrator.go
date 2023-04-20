@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"io/ioutil"
 	"net/http"
@@ -10,13 +11,16 @@ import (
 
 	"github.com/Jorrit05/micro-recomposer/pkg/lib"
 	"github.com/docker/docker/client"
+	"github.com/google/uuid"
+	amqp "github.com/rabbitmq/amqp091-go"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 var (
-	serviceName string = "orchestrator_service"
-	routingKey  string
-
+	serviceName  string = "orchestrator_service"
+	routingKey   string
+	channel      *amqp.Channel
+	conn         *amqp.Connection
 	log, logFile                = lib.InitLogger(serviceName)
 	dockerClient *client.Client = lib.GetDockerClient()
 
@@ -33,14 +37,21 @@ func main() {
 	routingKey = lib.GetDefaultRoutingKey(serviceName)
 
 	// Register a yaml file of available microservices in etcd.
-	processedServices, err := lib.SetMicroservicesEtcd(&lib.EtcdClientWrapper{Client: etcdClient}, "/var/log/stack-files/config/microservices_config.yml", "")
+	_, err := lib.SetMicroservicesEtcd(&lib.EtcdClientWrapper{Client: etcdClient}, "/var/log/stack-files/config/microservices_config.yaml", "")
 	if err != nil {
 		log.Fatalf("Error setting microservices in etcd: %v", err)
 	}
 
-	for serviceName, _ := range processedServices {
-		log.Infof("serviceName added to etcd, %s", serviceName)
+	// Define a WaitGroup
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	// Connect to AMQ queue, declare own routingKey as queue, start listening for messages
+	_, conn, channel, err = lib.SetupConnection(serviceName, routingKey, false)
+	if err != nil {
+		log.Fatalf("Failed to setup proper connection to RabbitMQ: %v", err)
 	}
+	defer conn.Close()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
@@ -48,9 +59,10 @@ func main() {
 		if err := http.ListenAndServe(":8080", mux); err != nil {
 			log.Fatalf("Error starting HTTP server: %s", err)
 		}
+		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()
 
-	select {}
+	wg.Wait()
 }
 
 func handler(w http.ResponseWriter, req *http.Request) {
@@ -80,23 +92,64 @@ func handler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if len(agentData) == 0 {
-			w.Write([]byte("No providers of that name are currently available"))
-		} else if len(agentData) != len(orchestratorRequest.Providers) {
-			var agentList []string
-			for k := range agentData {
-				agentList = append(agentList, k)
+		var resp []byte
+		var agentList []string
+
+		for k := range agentData {
+			agentList = append(agentList, k)
+		}
+
+		// Filter out which providers aren't online currently
+		matched, _ := lib.SliceIntersectAndDifference(orchestratorRequest.Providers, agentList)
+
+		if len(matched) == 0 {
+			resp = []byte("No providers of that name are currently available")
+			// } else if len(notMatched) > 0 {
+
+		} else {
+
+			var requestorConfig lib.Requestor
+			_, err = lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+orchestratorRequest.Name, &requestorConfig)
+			if err != nil {
+				log.Errorf("Error getting requestor configuration", err)
+				http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
+				return
 			}
 
-			// Filter out which providers aren't online currently
-			matched, notMatched := lib.SliceIntersectAndDifference(orchestratorRequest.Providers, agentList)
-			w.Write([]byte(fmt.Sprintf("Provider(s) %s, currently not available. Requests for %s accepted, check output queue.", strings.Join(notMatched, ","), strings.Join(matched, ","))))
+			matches, _ := lib.SliceIntersectAndDifference(matched, requestorConfig.AllowedPartners)
+			log.Infof(" matches: %s", strings.Join(matches, ","))
+			requestID := uuid.New().String()
 
-			return
-		} else {
-			w.Write([]byte("Request accepted, check output queue"))
-			return
+			if len(orchestratorRequest.Architecture.ServiceIO) != 0 {
+				// TODO: Handle new architecture
+			} else {
+
+				var requestor lib.Requestor
+				requestorJSON, err := lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+orchestratorRequest.Name, &requestor)
+				if err != nil {
+					log.Errorf("Error getting requestor configuration", err)
+					http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
+					return
+				}
+
+				// Send architecture to agents. Who decide whether it is already created or being created or not.
+				for _, v := range matches {
+					mes := amqp.Publishing{
+						Body:          requestorJSON,
+						Type:          "createArchitecture",
+						CorrelationId: requestID,
+					}
+
+					lib.Publish(channel, agentData[v].RoutingKey, mes, "")
+				}
+
+			}
+			resp = []byte(fmt.Sprintf("Requests for %s accepted, check output queue.", strings.Join(matched, ",")))
+			// resp = []byte("Request accepted, check output queue")
 		}
+
+		w.Write(resp)
+		return
 
 	case "architecture":
 

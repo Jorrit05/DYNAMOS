@@ -76,7 +76,7 @@ services:
           - mysql
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /Users/jorrit/Documents/master-software-engineering/thesis/swarm_setup/db/:/docker-entrypoint-initdb.d
+      - /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/db/:/docker-entrypoint-initdb.d
       - type: bind
         source: /Users/jorrit/Documents/mysql
         target: /var/lib/mysql

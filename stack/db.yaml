@@ -1,0 +1,64 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql
+    secrets:
+      - db_root_password
+      - db_dba_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        reservations:
+          memory: 128M
+        limits:
+          memory: 256M
+    environment:
+      MYSQL_USER: jorrit
+      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_dba_password
+    networks:
+      unl_1:
+        aliases:
+          - mysql
+      unl_2:
+        aliases:
+          - mysql
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # - /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/db/:/docker-entrypoint-initdb.d
+      - type: bind
+        source: /Users/jorrit/Documents/mysql
+        target: /var/lib/mysql
+  adminer:
+    image: adminer
+    ports:
+      - 8085:8080
+    networks:
+      - unl_1
+
+networks:
+  core_network:
+    external: true
+  unl_1:
+    external: true
+  unl_2:
+    external: true
+  third_party:
+    external: true
+
+volumes:
+  service_logs:
+    external: true
+
+secrets:
+  db_root_password:
+    external: true
+  db_dba_password:
+    external: true
+  rabbitmq_user:
+    external: true
+

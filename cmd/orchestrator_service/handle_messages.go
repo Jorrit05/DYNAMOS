@@ -9,22 +9,22 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func handleCreateService(cli *client.Client, payload []lib.CreateServicePayload) {
+func handleCreateService(cli *client.Client, payload lib.MicroServiceData) {
 	fmt.Println("Handling Create Service")
 
-	for _, microservice := range payload {
-		serviceSpec := lib.CreateServiceSpec(
-			microservice.ImageName,
-			microservice.Tag,
-			microservice.EnvVars,
-			microservice.Networks,
-			microservice.Secrets,
-			microservice.Volumes,
-			microservice.Ports,
-			cli,
-		)
-		lib.CreateDockerService(cli, serviceSpec)
-	}
+	// for _, microservice := range payload {
+	// 	serviceSpec := lib.CreateServiceSpec(
+	// 		microservice.ImageName,
+	// 		microservice.Tag,
+	// 		microservice.EnvVars,
+	// 		microservice.Networks,
+	// 		microservice.Secrets,
+	// 		microservice.Volumes,
+	// 		microservice.Ports,
+	// 		cli,
+	// 	)
+	// 	lib.CreateDockerService(cli, serviceSpec)
+	// }
 }
 
 func handleDetachService(payload lib.DetachAttachServicePayload) {
@@ -54,7 +54,7 @@ func startMessageLoop(
 
 		switch msg.Type {
 		case "CreateService":
-			var payload []lib.CreateServicePayload
+			var payload lib.MicroServiceData
 			err := json.Unmarshal(msg.Body, &payload)
 			if err != nil {
 				log.Printf("Error decoding CreateServicePayload: %v", err)

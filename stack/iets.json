@@ -1,20 +1,8 @@
 {
-    "requestor_config": [
-        {
-            "name": "uva",
-            "current_archetype": "Archetype1",
-            "allowed_partners": [
-                "unl1",
-                "unl2"
-            ]
-        },
-        {
-            "name": "vu",
-            "current_archetype": "Archetype1",
-            "allowed_partners": [
-                "unl1",
-                "unl2"
-            ]
-        }
-    ]
+    "file": "/app/cmd/orchestrator/orchestrator.go:138",
+    "func": "main.handler",
+    "level": "info",
+    "msg": "Json dump: %s {\"name\":\"uva\",\"current_archetype\":\"Archetype1\",\"allowed_partners\":[\"unl1_agent\",\"unl2_agent\"]}",
+    "service": "orchestrator_service",
+    "time": "2023-04-19T07:58:23Z"
 }

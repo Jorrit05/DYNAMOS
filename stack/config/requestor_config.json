@@ -2,18 +2,18 @@
   "requestor_config": [
     {
       "name": "uva",
-      "current_archetype": "Archetype1",
+      "current_archetype": "ArcheType1",
       "allowed_partners": [
-        "unl1",
-        "unl2"
+        "unl1_agent",
+        "unl2_agent"
       ]
     },
     {
       "name": "vu",
-      "current_archetype": "Archetype1",
+      "current_archetype": "ArcheType1",
       "allowed_partners": [
-        "unl1",
-        "unl2"
+        "unl1_agent",
+        "unl2_agent"
       ]
     }
   ]

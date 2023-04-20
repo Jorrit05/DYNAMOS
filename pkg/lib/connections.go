@@ -13,6 +13,18 @@ var conn *amqp.Connection
 
 type serviceFunc func(message amqp.Delivery) (amqp.Publishing, error)
 
+type connectionOptions struct {
+	queueAutoDelete bool
+}
+
+type ConnectionOptions func(*connectionOptions)
+
+func QueueAutoDelete(queueAutoDelete bool) ConnectionOptions {
+	return func(options *connectionOptions) {
+		options.queueAutoDelete = queueAutoDelete
+	}
+}
+
 func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
 	connectionString, err := GetAMQConnectionString()
 	if err != nil {
@@ -45,7 +57,16 @@ func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
 // The service name in format '<name>_service' is used to declare the queue.
 //
 // The routingKey service.<name> is used when binding the queue to the exchange, the exchange will publish messages to all queues that match the routingkey pattern
-func SetupConnection(serviceName string, routingKey string, startConsuming bool) (<-chan amqp.Delivery, *amqp.Connection, *amqp.Channel, error) {
+func SetupConnection(serviceName string, routingKey string, startConsuming bool, opts ...ConnectionOptions) (<-chan amqp.Delivery, *amqp.Connection, *amqp.Channel, error) {
+	options := &connectionOptions{
+		queueAutoDelete: false,
+	}
+
+	// Apply custom options
+	for _, opt := range opts {
+		opt(options)
+	}
+
 	conn, channel, _ := getConnectionToRabbitMq()
 
 	err := Exchange(channel)
@@ -54,7 +75,7 @@ func SetupConnection(serviceName string, routingKey string, startConsuming bool)
 		return nil, nil, nil, err
 	}
 
-	queue, err := DeclareQueue(serviceName, channel)
+	queue, err := DeclareQueue(serviceName, channel, options.queueAutoDelete)
 	if err != nil {
 		log.Fatalf("Failed to declare queue: %v", err)
 		return nil, nil, nil, err
@@ -80,7 +101,7 @@ func SetupConnection(serviceName string, routingKey string, startConsuming bool)
 			log.Fatalf("Failed to register consumer: %v", err)
 			return nil, nil, nil, err
 		} else {
-			log.Printf("Registered consumer: %s", os.Getenv("INPUT_QUEUE"))
+			log.Printf("%s listening to (consumer of): %s", serviceName, os.Getenv("INPUT_QUEUE"))
 		}
 
 		return messages, conn, channel, nil
@@ -155,13 +176,13 @@ func Connect(connectionString string) (*amqp.Connection, *amqp.Channel, error) {
 	return conn, channel, nil
 }
 
-func DeclareQueue(name string, channel *amqp.Channel) (*amqp.Queue, error) {
+func DeclareQueue(name string, channel *amqp.Channel, autoDelete bool) (*amqp.Queue, error) {
 	queue, err := channel.QueueDeclare(
-		name,  // name
-		true,  // durable
-		false, // delete when unused
-		false, // exclusive
-		false, // no-wait
+		name,       // name
+		true,       // durable
+		autoDelete, // delete when unused
+		false,      // exclusive
+		false,      // no-wait
 		amqp.Table{
 			"x-dead-letter-exchange": "dead-letter-exchange",
 		},

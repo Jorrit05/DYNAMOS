@@ -90,14 +90,14 @@ func UnmarshalStackFile(fileLocation string) MicroServiceData {
 
 // Take a given docker stack yaml file, and save all pertinent info (struct MicroServiceData), like the
 // required env variable and volumes etc. Into etcd.
-func SetMicroservicesEtcd(etcdClient EtcdClient, fileLocation string, etcdPath string) (map[string]MicroServiceDetails, error) {
+func SetMicroservicesEtcd(etcdClient EtcdClient, fileLocation string, etcdPath string) (map[string]MicroService, error) {
 	if etcdPath == "" {
 		etcdPath = "/microservices"
 	}
 
 	var service MicroServiceData = UnmarshalStackFile(fileLocation)
 
-	processedServices := make(map[string]MicroServiceDetails)
+	processedServices := make(map[string]MicroService)
 
 	for serviceName, payload := range service.Services {
 

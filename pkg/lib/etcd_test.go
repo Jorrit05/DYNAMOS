@@ -68,7 +68,7 @@ func TestGetAndUnmarshalJSON(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test GetMicroServiceData
-	var msData MicroServiceDetails
+	var msData MicroService
 	_, err = GetAndUnmarshalJSON(cli, "/microservices/test-service", &msData)
 	require.NoError(t, err)
 	assert.NotNil(t, msData)
@@ -92,7 +92,7 @@ func TestGetAndUnmarshalJSONMap(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test GetAndUnmarshalJSONMap
-	msDataMap, err := GetAndUnmarshalJSONMap[MicroServiceDetails](cli, "/testmicroservices/")
+	msDataMap, err := GetAndUnmarshalJSONMap[MicroService](cli, "/testmicroservices/")
 	require.NoError(t, err)
 	assert.NotNil(t, msDataMap)
 	assert.Equal(t, 2, len(msDataMap))

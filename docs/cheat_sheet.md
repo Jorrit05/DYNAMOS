@@ -24,17 +24,13 @@ docker exec -it $(docker ps -f name=apps_randomize_service -q) cat /run/secrets/
 
 docker logs --since 5s $(docker ps -q --filter "ancestor=grafana/loki:2.8.0" --filter "status=restarting")
 
-
-
-docker run --rm -d --name mongo \
-        -e MONGO_INITDB_ROOT_USERNAME=root \
-        -e MONGO_INITDB_ROOT_PASSWORD=example \
-        -p 27017:27017 \
-        mongo:4
-
 {
     "query" : "SELECT `first_name`, `last_name`, `sex`, `person_id` FROM `person` LIMIT 2"
 }
+
+# SQL
+
+If the database PW doesn't work, and I changed the root password. This is because the environment variable is ignored since the container will use the existing database on my host machine.
 
 # Logs
 

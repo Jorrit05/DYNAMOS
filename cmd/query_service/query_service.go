@@ -46,6 +46,8 @@ func main() {
 	defer conn.Close()
 
 	go func() {
+		defer lib.HandlePanicAndFlushLogs(log, logFile)
+
 		lib.StartMessageLoop(doQuery, messages, channel, routingKey, "")
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()
