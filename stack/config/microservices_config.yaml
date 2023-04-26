@@ -31,7 +31,8 @@ services:
       - db_root_password
       - db_dba_password
       - rabbitmq_user
-
+    deploy:
+          replicas: 1
 
 secrets:
   db_root_password:

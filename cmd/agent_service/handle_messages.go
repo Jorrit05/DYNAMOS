@@ -25,19 +25,23 @@ func createDockerServices(cli *client.Client, msData lib.MicroServiceData) {
 			microservice.Secrets,
 			microservice.Volumes,
 			microservice.Ports,
+			microservice.Deploy,
 			cli,
 		)
-		lib.CreateDockerService(cli, serviceSpec)
+		serviceId := lib.CreateDockerService(cli, serviceSpec)
 
-		jsonData, err := json.Marshal(microservice)
-		if err != nil {
-			log.Warn("Error marshaling payload to JSON:", err)
-		}
+		// jsonData, err := json.Marshal(microservice)
+		// if err != nil {
+		// 	log.Warn("Error marshaling payload to JSON:", err)
+		// }
 
-		_, err = etcdClient.Put(context.Background(), fmt.Sprintf("%s/%s", msEtcdPath, microservice.Image), string(jsonData))
+		_, err := etcdClient.Put(context.Background(), fmt.Sprintf("%s/%s", msEtcdPath, microservice.Image), string(serviceId.ID))
 		if err != nil {
 			log.Fatalf("Failed creating an item in etcd: %s", err)
 		}
+
+		// Monitor created microservice
+		go monitorServices(serviceId.ID)
 	}
 }
 
@@ -105,6 +109,8 @@ func createServiceFromArchetype(archetype lib.ArcheType) error {
 		if inputService == "start" {
 			inputService = startQueue
 		}
+
+		microservice.EnvVars["AGENT_NAME"] = hostname
 		microservice.EnvVars["INPUT_QUEUE"] = inputService
 		microservice.Networks = getTargetNetwork()
 		microservice.NetworkList = nil
@@ -131,7 +137,6 @@ func startMessageLoop(
 		switch msg.Type {
 		case "datarequest":
 		case "createarchitecture":
-			log.Info("Create architecture message received")
 			var requestor lib.Requestor
 			var archetype lib.ArcheType
 
@@ -140,14 +145,10 @@ func startMessageLoop(
 				log.Errorf("Error unmarshaling JSON:", err)
 			}
 
-			log.Info("requestor name: %s", requestor.Name)
-			log.Info("requestor CurrentArchetype: %s", requestor.CurrentArchetype)
-
-			archJson, err := lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/archetype_config/"+requestor.CurrentArchetype, &archetype)
+			_, err = lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/archetype_config/"+requestor.CurrentArchetype, &archetype)
 			if err != nil {
 				log.Errorf("Error unmarshaling archetype:", err)
 			}
-			log.Println("Json dump: %s", string(archJson))
 
 			createServiceFromArchetype(archetype)
 
@@ -170,11 +171,36 @@ func startMessageLoop(
 		case "KillService":
 			// Handle KillService
 			// ...
+		case "changereplicas":
+			changeServiceReplicas(msg.Body)
 
 		default:
 			log.Printf("Unknown message type: %s", msg.Type)
 		}
 
 		// ... (Acknowledge the message)
+	}
+}
+
+func changeServiceReplicas(body []byte) {
+
+	var replicaStruct lib.ChangeReplicas
+
+	err := json.Unmarshal(body, &replicaStruct)
+	if err != nil {
+		log.Errorf("Error unmarshaling JSON:", err)
+		return
+	}
+
+	resp, err := etcdClient.Get(context.Background(), fmt.Sprintf("%s/%s", msEtcdPath, replicaStruct.ServiceName))
+	if err != nil {
+		log.Errorf("Failed getting an item from etcd: %s", err)
+		return
+	}
+
+	err = lib.UpdateServiceReplicas(dockerClient, string(resp.Kvs[0].Value), replicaStruct.NrOfReplicas) // Set 5 replicas
+	if err != nil {
+		log.Errorf("Error updating service replicas: %v", err)
+		return
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
 	"sync"
 
 	"github.com/Jorrit05/micro-recomposer/pkg/lib"
@@ -13,8 +15,8 @@ import (
 )
 
 var (
+	serviceName         = fmt.Sprintf("%s_query_service", os.Getenv("AGENT_NAME"))
 	log, logFile        = lib.InitLogger(serviceName)
-	serviceName  string = "query_service"
 	routingKey   string = lib.GetDefaultRoutingKey(serviceName)
 	db           *sql.DB
 )

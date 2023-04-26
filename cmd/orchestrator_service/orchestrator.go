@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"sync"
 
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -66,7 +66,7 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Printf("handler: Error reading body: %v", err)
 		http.Error(w, "handler: Error reading request body", http.StatusBadRequest)
@@ -85,70 +85,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 
 	switch orchestratorRequest.Type {
 	case "datarequest":
-		agentData, err := lib.GetAndUnmarshalJSONMap[lib.AgentDetails](etcdClient, "/agents/")
-		if err != nil {
-			log.Errorf("Getting available agents: %v", err)
-			http.Error(w, "Internal error getting available agents", http.StatusInternalServerError)
-			return
-		}
-
-		var resp []byte
-		var agentList []string
-
-		for k := range agentData {
-			agentList = append(agentList, k)
-		}
-
-		// Filter out which providers aren't online currently
-		matched, _ := lib.SliceIntersectAndDifference(orchestratorRequest.Providers, agentList)
-
-		if len(matched) == 0 {
-			resp = []byte("No providers of that name are currently available")
-			// } else if len(notMatched) > 0 {
-
-		} else {
-
-			var requestorConfig lib.Requestor
-			_, err = lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+orchestratorRequest.Name, &requestorConfig)
-			if err != nil {
-				log.Errorf("Error getting requestor configuration", err)
-				http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
-				return
-			}
-
-			matches, _ := lib.SliceIntersectAndDifference(matched, requestorConfig.AllowedPartners)
-			log.Infof(" matches: %s", strings.Join(matches, ","))
-			requestID := uuid.New().String()
-
-			if len(orchestratorRequest.Architecture.ServiceIO) != 0 {
-				// TODO: Handle new architecture
-			} else {
-
-				var requestor lib.Requestor
-				requestorJSON, err := lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+orchestratorRequest.Name, &requestor)
-				if err != nil {
-					log.Errorf("Error getting requestor configuration", err)
-					http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
-					return
-				}
-
-				// Send architecture to agents. Who decide whether it is already created or being created or not.
-				for _, v := range matches {
-					mes := amqp.Publishing{
-						Body:          requestorJSON,
-						Type:          "createArchitecture",
-						CorrelationId: requestID,
-					}
-
-					lib.Publish(channel, agentData[v].RoutingKey, mes, "")
-				}
-
-			}
-			resp = []byte(fmt.Sprintf("Requests for %s accepted, check output queue.", strings.Join(matched, ",")))
-			// resp = []byte("Request accepted, check output queue")
-		}
-
-		w.Write(resp)
+		handleDataRequest(w, orchestratorRequest, etcdClient, channel)
 		return
 
 	case "architecture":
@@ -158,6 +95,102 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Unknown request", http.StatusNotFound)
 		return
 	}
+}
+
+func handleDataRequest(w http.ResponseWriter, orchestratorRequest lib.OrchestratorRequest, etcdClient *clientv3.Client, channel *amqp.Channel) {
+
+	// Get available agents
+	agentData, err := lib.GetAndUnmarshalJSONMap[lib.AgentDetails](etcdClient, "/agents/")
+	if err != nil {
+		log.Errorf("Getting available agents: %v", err)
+		http.Error(w, "Internal error getting available agents", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if requested organizationts are online
+	matched, err := getMatchedProviders(orchestratorRequest.Providers, agentData)
+	if err != nil {
+		log.Errorf("Error getting matched providers: %v", err)
+		http.Error(w, "Internal error getting matched providers", http.StatusInternalServerError)
+		return
+	}
+
+	if len(matched) == 0 {
+		w.Write([]byte("No providers of that name are currently available"))
+		return
+	}
+
+	// Check if the requesting user has access to all these organizations
+	var requestorConfig lib.Requestor
+	matches, requestorJSON, err := getAllowedProviders(orchestratorRequest.Name, matched, &requestorConfig)
+	if err != nil {
+		log.Errorf("Error getting requestor configuration", err)
+		http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
+		return
+	}
+
+	// _, err = lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+orchestratorRequest.Name, &requestorConfig)
+	// if err != nil {
+	// 	log.Errorf("Error getting requestor configuration", err)
+	// 	http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// matches, _ := lib.SliceIntersectAndDifference(matched, requestorConfig.AllowedPartners)
+	// log.Infof(" matches: %s", strings.Join(matches, ","))
+	requestID := uuid.New().String()
+
+	if len(orchestratorRequest.Architecture.ServiceIO) != 0 {
+		// TODO: Handle new architecture
+	} else {
+
+		// var requestor lib.Requestor
+		// requestorJSON, err := lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+orchestratorRequest.Name, &requestor)
+		// if err != nil {
+		// 	log.Errorf("Error getting requestor configuration", err)
+		// 	http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
+		// 	return
+		// }
+
+		// Send architecture to agents. Who decide whether it is already created or being created or not.
+		for _, v := range matches {
+			mes := amqp.Publishing{
+				Body:          requestorJSON,
+				Type:          "createArchitecture",
+				CorrelationId: requestID,
+			}
+
+			lib.Publish(channel, agentData[v].RoutingKey, mes, "")
+		}
+
+	}
+	resp := []byte(fmt.Sprintf("Requests for %s accepted, check output queue.", strings.Join(matched, ",")))
+
+	w.Write(resp)
+}
+
+func getMatchedProviders(requestProviders []string, agentData map[string]lib.AgentDetails) ([]string, error) {
+	var agentList []string
+
+	for k := range agentData {
+		agentList = append(agentList, k)
+	}
+
+	matched, _ := lib.SliceIntersectAndDifference(requestProviders, agentList)
+	return matched, nil
+}
+
+func getAllowedProviders(name string, requestedOrganizations []string, reqConfig *lib.Requestor) ([]string, []byte, error) {
+
+	// Check if the requesting user has access to all these organizations
+	requesterJSON, err := lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+name, reqConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	matches, _ := lib.SliceIntersectAndDifference(requestedOrganizations, reqConfig.AllowedPartners)
+	log.Infof(" matches: %s", strings.Join(matches, ","))
+	return matches, requesterJSON, nil
 }
 
 // func handler(w http.ResponseWriter, req *http.Request) {

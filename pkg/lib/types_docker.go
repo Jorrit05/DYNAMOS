@@ -1,5 +1,11 @@
 package lib
 
+import (
+	"time"
+
+	"github.com/docker/docker/api/types/swarm"
+)
+
 type MicroServiceData struct {
 	Services map[string]MicroService `yaml:"services"`
 }
@@ -31,22 +37,16 @@ type Network struct {
 }
 
 type Deploy struct {
-	Replicas  int       `json:"replicas,omitempty" yaml:"replicas,omitempty"`
-	Placement Placement `json:"placement,omitempty" yaml:"placement,omitempty"`
-	Resources Resources `json:"resources,omitempty" yaml:"resources,omitempty"`
+	Replicas      uint64                     `json:"replicas,omitempty" yaml:"replicas,omitempty"`
+	Placement     swarm.Placement            `json:"placement,omitempty" yaml:"placement,omitempty"`
+	UpdateConfig  UpdateConfig               `json:"update_config,omitempty" yaml:"update_config,omitempty"`
+	RestartPolicy swarm.RestartPolicy        `json:"restart_policy,omitempty" yaml:"restart_policy,omitempty"`
+	Resources     swarm.ResourceRequirements `json:"resources,omitempty" yaml:"resources,omitempty"`
 }
 
-type Placement struct {
-	Constraints []string `json:"constraints,omitempty" yaml:"constraints,omitempty"`
-}
-
-type Resources struct {
-	Reservations Resource `json:"reservations,omitempty" yaml:"reservations,omitempty"`
-	Limits       Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
-}
-
-type Resource struct {
-	Memory string `json:"memory,omitempty" yaml:"memory,omitempty"`
+type UpdateConfig struct {
+	Parallelism uint64        `json:"parallelism,omitempty" yaml:"parallelism,omitempty"`
+	Delay       time.Duration `json:"delay,omitempty" yaml:"delay,omitempty"`
 }
 
 type ExternalDockerConfig struct {

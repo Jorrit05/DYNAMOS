@@ -27,7 +27,15 @@ func GetAMQConnectionString() (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("amqp://%s:%s@rabbit:5672/", user, pw), nil
+	var target string
+
+	if os.Getenv("LOCAL_DEV") != "" {
+		target = "localhost"
+	} else {
+		target = "rabbit"
+	}
+
+	return fmt.Sprintf("amqp://%s:%s@%s:5672/", user, pw, target), nil
 }
 
 func GetSQLConnectionString() (string, error) {

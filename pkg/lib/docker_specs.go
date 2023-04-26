@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/mount"
@@ -40,6 +41,7 @@ func CreateServiceSpec(
 	secrets []string,
 	volumes map[string]string,
 	ports map[string]string,
+	deployOpts Deploy,
 	cli *client.Client,
 ) swarm.ServiceSpec {
 
@@ -124,6 +126,22 @@ func CreateServiceSpec(
 		})
 	}
 
+	// Here we assume we always want at least 1 replica.
+	if deployOpts.Replicas == uint64(0) {
+		deployOpts.Replicas = uint64(1)
+	}
+
+	mode := swarm.ServiceMode{
+		Replicated: &swarm.ReplicatedService{
+			Replicas: &deployOpts.Replicas,
+		},
+	}
+
+	updateConfig := swarm.UpdateConfig{
+		Parallelism: deployOpts.UpdateConfig.Parallelism,
+		Delay:       deployOpts.UpdateConfig.Delay,
+	}
+
 	return swarm.ServiceSpec{
 		Annotations: swarm.Annotations{
 			Name: imageName,
@@ -135,12 +153,16 @@ func CreateServiceSpec(
 				Secrets: secretRefs,
 				Mounts:  mounts,
 			},
-			Networks: networkConfigs,
+			Networks:  networkConfigs,
+			Placement: &deployOpts.Placement,
+			Resources: &deployOpts.Resources,
 		},
 		EndpointSpec: &swarm.EndpointSpec{
 			Mode:  swarm.ResolutionModeVIP,
 			Ports: portConfigs,
 		},
+		Mode:         mode,
+		UpdateConfig: &updateConfig,
 	}
 }
 
@@ -181,4 +203,34 @@ func CreateDockerService(cli *client.Client, spec swarm.ServiceSpec) types.Servi
 	}).Info("Service created")
 
 	return response
+}
+
+func UpdateServiceReplicas(cli *client.Client, serviceID string, replicas uint64) error {
+	// Get the service
+	service, _, err := cli.ServiceInspectWithRaw(context.Background(), serviceID, types.ServiceInspectOptions{})
+	if err != nil {
+		log.Errorf("Error getting service: %v", err)
+		return err
+	}
+
+	// Update the number of replicas
+	service.Spec.Mode.Replicated.Replicas = &replicas
+
+	// Prepare the service update options
+	updateOpts := types.ServiceUpdateOptions{
+		QueryRegistry: true,
+	}
+
+	// Update the service
+	response, err := cli.ServiceUpdate(context.Background(), serviceID, service.Version, service.Spec, updateOpts)
+	if err != nil {
+		log.Errorf("Error updating service: %v", err)
+		return err
+	}
+
+	log.WithFields(logrus.Fields{
+		"responseWarnings": strings.Join(response.Warnings, ","),
+	}).Info("Service updated with new replicas")
+
+	return nil
 }

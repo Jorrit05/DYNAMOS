@@ -6,3 +6,9 @@
 /reasoner/archetype_config/ArcheType2
 /reasoner/requestor_config/uva
 /reasoner/requestor_config/vu
+/unl1_agent/services/anonymize_service
+/unl1_agent/services/query_service
+
+Todo?:
+/unl1_agent/services/input_queue
+/unl1_agent/services/output_queue

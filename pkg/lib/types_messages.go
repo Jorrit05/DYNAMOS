@@ -16,3 +16,9 @@ type DetachAttachServicePayload struct {
 type KillServicePayload struct {
 	ServiceName string `json:"service_name"`
 }
+
+type ChangeReplicas struct {
+	Type         string `json:"type"`
+	ServiceName  string `json:"service_name"`
+	NrOfReplicas uint64 `json:"replicas"`
+}

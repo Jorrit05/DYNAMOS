@@ -22,16 +22,13 @@
 			"path": "stack"
 		},
 		{
-			"path": "cmd/anonymize_service"
-		},
-		{
 			"path": "cmd/gateway_service"
 		},
 		{
-			"path": "cmd/query_service"
+			"path": "cmd/user"
 		},
 		{
-			"path": "db"
+			"path": "cmd/query_service"
 		}
 	],
 	"settings": {}
