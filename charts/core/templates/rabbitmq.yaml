@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: rabbitmq
+        image: "{{ .Values.rabbitmq.image }}"
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        env:
+        - name: RABBITMQ_ERLANG_COOKIE
+          value: "{{ .Values.rabbitmq.env.RABBITMQ_ERLANG_COOKIE }}"
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: rabbitmq-user
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: rabbitmq-password
+        - name: RABBITMQ_LOGS
+          value: "{{ .Values.rabbitmq.env.RABBITMQ_LOGS }}"
+        volumeMounts:
+        - name: rabbitmq-data
+          mountPath: /var/lib/rabbitmq
+        - name: rabbitmq-log
+          mountPath: /var/log/rabbitmq
+        - name: rabbitmq-config
+          mountPath: /etc/rabbitmq/conf.d/11-custom.conf
+        - name: rabbitmq-definitions
+          mountPath: /opt/definitions.json
+
+      volumes:
+      - name: rabbitmq-data
+        persistentVolumeClaim:
+            claimName: rabbitmq-data-pvc
+      - name: rabbitmq-log
+        persistentVolumeClaim:
+            claimName: rabbitmq-log-pvc
+      - name: rabbitmq-definitions
+        hostPath:
+          path: "{{ .Values.volumes.definitions.hostPath }}"
+      - name: rabbitmq-config
+        hostPath:
+          path: "{{ .Values.volumes.config.hostPath }}"
+

@@ -29,6 +29,9 @@
 		},
 		{
 			"path": "cmd/query_service"
+		},
+		{
+			"path": "charts"
 		}
 	],
 	"settings": {}

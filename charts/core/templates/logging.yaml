@@ -1,0 +1,100 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: grafana/loki:2.8.0
+          args:
+            - "-config.file=/etc/loki/local-config.yaml"
+          ports:
+            - containerPort: 3100
+          volumeMounts:
+            - name: loki-config
+              mountPath: /etc/loki
+      volumes:
+        - name: loki-config
+          configMap:
+            name: loki-config
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: promtail
+  namespace: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: promtail
+  template:
+    metadata:
+      labels:
+        app: promtail
+    spec:
+      containers:
+        - name: promtail
+          image: grafana/promtail:2.8.0
+          args:
+            - "-config.file=/etc/promtail/config.yml"
+          volumeMounts:
+            - name: service-logs
+              mountPath: /var/log/service_logs
+            - name: promtail-config
+              mountPath: /etc/promtail
+
+      volumes:
+        - name: service-logs
+          persistentVolumeClaim:
+            claimName: logging-pvc
+        - name: promtail-config
+          configMap:
+            name: promtail-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_PATHS_PROVISIONING
+              value: "/etc/grafana/provisioning"
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Admin"
+          volumeMounts:
+            - name: grafana-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+      volumes:
+        - name: grafana-dashboards
+          hostPath:
+            path: /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/grafana
