@@ -52,6 +52,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: adminer
+  namespace: core
 spec:
   replicas: 1
   selector:

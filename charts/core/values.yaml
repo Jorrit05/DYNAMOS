@@ -1,3 +1,5 @@
+Namespace: core
+
 db:
   image: mysql
   resources:
@@ -40,7 +42,15 @@ volumes:
     hostPath: "/Users/jorrit/Documents/mysql"
 
 etcd:
-  image: quay.io/coreos/etcd:v3.5.1
+  nodeName: 0
+  replicaCount: 3
+  image:
+    repository: quay.io/coreos/etcd
+    tag: v3.5.1
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+
 
 loki:
   image: grafana/loki:2.8.0

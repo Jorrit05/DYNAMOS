@@ -35,8 +35,8 @@ kubectl logs rabbitmq-575f76fff7-v54pr
 kubectl get events
 kubectl exec -it <pod_name> -- /bin/bash
 
-kubectl create secret generic rabbit --from-literal=password=$(openssl rand -base64 12)
-kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand -base64 12) --from-literal=db_dba_password=$(openssl rand -base64 12)
+kubectl create secret generic rabbit --from-literal=password=$(openssl rand -base64 12) -n core
+kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand -base64 12) --from-literal=db_dba_password=$(openssl rand -base64 12) -n core
 
 kubectl get secret "rabbit" -o json | jq -r ".[\"data\"][\"password\"]" | base64 -d
 
@@ -44,7 +44,7 @@ kubectl get secret "sql" -o json | jq -r ".[\"data\"][\"db_root_password\"]" | b
 kubectl get secret "sql" -o json | jq -r ".[\"data\"][\"db_dba_password\"]" | base64 -d
 
 kubectl exec -it $(kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}') -- /bin/bash
-
+kubectl get services -n core
 
 # SQL
 

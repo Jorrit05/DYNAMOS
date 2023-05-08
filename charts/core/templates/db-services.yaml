@@ -2,6 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mysql-pvc
+  namespace: core
   annotations:
     "helm.sh/resource-policy": keep
 spec:
@@ -17,6 +18,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: adminer
+  namespace: core
 spec:
   selector:
     app: adminer

@@ -56,3 +56,7 @@ services:
       - --initial-cluster-token=my-etcd-token
       - --initial-cluster=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
       - --initial-cluster-state=new
+
+networks:
+  core_network:
+    external: true
