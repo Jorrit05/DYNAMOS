@@ -26,9 +26,8 @@ func GetDockerClient() *client.Client {
 	if err != nil {
 		log.Fatalf("Error getting Docker info: %v", err)
 	}
-	if !info.Swarm.ControlAvailable {
-		log.Fatal("This node is not a swarm manager. The agent can only be run on a swarm manager.")
-	}
+
+	log.Info(info)
 	return cli
 }
 

@@ -13,8 +13,10 @@ import (
 )
 
 func GetEtcdClient() *clientv3.Client {
+	endpoints := os.Getenv("ETCD_ENDPOINTS")
+
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"etcd1:2379", "etcd2:2379", "etcd3:2379"},
+		Endpoints:   strings.Split(endpoints, ","),
 		DialTimeout: 5 * time.Second,
 	})
 	if err != nil {

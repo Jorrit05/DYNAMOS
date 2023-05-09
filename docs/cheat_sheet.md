@@ -10,7 +10,7 @@ docker network create --driver overlay third_party
 openssl rand -base64 12 | docker secret create db_root_password -
 openssl rand -base64 12 | docker secret create db_dba_password -
 openssl rand -base64 12 | docker secret create rabbitmq_user -
-(Get hashed pw by logging into rabbit container and "rabbitmqctl hash_password K5vKN2bXI25R+1Jd <PW>", I think there was another way through the api/definitions. But forgot..
+(Get hashed pw by logging into rabbit container and "rabbitmqctl hash_password  <PW>", I think there was another way through the api/definitions. But forgot..
 Perhaps starting the service, creating the user manually, copying the hash from the api/definitions.. big brain time)
 
 docker exec -it $(docker ps -f name=apps_db -q) mysql -u root -p
@@ -36,6 +36,7 @@ kubectl get events
 kubectl exec -it <pod_name> -- /bin/bash
 
 kubectl create secret generic rabbit --from-literal=password=$(openssl rand -base64 12) -n core
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n unl1
 kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand -base64 12) --from-literal=db_dba_password=$(openssl rand -base64 12) -n core
 
 kubectl get secret "rabbit" -o json | jq -r ".[\"data\"][\"password\"]" | base64 -d

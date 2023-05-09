@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	hostname                    = os.Getenv("HOSTNAME")
+	hostname                    = os.Getenv("CONTAINER_NAME")
 	serviceName                 = fmt.Sprintf("%s_service", hostname)
 	log, logFile                = lib.InitLogger(serviceName)
 	dockerClient *client.Client = lib.GetDockerClient()

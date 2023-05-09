@@ -1,5 +1,8 @@
 Namespace: core
 
+dns:
+  loki: loki.core.svc.cluster.local
+
 db:
   image: mysql
   resources:

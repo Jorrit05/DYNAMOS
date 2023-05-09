@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-service-account
+
+---
+# apiGroups:
+# "" (core): pods, services, endpoints, nodes, namespaces
+# "apps": deployments, replicasets, statefulsets, daemonsets
+# "batch": jobs, cronjobs
+# "extensions": ingresses
+# "networking.k8s.io": networkpolicies
+# "storage.k8s.io": storageclasses, volumeattachments
+# "rbac.authorization.k8s.io": roles, rolebindings, clusterroles, clusterrolebindings
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-cluster-role
+rules:
+- apiGroups: ["","apps"]
+  resources: ["pods", "services", "deployments"]
+  verbs: ["create", "get", "list", "watch", "update", "delete"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-service-account
+  namespace: {{ .Release.Namespace }}

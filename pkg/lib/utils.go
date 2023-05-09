@@ -21,21 +21,14 @@ func ReadFile(fileName string) (string, error) {
 
 func GetAMQConnectionString() (string, error) {
 	user := os.Getenv("AMQ_USER")
-	pwFile := os.Getenv("AMQ_PASSWORD_FILE")
-	pw, err := ReadFile(pwFile)
-	if err != nil {
-		return "", err
-	}
-
-	var target string
+	pw := os.Getenv("AMQ_PASSWORD")
+	dns := os.Getenv("RABBIT_DNS")
 
 	if os.Getenv("LOCAL_DEV") != "" {
-		target = "localhost"
-	} else {
-		target = "rabbit"
+		dns = "localhost"
 	}
 
-	return fmt.Sprintf("amqp://%s:%s@%s:5672/", user, pw, target), nil
+	return fmt.Sprintf("amqp://%s:%s@%s:5672/", user, pw, dns), nil
 }
 
 func GetSQLConnectionString() (string, error) {

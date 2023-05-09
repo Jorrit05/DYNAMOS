@@ -16,7 +16,6 @@ var (
 	serviceName                   = "reasoner_service"
 	log, logFile                  = lib.InitLogger(serviceName)
 	etcdClient   *clientv3.Client = lib.GetEtcdClient()
-	hostname                      = os.Getenv("HOSTNAME")
 )
 
 type Updatable interface {
@@ -41,6 +40,7 @@ func main() {
 	mux.HandleFunc("/update", updateHandler)
 	mux.HandleFunc("/archetype_config", getHandler)
 	mux.HandleFunc("/requestor_config", getHandler)
+	log.Info("Starting http server on 8081/30011")
 	go func() {
 		if err := http.ListenAndServe(":8081", mux); err != nil {
 			log.Fatalf("Error starting HTTP server: %s", err)

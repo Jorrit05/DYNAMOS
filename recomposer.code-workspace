@@ -32,6 +32,9 @@
 		},
 		{
 			"path": "charts"
+		},
+		{
+			"path": "logs"
 		}
 	],
 	"settings": {}

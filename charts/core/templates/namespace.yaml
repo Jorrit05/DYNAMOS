@@ -4,3 +4,23 @@ metadata:
   name: core
   annotations:
     "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: unl1
+  annotations:
+    "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: unl2
+  annotations:
+    "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"

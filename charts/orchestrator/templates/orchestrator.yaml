@@ -1,0 +1,56 @@
+# orchestrator deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  namespace: {{ .Values.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      containers:
+      - name: orchestrator
+        image: orchestrator_service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ETCD_ENDPOINTS
+          value: {{ .Values.etcdEndpoints }}
+        - name: RABBIT_DNS
+          value: {{ .Values.rabbitDns }}
+        - name: AMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbit
+              key: password
+        - name: AMQ_USER
+          value: normal_user
+        volumeMounts:
+        - name: service-logs
+          mountPath: /var/log/service_logs
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: stack-files
+          mountPath: /var/log/stack-files
+        # resources:
+        #   requests:
+        #     memory: "128Mi"
+        #   limits:
+        #     memory: "256Mi"
+      volumes:
+      - name: service-logs
+        hostPath:
+          path: /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/logs
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+      - name: stack-files
+        hostPath:
+          path: /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/

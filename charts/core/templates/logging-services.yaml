@@ -1,20 +1,4 @@
 apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: logging-pvc
-  namespace: core
-  annotations:
-    "helm.sh/resource-policy": keep
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
-
----
-
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: loki-config
@@ -88,7 +72,7 @@ data:
       filename: /tmp/positions.yaml
 
     clients:
-      - url: http://loki:3100/loki/api/v1/push
+      - url: http://{{ .Values.dns.loki }}:3100/loki/api/v1/push
 
     scrape_configs:
     - job_name: system
@@ -99,20 +83,6 @@ data:
           job: varlogs
           __path__: /var/log/service_logs/*.log
 
-# ---
-
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: loki
-# spec:
-#   selector:
-#     app: loki
-#   ports:
-#     - name: http
-#       protocol: TCP
-#       port: 3100
-#       targetPort: 3100
 ---
 apiVersion: v1
 kind: Service
@@ -129,3 +99,59 @@ spec:
       targetPort: 3000
       nodePort: 30003
   type: NodePort
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: core
+spec:
+  selector:
+    app: loki
+  ports:
+    - protocol: TCP
+      port: 3100
+      targetPort: 3100
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-entrypoint
+  namespace: core
+data:
+  entrypoint.sh: |-
+    #!/bin/sh
+    # set -euc
+
+    mkdir -p /etc/grafana/provisioning/datasources
+    cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+    apiVersion: 1
+    datasources:
+    - name: Loki
+      type: loki
+      access: proxy
+      orgId: 1
+      url: http://{{ .Values.dns.loki }}:3100
+      basicAuth: false
+      isDefault: true
+      version: 1
+      editable: false
+    EOF
+    # mkdir -p /etc/grafana/provisioning/dashboards
+    cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 300
+      options:
+        path: /etc/grafana/provisioning/dashboards
+    EOF
+    /run.sh

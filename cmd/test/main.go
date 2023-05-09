@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Jorrit05/micro-recomposer/pkg/lib"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -33,9 +34,11 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 	// hostname := "unl1_agent"
-	var test uint64
-	test = uint64(9)
-	fmt.Println(test)
+	test := "http://etcd-0.{{ .Values.etcdDns }}:2379,http://etcd-1.{{ .Values.etcdDns }}:2379,http://etcd-2.{{ .Values.etcdDns }}:2379"
+
+	x := strings.Split(test, ",")
+
+	fmt.Println(len(x))
 
 	// fileLocation := "/Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/agents.yaml"
 
