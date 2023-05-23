@@ -47,6 +47,16 @@ kubectl get secret "sql" -o json | jq -r ".[\"data\"][\"db_dba_password\"]" | ba
 kubectl exec -it $(kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}') -- /bin/bash
 kubectl get services -n core
 
+# Istio
+
+kubectl label namespace default istio-injection=enabled
+kubectl label namespace unl1 istio-injection=enabled
+kubectl label namespace unl2 istio-injection=enabled
+kubectl label namespace core istio-injection=enabled
+kubectl label namespace orchestrator istio-injection=enabled
+
+
+
 # SQL
 
 If the database PW doesn't work, and I changed the root password. This is because the environment variable is ignored since the container will use the existing database on my host machine.
