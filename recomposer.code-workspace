@@ -1,10 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "cmd/agent_service"
+			"path": "cmd/orchestrator_service"
 		},
 		{
-			"path": "cmd/orchestrator_service"
+			"path": "cmd/policyEnforcer"
 		},
 		{
 			"path": "cmd/reasoner_service"
@@ -35,6 +35,9 @@
 		},
 		{
 			"path": "logs"
+		},
+		{
+			"path": "cmd/archetype_playground"
 		}
 	],
 	"settings": {}

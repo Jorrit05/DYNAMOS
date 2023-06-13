@@ -12,3 +12,10 @@
 Todo?:
 /unl1_agent/services/input_queue
 /unl1_agent/services/output_queue
+
+
+/requestTypes/sqlDataRequest -> JSON definition
+/archetypes/computeToData -> JSON definition
+/archetypes/dataThroughTtp -> JSON definition
+/microservices/queryService/chainMetadata -> JSON definition
+<!-- /microservices/queryService/deploymentData -> JSON deployment definition -->

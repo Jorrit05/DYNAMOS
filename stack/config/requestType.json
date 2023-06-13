@@ -1,0 +1,13 @@
+[
+    {
+        "type": "sqlDataRequest",
+        "requiredServices": [
+            "query_service",
+            "algorithm_service"
+        ],
+        "optionalServices": [
+            "anonymize_service",
+            "graph_service"
+        ]
+    }
+]

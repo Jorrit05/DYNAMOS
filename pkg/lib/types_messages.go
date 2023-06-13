@@ -1,11 +1,11 @@
 package lib
 
 type OrchestratorRequest struct {
-	Type         string   `json:"type"`
-	Providers    []string `json:"providers"`
-	Query        string   `json:"query"`
-	Architecture IoConfig `json:"architecture"`
-	Name         string   `json:"name"`
+	Type      string   `json:"type"`
+	Providers []string `json:"providers"`
+	Query     string   `json:"query"`
+	// Architecture IoConfig `json:"architecture"`
+	Name string `json:"name"`
 }
 
 type DetachAttachServicePayload struct {

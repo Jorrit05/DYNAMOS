@@ -1,0 +1,29 @@
+[
+    {
+        "name": "queryService",
+        "label": "dataProvider",
+        "allowedOutputs": [
+            "algorithmService",
+            "anonymizeService"
+        ]
+    },
+    {
+        "name": "anonymizeService",
+        "label": "dataProvider",
+        "allowedOutputs": [
+            "algorithmService"
+        ]
+    },
+    {
+        "name": "algorithmService",
+        "label": "computeProvider",
+        "allowedOutputs": [
+            "graphService"
+        ]
+    },
+    {
+        "name": "graphService",
+        "label": "computeProvider",
+        "allowedOutputs": []
+    }
+]

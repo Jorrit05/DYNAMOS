@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"os"
@@ -124,4 +125,15 @@ func SliceIntersectAndDifference(sliceA, sliceB []string) (matched []string, not
 	}
 
 	return matched, notMatched
+}
+
+func UnmarshalJsonFile[T any](fileLocation string, target *T) {
+	jsonRep, err := os.ReadFile(fileLocation)
+	if err != nil {
+		log.Fatalf("Failed to read the config file: %v", err)
+	}
+
+	if err := json.Unmarshal(jsonRep, &target); err != nil {
+		log.Fatalf("Failed to unmarshall the config: %v", err)
+	}
 }

@@ -204,7 +204,7 @@ func RegisterJSONArray[T any](jsonContent []byte, target Iterable, etcdClient *c
 // - etcdClient is an instance of the etcd client.
 // - key is the etcd key where the JSON value is stored.
 // - target should be a pointer to an instance of the target struct.
-func GetAndUnmarshalJSON[T any](etcdClient *clientv3.Client, key string, target T) ([]byte, error) {
+func GetAndUnmarshalJSON[T any](etcdClient *clientv3.Client, key string, target *T) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -284,10 +284,35 @@ func SaveStructToEtcd[T any](etcdClient *clientv3.Client, key string, target T) 
 	defer cancel()
 	// Save the JSON representation to the etcd key-value store
 	_, err = etcdClient.Put(ctx, key, string(jsonRep))
+
 	if err != nil {
 		log.Errorf("failed to save struct to etcd: %v", err)
 		return err
 	}
 
 	return nil
+}
+
+// Get all values from a certain prefix, convert these to a list of the given type.
+func GetPrefixListEtcd[T any](client *clientv3.Client, prefix string, target *T) ([]T, error) {
+	ctx := context.Background()
+	resp, err := client.Get(ctx, prefix, clientv3.WithPrefix())
+
+	var targets []T
+	if err != nil {
+		log.Errorf("Failed to get from etcd: %v", err)
+		return nil, err
+	}
+
+	for _, kv := range resp.Kvs {
+		if err := json.Unmarshal(kv.Value, &target); err != nil {
+			log.Errorf("Failed to unmarshal value for key %s: %v", kv.Key, err)
+			continue
+		}
+
+		targets = append(targets, *target)
+		target = nil
+	}
+
+	return targets, err
 }

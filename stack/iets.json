@@ -1,6 +1,6 @@
 {
     "name": "ArcheType1",
-    "request_type": "datarequestsql",
+    "request_type": "sqlDataRequest",
     "io_config": {
         "service_io": {
             "query_service": "start",

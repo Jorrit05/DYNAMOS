@@ -1,0 +1,9 @@
+digraph G {
+  query_service -> algorithm_service ;
+  query_service -> anonymize_service [color=gray, fontcolor=gray, label="optional"];
+  anonymize_service -> algorithm_service ;
+  algorithm_service -> graph_service [color=gray, fontcolor=gray, label="optional"];
+
+  graph_service [style=dashed, color=gray];
+  anonymize_service [style=dashed, color=gray];
+}

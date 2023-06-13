@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"fmt"
 	"os"
 	"runtime/debug"
 
@@ -13,8 +12,14 @@ var (
 	logFile *os.File
 )
 
-func InitLogger(serviceName string) (*logrus.Entry, *os.File) {
-	logFile, err := os.OpenFile(fmt.Sprintf("/var/log/service_logs/%s.log", serviceName), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+func InitLogger(serviceName string, logFileLocation string) (*logrus.Entry, *os.File) {
+	// logFileLocation := fmt.Sprintf("/var/log/service_logs/%s.log", serviceName)
+	// if os.Getenv("MODE") == "local" {
+	// 	mydir, _ := os.Getwd()
+	// 	logFileLocation = fmt.Sprintf("%s/%s.log", mydir, serviceName)
+	// }
+
+	logFile, err := os.OpenFile(logFileLocation, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		logrus.Fatalf("Failed to open logfile %s: %v", serviceName, err)
 	}
