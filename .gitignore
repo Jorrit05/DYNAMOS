@@ -22,3 +22,5 @@ definitions.json
 # Go workspace file
 go.work
 __debug_bin
+node_modules
+.env.local

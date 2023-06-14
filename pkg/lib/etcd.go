@@ -294,7 +294,8 @@ func SaveStructToEtcd[T any](etcdClient *clientv3.Client, key string, target T) 
 }
 
 // Get all values from a certain prefix, convert these to a list of the given type.
-func GetPrefixListEtcd[T any](client *clientv3.Client, prefix string, target *T) ([]T, error) {
+func GetPrefixListEtcd[T any](client KVGetter, prefix string, target *T) ([]T, error) {
+	// func GetPrefixListEtcd[T any](client *clientv3.Client, prefix string, target *T) ([]T, error) {
 	ctx := context.Background()
 	resp, err := client.Get(ctx, prefix, clientv3.WithPrefix())
 
@@ -315,4 +316,13 @@ func GetPrefixListEtcd[T any](client *clientv3.Client, prefix string, target *T)
 	}
 
 	return targets, err
+}
+
+type KVGetter interface {
+	Get(ctx context.Context, key string, opts ...clientv3.OpOption) (*clientv3.GetResponse, error)
+}
+
+type MyType struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
