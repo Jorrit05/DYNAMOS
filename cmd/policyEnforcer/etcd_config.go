@@ -8,27 +8,27 @@ import (
 
 func registerPolicyEnforcerConfiguration() {
 	// Load request types
-	var requestsTypes []RequestType
+	var requestsTypes []lib.RequestType
 	lib.UnmarshalJsonFile(requestTypeConfigLocation, &requestsTypes)
 
 	for _, requestType := range requestsTypes {
-		lib.SaveStructToEtcd[RequestType](etcdClient, fmt.Sprintf("/requestTypes/%s", requestType.Type), requestType)
+		lib.SaveStructToEtcd[lib.RequestType](etcdClient, fmt.Sprintf("/requestTypes/%s", requestType.Name), requestType)
 	}
 
 	// Load archetypes
-	var archeTypes []Archetype
+	var archeTypes []lib.Archetype
 	lib.UnmarshalJsonFile(archetypeConfigLocation, &archeTypes)
 
 	for _, archeType := range archeTypes {
-		lib.SaveStructToEtcd[Archetype](etcdClient, fmt.Sprintf("/archetypes/%s", archeType.Name), archeType)
+		lib.SaveStructToEtcd[lib.Archetype](etcdClient, fmt.Sprintf("/archetypes/%s", archeType.Name), archeType)
 	}
 
 	// Load labels and allowedOutputs (microservice.json)
-	var microservices []MicroserviceMetadata
+	var microservices []lib.MicroserviceMetadata
 
 	lib.UnmarshalJsonFile(microserviceMetadataConfigLocation, &microservices)
 
 	for _, microservice := range microservices {
-		lib.SaveStructToEtcd[MicroserviceMetadata](etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", microservice.Name), microservice)
+		lib.SaveStructToEtcd[lib.MicroserviceMetadata](etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", microservice.Name), microservice)
 	}
 }

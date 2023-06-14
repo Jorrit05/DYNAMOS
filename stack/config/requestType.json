@@ -1,6 +1,6 @@
 [
     {
-        "type": "sqlDataRequest",
+        "name": "sqlDataRequest",
         "requiredServices": [
             "query_service",
             "algorithm_service"

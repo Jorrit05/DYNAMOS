@@ -13,6 +13,7 @@ Todo?:
 /unl1_agent/services/input_queue
 /unl1_agent/services/output_queue
 
+/request-types/sql-data-request -> JSON definition
 
 /requestTypes/sqlDataRequest -> JSON definition
 /archetypes/computeToData -> JSON definition

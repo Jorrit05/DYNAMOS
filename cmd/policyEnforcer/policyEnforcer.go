@@ -12,32 +12,6 @@ var (
 	etcdClient   *clientv3.Client = lib.GetEtcdClient()
 )
 
-type RequestType struct {
-	Type             string   `json:"type"`
-	RequiredServices []string `json:"requiredServices"`
-	OptionalServices []string `json:"optionalServices"`
-}
-
-type Archetype struct {
-	Name            string `json:"name"`
-	ComputeProvider string `json:"computeProvider"`
-	ResultRecipient string `json:"resultRecipient"`
-}
-
-type MicroserviceMetadata struct {
-	Name           string   `json:"name"`
-	Label          string   `json:"label"`
-	AllowedOutputs []string `json:"allowedOutputs"`
-}
-
-type Named interface {
-	GetName() string
-}
-
-func (a Archetype) GetName() string {
-	return a.Name
-}
-
 func main() {
 
 	defer logFile.Close()
@@ -48,6 +22,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/archetypes/", archetypesHandler(etcdClient, "/archetypes"))
+	mux.HandleFunc("/requesttypes/", requestTypesHandler(etcdClient, "/requestTypes"))
+	mux.HandleFunc("/requestTypes/", requestTypesHandler(etcdClient, "/requestTypes"))
+	mux.HandleFunc("/microservices/", microserviceMetadataHandler(etcdClient, "/microservices"))
 
 	// mux.HandleFunc("/archetypes/", genericGetHandler)
 	log.Info("Starting http server on 8081/30011")
