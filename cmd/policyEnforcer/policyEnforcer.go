@@ -10,7 +10,7 @@ import (
 
 var (
 	log, logFile                  = lib.InitLogger(logFileLocation, serviceName)
-	etcdClient   *clientv3.Client = lib.GetEtcdClient()
+	etcdClient   *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
 )
 
 func main() {
@@ -29,6 +29,8 @@ func main() {
 	mux.HandleFunc("/requesttypes/", requestTypesHandler(etcdClient, "/requestTypes"))
 	mux.HandleFunc("/requestTypes/", requestTypesHandler(etcdClient, "/requestTypes"))
 	mux.HandleFunc("/microservices/", microserviceMetadataHandler(etcdClient, "/microservices"))
+	mux.HandleFunc("/agreements/", agreementsHandler(etcdClient, "/agreements"))
+
 	mux.HandleFunc("/requestapproval", requestApprovalHandler(etcdClient, ""))
 
 	log.Info("Starting http server on 8081/30011")

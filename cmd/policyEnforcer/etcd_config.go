@@ -31,4 +31,13 @@ func registerPolicyEnforcerConfiguration() {
 	for _, microservice := range microservices {
 		lib.SaveStructToEtcd[lib.MicroserviceMetadata](etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", microservice.Name), microservice)
 	}
+
+	// Load agreemnents  (agreemnents.json)
+	var agreements []lib.Agreement
+
+	lib.UnmarshalJsonFile(agreementsConfigLocation, &agreements)
+
+	for _, agreement := range agreements {
+		lib.SaveStructToEtcd[lib.Agreement](etcdClient, fmt.Sprintf("/agreements/%s", agreement.Name), agreement)
+	}
 }

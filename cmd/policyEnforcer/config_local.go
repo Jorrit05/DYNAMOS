@@ -14,7 +14,10 @@ var serviceName = "policyEnforcer"
 var requestTypeConfigLocation = addEtcdDir("requestType.json")
 var archetypeConfigLocation = addEtcdDir("archetype.json")
 var microserviceMetadataConfigLocation = addEtcdDir("microservices.json")
+var agreementsConfigLocation = addEtcdDir("agreements.json")
+
 var logFileLocation = fmt.Sprintf("/var/log/service_logs/%s.log", serviceName)
+var etcdEndpoints = "http://localhost:30005"
 
 func addEtcdDir(val string) string {
 	_, filename, _, ok := runtime.Caller(0)

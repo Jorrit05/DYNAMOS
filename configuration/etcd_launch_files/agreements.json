@@ -1,0 +1,25 @@
+[
+    {
+        "name": "VU",
+        "relations": {
+            "jorrit.stutterheim@cloudnation.nl" : {
+                "requestTypes" : ["sqlDataRequest"],
+                "dataSets" : ["wageGap"]
+            }
+        }
+    },
+    {
+        "name": "UVA",
+        "relations": {
+            "jorrit.stutterheim@cloudnation.nl" : {
+                "requestTypes" : ["sqlDataRequest"],
+                "dataSets" : ["wageGap"]
+            }
+        }
+    },
+    {
+        "name": "RUG",
+        "relations": {
+        }
+    }
+]

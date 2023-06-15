@@ -43,6 +43,16 @@ type MicroserviceMetadata struct {
 	AllowedOutputs []string `json:"allowedOutputs"`
 }
 
+type Relation struct {
+	RequestTypes []string `json:"requestTypes"`
+	DataSets     []string `json:"dataSets"`
+}
+
+type Agreement struct {
+	Name      string              `json:"name"`
+	Relations map[string]Relation `json:"relations"`
+}
+
 type Named interface {
 	GetName() string
 }
@@ -56,6 +66,10 @@ func (a RequestType) GetName() string {
 }
 
 func (a MicroserviceMetadata) GetName() string {
+	return a.Name
+}
+
+func (a Agreement) GetName() string {
 	return a.Name
 }
 

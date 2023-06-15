@@ -12,9 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func GetEtcdClient() *clientv3.Client {
-	endpoints := os.Getenv("ETCD_ENDPOINTS")
-
+func GetEtcdClient(endpoints string) *clientv3.Client {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   strings.Split(endpoints, ","),
 		DialTimeout: 5 * time.Second,

@@ -60,6 +60,23 @@ func microserviceMetadataHandler(etcdClient *clientv3.Client, etcdRoot string) h
 	}
 }
 
+func agreementsHandler(etcdClient *clientv3.Client, root string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			// Call your handler for GET
+			lib.GenericGetHandler[lib.Agreement](w, r, etcdClient, "/agreements")
+		case http.MethodPut:
+			// Call your handler for PUT
+			agreement := &lib.Agreement{}
+			lib.GenericPutToEtcd[lib.Agreement](w, r, etcdClient, "/agreements", agreement)
+		default:
+			// Respond with a 405 'Method Not Allowed' HTTP response if the method isn't supported
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	}
+}
+
 type messageType struct {
 	Type string `json:"type"`
 }
