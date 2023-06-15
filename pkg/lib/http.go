@@ -12,6 +12,19 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
+type User struct {
+	ID       string `json:"ID"`
+	UserName string `json:"userName"`
+	// Other fields...
+}
+
+type RequestApproval struct {
+	Type          string   `json:"type"`
+	User          User     `json:"user"`
+	DataProviders []string `json:"dataProviders"`
+	SyncServices  bool     `json:"syncServices"`
+}
+
 type RequestType struct {
 	Name             string   `json:"name"`
 	RequiredServices []string `json:"requiredServices"`

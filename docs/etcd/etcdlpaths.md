@@ -19,4 +19,7 @@ Todo?:
 /archetypes/computeToData -> JSON definition
 /archetypes/dataThroughTtp -> JSON definition
 /microservices/queryService/chainMetadata -> JSON definition
+/agreements/VU -> JSON definition
+/agreements/UVA -> JSON definition
+/agreements/RUG -> JSON definition
 <!-- /microservices/queryService/deploymentData -> JSON deployment definition -->

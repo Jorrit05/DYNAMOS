@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/Jorrit05/micro-recomposer/pkg/lib"
@@ -55,5 +57,49 @@ func microserviceMetadataHandler(etcdClient *clientv3.Client, etcdRoot string) h
 			// Respond with a 405 'Method Not Allowed' HTTP response if the method isn't supported
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
+	}
+}
+
+type messageType struct {
+	Type string `json:"type"`
+}
+
+func requestApprovalHandler(etcdClient *clientv3.Client, etcdRoot string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		r.Body.Close()
+
+		if err != nil {
+			log.Printf("handler: Error reading body: %v", err)
+			http.Error(w, "handler: Error reading request body", http.StatusBadRequest)
+			return
+		}
+		var msgType messageType
+		err = json.Unmarshal(body, &msgType)
+		if err != nil {
+			log.Printf("handler: Error unmarshalling body: %v", err)
+			http.Error(w, "handler: Error unmarshalling request body", http.StatusBadRequest)
+			return
+		}
+		switch msgType.Type {
+		case "requestApproval":
+			// Call your handler for GET
+			var requestApproval lib.RequestApproval
+			err = json.Unmarshal(body, &requestApproval)
+			if err != nil {
+				log.Printf("handler: Error unmarshalling body into RequestApproval: %v", err)
+				http.Error(w, "handler: Error unmarshalling request body", http.StatusBadRequest)
+				return
+			}
+
+		default:
+			// Respond with a 405 'Method Not Allowed' HTTP response if the method isn't supported
+			http.Error(w, "Invalid type", http.StatusNotFound)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
 	}
 }

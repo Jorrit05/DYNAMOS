@@ -17,6 +17,8 @@ export function useMsalAuthentication(interactionType: InteractionType, request:
     const error = ref<AuthError|null>(null);
 
     const acquireToken = async (requestOverride?: PopupRequest|RedirectRequest|SilentRequest) => {
+        console.log("EEHHMM")
+
         if (!localInProgress.value) {
             localInProgress.value = true;
             const tokenRequest = requestOverride || request;
@@ -73,7 +75,8 @@ export function useMsalAuthentication(interactionType: InteractionType, request:
     });
 
     acquireToken();
-    
+    console.log("result")
+    console.log(result)
     return {
         acquireToken,
         result,

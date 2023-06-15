@@ -2,7 +2,11 @@
   <el-menu class="el-menu-demo" mode="horizontal" background-color="#545c64" text-color="#fff">
         <el-menu-item index="home">
             <i class="el-icon-house"></i>
-            <router-link to="/">Microsoft Identity Platform</router-link>
+            <router-link to="/">Home</router-link>
+        </el-menu-item>
+        <el-menu-item v-if="isAuthenticated" index="RequestApproval">
+            <i class="el-icon-house"></i>
+            <router-link to="/requestApproval">RequestApproval</router-link>
         </el-menu-item>
         <el-sub-menu index="pages">
             <template #title>Example Pages</template>

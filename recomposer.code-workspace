@@ -10,34 +10,19 @@
 			"path": "cmd/reasoner_service"
 		},
 		{
-			"path": "cmd/test"
-		},
-		{
-			"path": "docs"
+			"path": "cmd/archetype_playground"
 		},
 		{
 			"path": "pkg/lib"
 		},
 		{
-			"path": "stack"
+			"path": "docs"
 		},
 		{
-			"path": "cmd/gateway_service"
-		},
-		{
-			"path": "cmd/user"
-		},
-		{
-			"path": "cmd/query_service"
+			"path": "configuration"
 		},
 		{
 			"path": "charts"
-		},
-		{
-			"path": "logs"
-		},
-		{
-			"path": "cmd/archetype_playground"
 		}
 	],
 	"settings": {}
