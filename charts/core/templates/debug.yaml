@@ -1,21 +1,21 @@
 # debug-pod.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: debug
-  namespace: {{ .Values.Namespace }}
-spec:
-  containers:
-  - name: debug
-    image: busybox
-    command: ['sleep', '3600']
-    stdin: true
-    tty: true
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: debug
+#   namespace: {{ .Values.Namespace }}
+# spec:
+#   containers:
+#   - name: debug
+#     image: busybox
+#     command: ['sleep', '3600']
+#     stdin: true
+#     tty: true
 
-    volumeMounts:
-    - name: service-logs
-      mountPath: /var/log/service_logs
-  volumes:
-    - name: service-logs
-      hostPath:
-        path: /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/logs
+#     volumeMounts:
+#     - name: service-logs
+#       mountPath: /var/log/service_logs
+#   volumes:
+#     - name: service-logs
+#       hostPath:
+#         path: /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/logs

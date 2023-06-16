@@ -4,10 +4,7 @@
 			"path": "cmd/orchestrator_service"
 		},
 		{
-			"path": "cmd/policyEnforcer"
-		},
-		{
-			"path": "cmd/reasoner_service"
+			"path": "cmd/orchestrator"
 		},
 		{
 			"path": "cmd/archetype_playground"
@@ -23,6 +20,12 @@
 		},
 		{
 			"path": "charts"
+		},
+		{
+			"path": "cmd/test"
+		},
+		{
+			"path": "cmd/policyEnforcer"
 		}
 	],
 	"settings": {}

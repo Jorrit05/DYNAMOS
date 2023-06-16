@@ -5,7 +5,7 @@ metadata:
   name: loki
   namespace: core
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: loki
@@ -36,7 +36,7 @@ metadata:
   name: promtail
   namespace: core
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: promtail
@@ -62,7 +62,7 @@ spec:
       volumes:
         - name: service-logs
           hostPath:
-            path: /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/logs
+            path: /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/logs
         - name: promtail-config
           configMap:
             name: promtail-config
@@ -73,7 +73,7 @@ metadata:
   name: grafana
   namespace: core
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: grafana
@@ -105,7 +105,7 @@ spec:
       volumes:
         - name: grafana-dashboards
           hostPath:
-            path: /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/grafana
+            path: /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/grafana
         - name: grafana-entrypoint
           configMap:
             name: grafana-entrypoint

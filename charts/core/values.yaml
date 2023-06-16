@@ -36,9 +36,9 @@ volumes:
   log:
     hostPath: "/Users/jorrit/.docker-conf/rabbitmq/log/"
   config:
-    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/config/rabbitmq.conf"
+    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/config/rabbitmq.conf"
   definitions:
-    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/config/definitions.json"
+    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/config/definitions.json"
   docker:
     hostPath: "/var/run/docker.sock"
   mysql:

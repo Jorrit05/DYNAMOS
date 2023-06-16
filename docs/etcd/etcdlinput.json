@@ -32,7 +32,7 @@
                 "rabbitmq_user"
             ],
             "Volumes": {
-                "/Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/": "/var/log/stack-files",
+                "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/": "/var/log/stack-files",
                 "/var/run/docker.sock": "/var/run/docker.sock",
                 "service_logs": "/var/log/service_logs"
             },
@@ -78,7 +78,7 @@
                 "rabbitmq_user"
             ],
             "Volumes": {
-                "/Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/": "/var/log/stack-files",
+                "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/": "/var/log/stack-files",
                 "/var/run/docker.sock": "/var/run/docker.sock",
                 "service_logs": "/var/log/service_logs"
             },

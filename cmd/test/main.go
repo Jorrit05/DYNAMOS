@@ -1,57 +1,55 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/Jorrit05/micro-recomposer/pkg/lib"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 var (
-	serviceName string = "test_service"
-
-	log, logFile = lib.InitLogger(serviceName)
-	etcdClient   *clientv3.Client
+	log, logFile                  = lib.InitLogger(serviceName, logFileLocation)
+	etcdClient   *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
 )
 
-func c(v int) {
-	switch v {
-	case 42:
-	case 45:
-		fmt.Println("Not the answer")
-	default:
-		fmt.Println("The guess is wrong!")
-	}
+func main() {
+
+	jsonStr := `{
+		"type": "sqlDataRequest",
+		"user": {
+			"ID": "<GUID>",
+			"userName": "jorrit.stutterheim@cloudnation.nl"
+		},
+		"dataProviders": ["VU","UVA","RUG"],
+		"syncServices" : true
+	}`
+
+	var requestApproval lib.RequestApproval
+	json.Unmarshal([]byte(jsonStr), &requestApproval)
+
+	checkDataStewards(&requestApproval)
+
 }
 
-func main() {
-	// etcdClient, err := clientv3.New(clientv3.Config{
-	// 	Endpoints:   []string{"localhost:2379"},
-	// 	DialTimeout: 5 * time.Second,
-	// })
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// hostname := "unl1_agent"
-	test := "http://etcd-0.{{ .Values.etcdDns }}:2379,http://etcd-1.{{ .Values.etcdDns }}:2379,http://etcd-2.{{ .Values.etcdDns }}:2379"
+func checkDataStewards(requestApproval *lib.RequestApproval) {
+	for _, steward := range requestApproval.DataProviders {
+		output, err := lib.GetValueFromEtcd(etcdClient, "/policyEnforcer/agreements/"+steward)
+		if err != nil {
+			fmt.Println("do somthing")
+		}
 
-	x := strings.Split(test, ",")
+		if output == "" {
+			fmt.Println("key not found")
+		}
 
-	fmt.Println(len(x))
+		var agreement lib.Agreement
+		err = json.Unmarshal([]byte(output), &agreement)
+		if err != nil {
+			log.Errorf("%s: error unmarshalling agreement. %v", serviceName, err)
+		}
 
-	// fileLocation := "/Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/agents.yaml"
+		fmt.Println(agreement)
 
-	// var service lib.MicroServiceData = lib.UnmarshalStackFile(fileLocation)
-
-	// for _, v := range service.Services {
-	// 	// Map of network result would be:
-	// 	// network: core_network and list of aliases: unl1_agent
-	// 	// network: unl_1 list of aliases: unl1_agent
-	// 	for key, value := range v.Networks {
-	// 		fmt.Println("network: " + key)
-	// 		fmt.Println("list of aliases: " + strings.Join(value.Aliases, ","))
-	// 	}
-	// 	break
-	// }
+	}
 }

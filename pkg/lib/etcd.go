@@ -129,7 +129,8 @@ func GetValueFromEtcd(etcdClient *clientv3.Client, key string) (string, error) {
 	}
 
 	if len(resp.Kvs) == 0 {
-		return "", fmt.Errorf("key %s not found in etcd", key)
+		fmt.Printf("key %s not found in etcd", key)
+		return "", nil
 	}
 
 	value := string(resp.Kvs[0].Value)

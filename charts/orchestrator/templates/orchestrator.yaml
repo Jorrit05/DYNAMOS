@@ -47,10 +47,10 @@ spec:
       volumes:
       - name: service-logs
         hostPath:
-          path: /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/logs
+          path: /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/logs
       - name: docker-sock
         hostPath:
           path: /var/run/docker.sock
       - name: stack-files
         hostPath:
-          path: /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/
+          path: /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/

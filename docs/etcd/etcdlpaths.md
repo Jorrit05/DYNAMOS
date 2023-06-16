@@ -19,7 +19,10 @@ Todo?:
 /archetypes/computeToData -> JSON definition
 /archetypes/dataThroughTtp -> JSON definition
 /microservices/queryService/chainMetadata -> JSON definition
-/agreements/VU -> JSON definition
-/agreements/UVA -> JSON definition
-/agreements/RUG -> JSON definition
+
+
+/policyEnforcer/agreements/VU -> JSON definition
+/policyEnforcer/agreements/UVA -> JSON definition
+/policyEnforcer/agreements/RUG -> JSON definition
+/dataStewards/UVA (agent availability in the distributed system)
 <!-- /microservices/queryService/deploymentData -> JSON deployment definition -->

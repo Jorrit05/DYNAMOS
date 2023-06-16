@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -14,9 +13,7 @@ import (
 )
 
 var (
-	hostname                    = os.Getenv("CONTAINER_NAME")
-	serviceName                 = fmt.Sprintf("%s_service", hostname)
-	log, logFile                = lib.InitLogger(serviceName)
+	log, logFile                = lib.InitLogger(serviceName, logFileLocation)
 	dockerClient *client.Client = lib.GetDockerClient()
 	routingKey   string
 	channel      *amqp091.Channel
@@ -24,7 +21,7 @@ var (
 	startQueue   string
 	// externalRoutingKey  string
 	// externalServiceName string
-	etcdClient  *clientv3.Client = lib.GetEtcdClient()
+	etcdClient  *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
 	agentConfig lib.AgentDetails
 	msEtcdPath  string = fmt.Sprintf("/%s/services", hostname)
 )

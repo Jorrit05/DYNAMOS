@@ -1,0 +1,16 @@
+[
+    {
+        "name": "VU",
+        "services": null,
+        "ActiveSince": null,
+        "ConfigUpdated": null,
+        "RoutingKey": "service.VU"
+    },
+    {
+        "name": "UVA",
+        "services": null,
+        "ActiveSince": null,
+        "ConfigUpdated": null,
+        "RoutingKey": "service.UVA"
+    }
+]

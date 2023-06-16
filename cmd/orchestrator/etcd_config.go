@@ -38,6 +38,24 @@ func registerPolicyEnforcerConfiguration() {
 	lib.UnmarshalJsonFile(agreementsConfigLocation, &agreements)
 
 	for _, agreement := range agreements {
-		lib.SaveStructToEtcd[lib.Agreement](etcdClient, fmt.Sprintf("/agreements/%s", agreement.Name), agreement)
+		lib.SaveStructToEtcd[lib.Agreement](etcdClient, fmt.Sprintf("/policyEnforcer/agreements/%s", agreement.Name), agreement)
 	}
+
+	// Load agents that are online. Temporary until agents are created  (agents_temp.json)
+	var agents []Agent
+
+	lib.UnmarshalJsonFile(agentConfigLocation, &agents)
+
+	for _, agent := range agents {
+		lib.SaveStructToEtcd[Agent](etcdClient, fmt.Sprintf("/dataStewards/%s", agent.Name), agent)
+	}
+
+}
+
+type Agent struct {
+	Name          string      `json:"name"`
+	Services      interface{} `json:"services"`
+	ActiveSince   interface{} `json:"ActiveSince"`
+	ConfigUpdated interface{} `json:"ConfigUpdated"`
+	RoutingKey    string      `json:"RoutingKey"`
 }

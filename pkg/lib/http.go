@@ -1,10 +1,12 @@
 package lib
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -25,6 +27,21 @@ type RequestApproval struct {
 	SyncServices  bool     `json:"syncServices"`
 }
 
+type Relation struct {
+	ID                      string   `json:"ID"`
+	RequestTypes            []string `json:"requestTypes"`
+	DataSets                []string `json:"dataSets"`
+	AllowedArchetypes       []string `json:"allowedArchetypes"`
+	AllowedComputeProviders []string `json:"allowedComputeProviders"`
+}
+
+type Agreement struct {
+	Name             string              `json:"name"`
+	Relations        map[string]Relation `json:"relations"`
+	ComputeProviders []string            `json:"computeProviders"`
+	Archetypes       []string            `json:"archetypes"`
+}
+
 type RequestType struct {
 	Name             string   `json:"name"`
 	RequiredServices []string `json:"requiredServices"`
@@ -43,14 +60,19 @@ type MicroserviceMetadata struct {
 	AllowedOutputs []string `json:"allowedOutputs"`
 }
 
-type Relation struct {
-	RequestTypes []string `json:"requestTypes"`
-	DataSets     []string `json:"dataSets"`
+type Auth struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
-type Agreement struct {
-	Name      string              `json:"name"`
-	Relations map[string]Relation `json:"relations"`
+type ValidationResponse struct {
+	Type                    string   `json:"type"`
+	RequestType             string   `json:"requestType"`
+	ValidDataProviders      []string `json:"validDataProviders"`
+	InvalidDataProviders    []string `json:"invalidDataProviders"`
+	Auth                    Auth     `json:"auth"`
+	AllowedArcheTypes       []string `json:"allowedArcheTypes"`
+	AllowedComputeProviders []string `json:"allowedComputeProviders"`
 }
 
 type Named interface {
@@ -95,6 +117,7 @@ func GenericGetHandler[T any](w http.ResponseWriter, req *http.Request, etcdClie
 
 	default:
 		key := fmt.Sprintf("%s/%s", etcdRoot, trimmedPath)
+		fmt.Println(key)
 		jsonData, err = GetAndUnmarshalJSON(etcdClient, key, &target)
 
 		if err != nil {
@@ -112,6 +135,9 @@ func GenericGetHandler[T any](w http.ResponseWriter, req *http.Request, etcdClie
 // Updata a single JSON struct to Etcd. (not many validity checks)
 // Only works if struct has a name field and target has implemented the Named interface.
 func GenericPutToEtcd[T any](w http.ResponseWriter, req *http.Request, etcdClient *clientv3.Client, etcdRoot string, target Named) {
+	//TODO:
+	// Allow longer ETCD paths. Now /policyEnforcer/agreements/VU, will be put at /policyEnforcer/VU. Probably insert trimmedPath.
+	// First write unit tests though.
 
 	body, err := io.ReadAll(req.Body)
 	req.Body.Close()
@@ -160,4 +186,44 @@ func GenericPutToEtcd[T any](w http.ResponseWriter, req *http.Request, etcdClien
 	log.Infof("Added %s", key)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
+}
+
+func PostRequest(url string, body string) ([]byte, error) {
+	reqBody := bytes.NewBufferString(body)
+	req, err := http.NewRequest(http.MethodPost, url, reqBody)
+	if err != nil {
+		log.Printf("Failed to create request: %v", err)
+		return []byte(""), err
+	}
+
+	headers := map[string]string{
+		"Content-Type": "application/json",
+		// add other headers as required
+	}
+
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Failed to make request: %v", err)
+		return []byte(""), err
+	}
+	defer resp.Body.Close()
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Failed to read response body: %v", err)
+		return []byte(""), err
+	}
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		err = fmt.Errorf(fmt.Sprintf("Bad response from server: %s", resp.Status))
+		log.Printf("%v", err)
+		return []byte(""), err
+	}
+
+	return respBody, nil
 }

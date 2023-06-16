@@ -4,7 +4,7 @@ metadata:
   name: db
   namespace: core
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: db
@@ -54,7 +54,7 @@ metadata:
   name: adminer
   namespace: core
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: adminer

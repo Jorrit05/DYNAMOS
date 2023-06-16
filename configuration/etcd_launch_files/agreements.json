@@ -3,19 +3,29 @@
         "name": "VU",
         "relations": {
             "jorrit.stutterheim@cloudnation.nl" : {
+                "ID" : "GUID",
                 "requestTypes" : ["sqlDataRequest"],
-                "dataSets" : ["wageGap"]
+                "dataSets" : ["wageGap"],
+                "allowedArchetypes" : ["computeToData", "dataThroughTtp"],
+                "allowedComputeProviders" : ["surf"]
             }
-        }
+        },
+        "computeProviders" : ["surf", "otherCompany"],
+        "archetypes" : ["computeToData", "dataThroughTtp",  "reproducableScience"]
     },
     {
         "name": "UVA",
         "relations": {
             "jorrit.stutterheim@cloudnation.nl" : {
+                "ID" : "GUID",
                 "requestTypes" : ["sqlDataRequest"],
-                "dataSets" : ["wageGap"]
+                "dataSets" : ["wageGap"],
+                "allowedArchetypes" : ["computeToData", "dataThroughTtp"],
+                "allowedComputeProviders" : ["surf"]
             }
-        }
+        },
+        "computeProviders" : ["surf", "otherCompany"],
+        "archetypes" : ["computeToData", "dataThroughTtp",  "reproducableScience"]
     },
     {
         "name": "RUG",
