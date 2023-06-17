@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 )
 
 func registerPolicyEnforcerConfiguration() {

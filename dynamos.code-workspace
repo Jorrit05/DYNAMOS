@@ -26,6 +26,12 @@
 		},
 		{
 			"path": "cmd/policyEnforcer"
+		},
+		{
+			"path": "pkg/proto"
+		},
+		{
+			"path": "cmd/rabbitmq-sidecar"
 		}
 	],
 	"settings": {}

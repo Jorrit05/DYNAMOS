@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 

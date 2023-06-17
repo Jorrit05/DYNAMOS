@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/gorilla/handlers"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -24,6 +24,13 @@ func main() {
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
+	// Connect to AMQ queue, declare own routingKey as queue, start listening for messages
+	_, conn, channel, err := lib.SetupConnection(serviceName, serviceName, false)
+	if err != nil {
+		log.Fatalf("Failed to setup proper connection to RabbitMQ: %v", err)
+	}
+	defer conn.Close()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/archetypes/", archetypesHandler(etcdClient, "/archetypes"))

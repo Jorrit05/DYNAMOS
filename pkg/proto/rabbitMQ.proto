@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package proto;
+
+// The greeting service definition.
+service SideCar {
+  // Sends a greeting
+  rpc StartService (ServiceRequest) returns (ServiceReply) {}
+}
+
+// The request message containing the user's name.
+message ServiceRequest {
+  string serviceName = 1;
+  string routingKey = 2;
+}
+
+// The response message containing the greetings
+message ServiceReply {
+  string message = 1;
+}

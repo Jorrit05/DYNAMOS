@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
-	"github.com/gorilla/handlers"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
@@ -21,19 +20,12 @@ func main() {
 	defer etcdClient.Close()
 	defer lib.HandlePanicAndFlushLogs(log, logFile)
 
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/validate/", agreementsHandler("/policyEnforcer"))
-
-	log.Info(fmt.Sprintf("Starting http server on %s/30012", port))
-	go func() {
-		if err := http.ListenAndServe(port, handlers.CORS(originsOk, headersOk, methodsOk)(mux)); err != nil {
-			log.Fatalf("Error starting HTTP server: %s", err)
-		}
-	}()
+	// Connect to AMQ queue, declare own routingKey as queue, start listening for messages
+	_, conn, channel, err := lib.SetupConnection(serviceName, routingKey, false)
+	if err != nil {
+		log.Fatalf("Failed to setup proper connection to RabbitMQ: %v", err)
+	}
+	defer conn.Close()
 
 	select {}
 

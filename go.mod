@@ -1,4 +1,4 @@
-module github.com/Jorrit05/micro-recomposer
+module github.com/Jorrit05/DYNAMOS
 
 go 1.20
 

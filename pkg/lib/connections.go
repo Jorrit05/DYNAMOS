@@ -34,7 +34,7 @@ func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
 	var conn *amqp.Connection
 	var channel *amqp.Channel
 
-	for i := 1; i <= 7; i++ { // maximum of 3 retries
+	for i := 1; i <= 7; i++ { // maximum of 7 retries
 		conn, channel, err = Connect(connectionString)
 		if err == nil {
 			break // no error, break out of loop

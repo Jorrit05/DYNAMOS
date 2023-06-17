@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 )
 
 type messageType struct {
@@ -31,6 +31,7 @@ func requestApprovalHandler() http.HandlerFunc {
 		switch msgType.Type {
 		case "requestApproval":
 
+			// Convert to struct
 			var requestApproval lib.RequestApproval
 			err = json.Unmarshal(body, &requestApproval)
 			if err != nil {
@@ -39,32 +40,7 @@ func requestApprovalHandler() http.HandlerFunc {
 				return
 			}
 
-			jsonRA, err := json.Marshal(requestApproval)
-			if err != nil {
-				log.Printf("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
-				http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
-				return
-			}
-
-			url := policyEnforcerEndpoint + "/validate"
-			approval, err := lib.PostRequest(url, string(jsonRA))
-			if err != nil {
-				log.Printf("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
-				http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
-				return
-			}
-
-			fmt.Println(string(approval))
-
-			err = checkRequestApproval(&requestApproval)
-			if err != nil {
-				log.Printf("%s: checkRequestApproval: %v", serviceName, err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-				return
-			}
-
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
+			handleRequestApproval(w, &requestApproval)
 			return
 
 		default:
@@ -73,4 +49,40 @@ func requestApprovalHandler() http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func handleRequestApproval(w http.ResponseWriter, requestApproval *lib.RequestApproval) {
+
+	// Convert back to JSON to pass on to the policy enforcer
+	jsonRA, err := json.Marshal(requestApproval)
+	if err != nil {
+		log.Printf("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
+		http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
+		return
+	}
+
+	// Change this to Rabbit?
+	// Get an approval.
+	//   - I can have an agreement with each data steward
+	//   - Get a result channel or endpoint
+	//   - Return an access token
+	//   - Start a composition request
+	url := policyEnforcerEndpoint + "/validate"
+	approval, err := lib.PostRequest(url, string(jsonRA))
+	if err != nil {
+		log.Printf("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
+		http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println(string(approval))
+	var validationResponse lib.ValidationResponse
+	fmt.Println(validationResponse)
+
+	// Start orchestration request
+	// Use archetypeplayground
+	// Compose message back to user.
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
