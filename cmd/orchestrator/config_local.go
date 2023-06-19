@@ -11,6 +11,7 @@ import (
 
 var serviceName = "orchestrator"
 var port = ":8081"
+var grpcAddr = "localhost:3005"
 
 var requestTypeConfigLocation = addEtcdDir("requestType.json")
 var archetypeConfigLocation = addEtcdDir("archetype.json")

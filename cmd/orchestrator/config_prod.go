@@ -10,6 +10,7 @@ import (
 var root = "/app/"
 var serviceName = "orchestrator"
 var port = ":8081"
+var grpcAddr = "localhost:3005"
 
 var requestTypeConfigLocation = root + "requestType.json"
 var archetypeConfigLocation = root + "archetype.json"

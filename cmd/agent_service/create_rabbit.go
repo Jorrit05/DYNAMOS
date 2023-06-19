@@ -1,6 +1,6 @@
 package main
 
-// import "github.com/Jorrit05/micro-recomposer/pkg/lib"
+// import "github.com/Jorrit05/DYNAMOS/pkg/lib"
 
 // func createRabbitMq() {
 // 	// Example service specification

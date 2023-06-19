@@ -2,21 +2,21 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"sync"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var (
-	log, logFile        = lib.InitLogger(serviceName)
-	serviceName  string = "anonymize_service"
-	routingKey   string = lib.GetDefaultRoutingKey(serviceName)
+	logger             = lib.InitLogger()
+	serviceName string = "anonymize_service"
+	routingKey  string = lib.GetDefaultRoutingKey(serviceName)
 )
 
 func main() {
-	defer logFile.Close()
-	defer lib.HandlePanicAndFlushLogs(log, logFile)
+	defer logger.Sync() // flushes buffer, if any
 
 	// Define a WaitGroup
 	var wg sync.WaitGroup

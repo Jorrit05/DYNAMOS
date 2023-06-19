@@ -46,7 +46,7 @@ func checkDataStewards(requestApproval *lib.RequestApproval) {
 		var agreement lib.Agreement
 		err = json.Unmarshal([]byte(output), &agreement)
 		if err != nil {
-			log.Errorf("%s: error unmarshalling agreement. %v", serviceName, err)
+			logger.Sugar().Errorw("%s: error unmarshalling agreement. %v", serviceName, err)
 		}
 
 		fmt.Println(agreement)

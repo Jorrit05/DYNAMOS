@@ -1,8 +1,5 @@
 Namespace: core
 
-dns:
-  loki: loki.core.svc.cluster.local
-
 db:
   image: mysql
   resources:
@@ -36,9 +33,9 @@ volumes:
   log:
     hostPath: "/Users/jorrit/.docker-conf/rabbitmq/log/"
   config:
-    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/config/rabbitmq.conf"
+    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
   definitions:
-    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/config/definitions.json"
+    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/definitions.json"
   docker:
     hostPath: "/var/run/docker.sock"
   mysql:
@@ -57,8 +54,7 @@ etcd:
 
 loki:
   image: grafana/loki:2.8.0
-  ports:
-    - "3100:3100"
+  port: "3100"
 
 promtail:
   image: grafana/promtail:2.8.0

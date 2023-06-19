@@ -16,14 +16,13 @@ var (
 
 func main() {
 
-	defer logFile.Close()
+	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
-	defer lib.HandlePanicAndFlushLogs(log, logFile)
 
 	// Connect to AMQ queue, declare own routingKey as queue, start listening for messages
 	_, conn, channel, err := lib.SetupConnection(serviceName, routingKey, false)
 	if err != nil {
-		log.Fatalf("Failed to setup proper connection to RabbitMQ: %v", err)
+		logger.Sugar().Fatalw("Failed to setup proper connection to RabbitMQ: %v", err)
 	}
 	defer conn.Close()
 
@@ -41,14 +40,14 @@ func agreementsHandler(etcdRoot string) http.HandlerFunc {
 		var requestApproval lib.RequestApproval
 		err = json.Unmarshal(body, &requestApproval)
 		if err != nil {
-			log.Printf("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
+			logger.Sugar().Infow("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
 			http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
 			return
 		}
 
 		err = checkRequestApproval(&requestApproval)
 		if err != nil {
-			log.Printf("%s: checkRequestApproval: %v", serviceName, err)
+			logger.Sugar().Infow("%s: checkRequestApproval: %v", serviceName, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -81,7 +80,7 @@ func checkDataStewards(requestApproval *lib.RequestApproval) {
 		var agreement lib.Agreement
 		err = json.Unmarshal([]byte(output), &agreement)
 		if err != nil {
-			log.Errorf("%s: error unmarshalling agreement. %v", serviceName, err)
+			logger.Sugar().Errorw("%s: error unmarshalling agreement. %v", serviceName, err)
 		}
 
 		fmt.Println(agreement)

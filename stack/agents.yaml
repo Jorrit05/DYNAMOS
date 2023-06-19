@@ -19,7 +19,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - service_logs:/var/log/service_logs
-      - /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/:/var/log/stack-files
+      - /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/:/var/log/stack-files
     deploy:
       replicas: 1
       # placement:
@@ -45,7 +45,7 @@ services:
   #   volumes:
   #     - /var/run/docker.sock:/var/run/docker.sock
   #     - service_logs:/var/log/service_logs
-  #     - /Users/jorrit/Documents/master-software-engineering/thesis/micro-recomposer/stack/:/var/log/stack-files
+  #     - /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/stack/:/var/log/stack-files
   #   deploy:
   #     replicas: 1
   #     # placement:

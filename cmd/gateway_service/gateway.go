@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -28,7 +28,7 @@ type requestInfo struct {
 
 func main() {
 	log, logFile := lib.InitLogger(serviceName)
-	defer logFile.Close()
+	defer logger.Sync() // flushes buffer, if any
 
 	// Connect to AMQ queue, declare own routingKey as queue
 	_, conn, channel, err := lib.SetupConnection(serviceName, routingKey, false)

@@ -119,6 +119,7 @@ func (m *mockKVGetter) Get(ctx context.Context, key string, opts ...clientv3.OpO
 	return m.response, m.err
 }
 func TestGetPrefixListEtcd(t *testing.T) {
+	logger = InitLogger()
 	// Prepare a mock response:
 	kvs := []*mvccpb.KeyValue{
 		{

@@ -50,12 +50,11 @@ kubectl get services -n core
 # Istio
 
 kubectl label namespace default istio-injection=enabled
-kubectl label namespace unl1 istio-injection=enabled
-kubectl label namespace unl2 istio-injection=enabled
+kubectl label namespace uva istio-injection=enabled
+kubectl label namespace vu istio-injection=enabled
 kubectl label namespace core istio-injection=enabled
-kubectl label namespace orchestrator istio-injection=enabled
 
-
+istioctl install --set profile=default -y
 
 # SQL
 
@@ -84,3 +83,6 @@ etcdctl --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoi
 - all container IP:
 docker container ls --filter "name=etcd_cluster" --format "{{.ID}}" | xargs -n1 docker container inspect --format "{{.Name}} {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
 
+
+# proto
+protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. \--go-grpc_opt=paths=source_relative rabbitMQ.proto

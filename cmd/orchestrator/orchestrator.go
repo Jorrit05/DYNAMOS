@@ -1,36 +1,56 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
+	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"github.com/gorilla/handlers"
+
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
-	log, logFile                  = lib.InitLogger(logFileLocation, serviceName)
-	etcdClient   *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
+	logger                      = lib.InitLogger()
+	etcdClient *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
 )
 
 func main() {
-
-	defer logFile.Close()
+	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
-	defer lib.HandlePanicAndFlushLogs(log, logFile)
+	// Set up a connection to the server.
 
+	conn, err := grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		logger.Sugar().Fatalw("did not connect to grpc server: %v", err)
+
+	}
+	defer conn.Close()
+	c := pb.NewSideCarClient(conn)
+
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	r, err := c.StartService(ctx, &pb.ServiceRequest{ServiceName: serviceName, RoutingKey: serviceName, QueueAutoDelete: false, StartConsuming: false})
+	if err != nil {
+		logger.Sugar().Fatalw("could not greet: %v", err)
+	}
+	logger.Sugar().Infow("Greeting: %s", r.GetMessage())
 	registerPolicyEnforcerConfiguration()
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	// Connect to AMQ queue, declare own routingKey as queue, start listening for messages
-	_, conn, channel, err := lib.SetupConnection(serviceName, serviceName, false)
-	if err != nil {
-		log.Fatalf("Failed to setup proper connection to RabbitMQ: %v", err)
-	}
-	defer conn.Close()
+	// _, conn, _, err := lib.SetupConnection(serviceName, serviceName, false)
+	// if err != nil {
+	// 	logger.Sugar().Fatalw("Failed to setup proper connection to RabbitMQ: %v", err)
+	// }
+	// defer conn.Close()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/archetypes/", archetypesHandler(etcdClient, "/archetypes"))
@@ -41,10 +61,10 @@ func main() {
 
 	mux.HandleFunc("/requestapproval", requestApprovalHandler())
 
-	log.Info(fmt.Sprintf("Starting http server on %s/30011", port))
+	logger.Sugar().Infow("Starting http server on %s/30011", port)
 	go func() {
 		if err := http.ListenAndServe(port, handlers.CORS(originsOk, headersOk, methodsOk)(mux)); err != nil {
-			log.Fatalf("Error starting HTTP server: %s", err)
+			logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
 		}
 	}()
 

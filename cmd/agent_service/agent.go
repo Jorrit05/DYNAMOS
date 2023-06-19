@@ -3,17 +3,18 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/docker/docker/client"
 	"github.com/rabbitmq/amqp091-go"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 var (
-	log, logFile                = lib.InitLogger(serviceName, logFileLocation)
+	logger                      = lib.InitLogger()
 	dockerClient *client.Client = lib.GetDockerClient()
 	routingKey   string
 	channel      *amqp091.Channel
@@ -27,9 +28,8 @@ var (
 )
 
 func main() {
-	defer logFile.Close()
+	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
-	defer lib.HandlePanicAndFlushLogs(log, logFile)
 
 	// Because there will be several agents running in this test setup add (and register) a guid for uniqueness
 	routingKey = lib.GetDefaultRoutingKey(serviceName)
@@ -43,7 +43,7 @@ func main() {
 	var err error
 	var messages <-chan amqp091.Delivery
 	// Connect to AMQ queue, declare own routingKey as queue
-	messages, conn, channel, err = lib.SetupConnection(serviceName, routingKey, true, lib.QueueAutoDelete(true))
+	messages, conn, channel, err = lib.SetupConnection(serviceName, routingKey, true, true)
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
@@ -57,7 +57,7 @@ func main() {
 
 	// Start listening for messages, this method keeps this method 'alive'
 	go func() {
-		defer lib.HandlePanicAndFlushLogs(log, logFile)
+
 		startMessageLoop(messages, "")
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()

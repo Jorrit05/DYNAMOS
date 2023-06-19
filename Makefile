@@ -1,4 +1,4 @@
-targets := anonymize query gateway agent orchestrator reasoner
+targets := anonymize query gateway agent orchestrator reasoner test
 
 prepare:
 	go mod tidy

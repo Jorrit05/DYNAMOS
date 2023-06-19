@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/docker/docker/client"
 
 	amqp "github.com/rabbitmq/amqp091-go"

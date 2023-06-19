@@ -37,7 +37,7 @@ func test() {
 		DialTimeout: 5 * time.Second,
 	})
 	if err != nil {
-		log.Fatal(err)
+		logger.Sugar().Fatal(err)
 	}
 	defer client.Close()
 

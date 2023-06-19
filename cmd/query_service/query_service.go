@@ -5,25 +5,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
-	"github.com/Jorrit05/micro-recomposer/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	amqp "github.com/rabbitmq/amqp091-go"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
-	serviceName         = fmt.Sprintf("%s_query_service", os.Getenv("AGENT_NAME"))
-	log, logFile        = lib.InitLogger(serviceName)
-	routingKey   string = lib.GetDefaultRoutingKey(serviceName)
-	db           *sql.DB
+	serviceName        = fmt.Sprintf("%s_query_service", os.Getenv("AGENT_NAME"))
+	logger             = lib.InitLogger()
+	routingKey  string = lib.GetDefaultRoutingKey(serviceName)
+	db          *sql.DB
 )
 
 func main() {
-	defer logFile.Close()
-	defer lib.HandlePanicAndFlushLogs(log, logFile)
+	defer logger.Sync() // flushes buffer, if any
 
 	// Define a WaitGroup
 	var wg sync.WaitGroup
@@ -48,7 +48,6 @@ func main() {
 	defer conn.Close()
 
 	go func() {
-		defer lib.HandlePanicAndFlushLogs(log, logFile)
 
 		lib.StartMessageLoop(doQuery, messages, channel, routingKey, "")
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes

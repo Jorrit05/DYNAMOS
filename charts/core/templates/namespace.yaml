@@ -10,7 +10,7 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: unl1
+  name: uva
   annotations:
     "helm.sh/resource-policy": keep
     "app.kubernetes.io/managed-by": "Helm"
@@ -20,7 +20,7 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: unl2
+  name: vu
   annotations:
     "helm.sh/resource-policy": keep
     "app.kubernetes.io/managed-by": "Helm"

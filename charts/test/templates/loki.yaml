@@ -57,48 +57,37 @@ data:
     #  reporting_enabled: false
 
 ---
-apiVersion: v1
-kind: ConfigMap
+
+
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: promtail-config
-  namespace: core
-data:
-  config.yml: |-
-    server:
-      http_listen_port: 9080
-      grpc_listen_port: 0
-
-    positions:
-      filename: /tmp/positions.yaml
-
-    clients:
-      - url: http://{{ .Values.dns.loki }}:3100/loki/api/v1/push
-
-    scrape_configs:
-    - job_name: system
-      static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: varlogs
-          __path__: /var/log/service_logs/*.log
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: grafana
+  name: loki
   namespace: core
 spec:
+  replicas: 1
   selector:
-    app: grafana
-  ports:
-    - name: http
-      protocol: TCP
-      port: 3000
-      targetPort: 3000
-      nodePort: 30003
-  type: NodePort
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: grafana/loki:2.8.0
+          args:
+            - "-config.file=/etc/loki/local-config.yaml"
+          ports:
+            - containerPort: 3100
+          volumeMounts:
+            - name: loki-config
+              mountPath: /etc/loki
+      volumes:
+        - name: loki-config
+          configMap:
+            name: loki-config
 
 ---
 
@@ -114,44 +103,6 @@ spec:
     - protocol: TCP
       port: 3100
       targetPort: 3100
+      nodePort: 30004
+  type: NodePort
 
----
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-entrypoint
-  namespace: core
-data:
-  entrypoint.sh: |-
-    #!/bin/sh
-    # set -euc
-
-    mkdir -p /etc/grafana/provisioning/datasources
-    cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
-    apiVersion: 1
-    datasources:
-    - name: Loki
-      type: loki
-      access: proxy
-      orgId: 1
-      url: http://{{ .Values.dns.loki }}:3100
-      basicAuth: false
-      isDefault: true
-      version: 1
-      editable: false
-    EOF
-    # mkdir -p /etc/grafana/provisioning/dashboards
-    cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
-    apiVersion: 1
-    providers:
-    - name: 'default'
-      orgId: 1
-      folder: ''
-      type: file
-      disableDeletion: false
-      updateIntervalSeconds: 300
-      options:
-        path: /etc/grafana/provisioning/dashboards
-    EOF
-    /run.sh

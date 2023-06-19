@@ -31,15 +31,14 @@ var (
 )
 
 func main() {
-	defer logFile.Close()
-	defer lib.HandlePanicAndFlushLogs(log, logFile)
+	defer logger.Sync() // flushes buffer, if any
 
 	routingKey = lib.GetDefaultRoutingKey(serviceName)
 
 	// Register a yaml file of available microservices in etcd.
 	_, err := lib.SetMicroservicesEtcd(&lib.EtcdClientWrapper{Client: etcdClient}, "/var/log/stack-files/config/microservices_config.yaml", "")
 	if err != nil {
-		log.Fatalf("Error setting microservices in etcd: %v", err)
+		logger.Sugar().Fatalw("Error setting microservices in etcd: %v", err)
 	}
 
 	// Define a WaitGroup
@@ -49,7 +48,7 @@ func main() {
 	// Connect to AMQ queue, declare own routingKey as queue, start listening for messages
 	_, conn, channel, err = lib.SetupConnection(serviceName, routingKey, false)
 	if err != nil {
-		log.Fatalf("Failed to setup proper connection to RabbitMQ: %v", err)
+		logger.Sugar().Fatalw("Failed to setup proper connection to RabbitMQ: %v", err)
 	}
 	defer conn.Close()
 
@@ -57,7 +56,7 @@ func main() {
 	mux.HandleFunc("/", handler)
 	go func() {
 		if err := http.ListenAndServe(":8080", mux); err != nil {
-			log.Fatalf("Error starting HTTP server: %s", err)
+			logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
 		}
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()
@@ -68,7 +67,7 @@ func main() {
 func handler(w http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		log.Printf("handler: Error reading body: %v", err)
+		logger.Sugar().Infow("handler: Error reading body: %v", err)
 		http.Error(w, "handler: Error reading request body", http.StatusBadRequest)
 		return
 	}
@@ -77,7 +76,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	var orchestratorRequest lib.OrchestratorRequest
 	err = json.Unmarshal([]byte(body), &orchestratorRequest)
 	if err != nil {
-		log.Printf("Error unmarshalling: %v", err)
+		logger.Sugar().Infow("Error unmarshalling: %v", err)
 		http.Error(w, "Error parsing request", http.StatusBadRequest)
 		return
 	}
@@ -91,7 +90,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	case "architecture":
 
 	default:
-		log.Printf("Unknown message type: %s", orchestratorRequest.Type)
+		logger.Sugar().Infow("Unknown message type: %s", orchestratorRequest.Type)
 		http.Error(w, "Unknown request", http.StatusNotFound)
 		return
 	}
@@ -102,7 +101,7 @@ func handleDataRequest(w http.ResponseWriter, orchestratorRequest lib.Orchestrat
 	// Get available agents
 	agentData, err := lib.GetAndUnmarshalJSONMap[lib.AgentDetails](etcdClient, "/agents/")
 	if err != nil {
-		log.Errorf("Getting available agents: %v", err)
+		logger.Sugar().Errorw("Getting available agents: %v", err)
 		http.Error(w, "Internal error getting available agents", http.StatusInternalServerError)
 		return
 	}
@@ -110,7 +109,7 @@ func handleDataRequest(w http.ResponseWriter, orchestratorRequest lib.Orchestrat
 	// Check if requested organizationts are online
 	matched, err := getMatchedProviders(orchestratorRequest.Providers, agentData)
 	if err != nil {
-		log.Errorf("Error getting matched providers: %v", err)
+		logger.Sugar().Errorw("Error getting matched providers: %v", err)
 		http.Error(w, "Internal error getting matched providers", http.StatusInternalServerError)
 		return
 	}
@@ -124,14 +123,14 @@ func handleDataRequest(w http.ResponseWriter, orchestratorRequest lib.Orchestrat
 	var requestorConfig lib.Requestor
 	matches, requestorJSON, err := getAllowedProviders(orchestratorRequest.Name, matched, &requestorConfig)
 	if err != nil {
-		log.Errorf("Error getting requestor configuration", err)
+		logger.Sugar().Errorw("Error getting requestor configuration", err)
 		http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
 		return
 	}
 
 	// _, err = lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+orchestratorRequest.Name, &requestorConfig)
 	// if err != nil {
-	// 	log.Errorf("Error getting requestor configuration", err)
+	// 	logger.Sugar().Errorw("Error getting requestor configuration", err)
 	// 	http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
 	// 	return
 	// }
@@ -147,7 +146,7 @@ func handleDataRequest(w http.ResponseWriter, orchestratorRequest lib.Orchestrat
 		// var requestor lib.Requestor
 		// requestorJSON, err := lib.GetAndUnmarshalJSON(etcdClient, "/reasoner/requestor_config/"+orchestratorRequest.Name, &requestor)
 		// if err != nil {
-		// 	log.Errorf("Error getting requestor configuration", err)
+		// 	logger.Sugar().Errorw("Error getting requestor configuration", err)
 		// 	http.Error(w, "Internal error getting requestor data", http.StatusInternalServerError)
 		// 	return
 		// }
@@ -196,7 +195,7 @@ func getAllowedProviders(name string, requestedOrganizations []string, reqConfig
 // func handler(w http.ResponseWriter, req *http.Request) {
 // 	body, err := ioutil.ReadAll(req.Body)
 // 	if err != nil {
-// 		log.Printf("handler: Error reading body: %v", err)
+// 		logger.Sugar().Infow("handler: Error reading body: %v", err)
 // 		http.Error(w, "handler: Error reading request body", http.StatusBadRequest)
 // 		return
 // 	}
@@ -225,19 +224,19 @@ func getAllowedProviders(name string, requestedOrganizations []string, reqConfig
 // 		Body:          body,
 // 		// Headers:       amqp.Table{"context": json.Marshal()},
 // 	}
-// 	log.Printf("handler: 3, %s", routingKey)
+// 	logger.Sugar().Infow("handler: 3, %s", routingKey)
 
 // 	if err := lib.Publish(outputChannel, routingKey, convertedAmqMessage, ""); err != nil {
-// 		log.Printf("Handler 4: Error publishing: %s", err)
+// 		logger.Sugar().Infow("Handler 4: Error publishing: %s", err)
 // 	}
 
 // 	// Wait for the response from the response channel
 // 	select {
 // 	case msg := <-responseChan:
-// 		log.Printf("handler: 5, msg received: %s", msg.Body)
+// 		logger.Sugar().Infow("handler: 5, msg received: %s", msg.Body)
 // 		w.Write(msg.Body)
 // 	case <-ctx.Done():
-// 		log.Println("handler: 6, context timed out")
+// 		logger.Info("handler: 6, context timed out")
 // 		http.Error(w, "handler: Request timed out", http.StatusRequestTimeout)
 // 	}
 // }

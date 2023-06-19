@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  anonymize_service:
+    image: anonymize_service
+    volumes:
+      - service_logs:/var/log/service_logs
+    networks:
+      - unl_1
+    environment:
+      INPUT_QUEUE: query_service
+      AMQ_PASSWORD_FILE: /run/secrets/rabbitmq_user
+      AMQ_USER: normal_user
+    secrets:
+      - rabbitmq_user
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        reservations:
+          memory: 128M
+        limits:
+          memory: 256M
+  query_service:
+    image: query_service
+    volumes:
+      - service_logs:/var/log/service_logs
+    networks:
+      - unl_1
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_dba_password
+      MYSQL_DATABASE: mydb
+      DB_USER: root
+      INPUT_QUEUE: gateway_service
+      AMQ_PASSWORD_FILE: /run/secrets/rabbitmq_user
+      AMQ_USER: normal_user
+    secrets:
+      - db_root_password
+      - db_dba_password
+      - rabbitmq_user
+
+
+secrets:
+  db_root_password:
+    external: true
+  db_dba_password:
+    external: true
+  rabbitmq_user:
+    external: true
+
+networks:
+  unl_1:
+    external: true
+
+volumes:
+  service_logs:
+    external: true

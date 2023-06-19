@@ -2,12 +2,18 @@ package main
 
 import (
 	"context"
-	"log"
+	"flag"
+	"fmt"
 	"net"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 
 	"google.golang.org/grpc"
+)
+
+var (
+	port = flag.Int("port", 3005, "The server port")
 )
 
 type server struct {
@@ -15,10 +21,10 @@ type server struct {
 }
 
 func (s *server) StartService(ctx context.Context, in *pb.ServiceRequest) (*pb.ServiceReply, error) {
-	log.Printf("Received: %v", in.GetService())
+	logger.Sugar().Infow("Received: %v", in.ServiceName)
 
 	// Call the SetupConnection function and handle the message consumption inside this function
-	_, _, _, err := SetupConnection(in.GetService(), in.GetRoutingKey(), true)
+	_, _, _, err := lib.SetupConnection(in.ServiceName, in.RoutingKey, in.StartConsuming, in.QueueAutoDelete)
 
 	if err != nil {
 		return &pb.ServiceReply{Message: "Failed to setup connection"}, nil
@@ -28,13 +34,15 @@ func (s *server) StartService(ctx context.Context, in *pb.ServiceRequest) (*pb.S
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
+	flag.Parse()
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Sugar().Fatalw("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
 	pb.RegisterSideCarServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		logger.Sugar().Fatalw("failed to serve: %v", err)
 	}
 }

@@ -1,0 +1,13 @@
+# # debug-pod.yaml
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: debug
+#   namespace: {{ .Values.Namespace }}
+# spec:
+#   containers:
+#   - name: debug
+#     image: busybox
+#     command: ['sleep', '3600']
+#     stdin: true
+#     tty: true

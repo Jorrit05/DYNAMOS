@@ -24,7 +24,7 @@ func requestApprovalHandler() http.HandlerFunc {
 		var msgType messageType
 		err = json.Unmarshal(body, &msgType)
 		if err != nil {
-			log.Printf("%s: Error unmarshalling body: %v", serviceName, err)
+			logger.Sugar().Infow("%s: Error unmarshalling body: %v", serviceName, err)
 			http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
 			return
 		}
@@ -35,7 +35,7 @@ func requestApprovalHandler() http.HandlerFunc {
 			var requestApproval lib.RequestApproval
 			err = json.Unmarshal(body, &requestApproval)
 			if err != nil {
-				log.Printf("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
+				logger.Sugar().Infow("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
 				http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
 				return
 			}
@@ -56,7 +56,7 @@ func handleRequestApproval(w http.ResponseWriter, requestApproval *lib.RequestAp
 	// Convert back to JSON to pass on to the policy enforcer
 	jsonRA, err := json.Marshal(requestApproval)
 	if err != nil {
-		log.Printf("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
+		logger.Sugar().Errorw("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
 		http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
 		return
 	}
@@ -70,7 +70,7 @@ func handleRequestApproval(w http.ResponseWriter, requestApproval *lib.RequestAp
 	url := policyEnforcerEndpoint + "/validate"
 	approval, err := lib.PostRequest(url, string(jsonRA))
 	if err != nil {
-		log.Printf("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
+		logger.Sugar().Errorw("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
 		http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
 		return
 	}

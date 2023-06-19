@@ -1,0 +1,102 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          command: ["/bin/sh", "/entrypoint/entrypoint.sh"]
+          ports:
+            - containerPort: 3000
+          env:
+            - name: RESTART_
+              value: "now"
+            - name: GF_PATHS_PROVISIONING
+              value: "/etc/grafana/provisioning"
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Admin"
+          volumeMounts:
+            - name: grafana-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: grafana-entrypoint
+              mountPath: /entrypoint
+      volumes:
+        - name: grafana-dashboards
+          hostPath:
+            path: /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/grafana
+        - name: grafana-entrypoint
+          configMap:
+            name: grafana-entrypoint
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: core
+spec:
+  selector:
+    app: grafana
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30003
+  type: NodePort
+
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-entrypoint
+  namespace: core
+data:
+  entrypoint.sh: |-
+    #!/bin/sh
+    # set -euc
+
+    mkdir -p /etc/grafana/provisioning/datasources
+    cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+    apiVersion: 1
+    datasources:
+    - name: Loki
+      type: loki
+      access: proxy
+      orgId: 1
+      url: http://{{ .Values.loki.dns }}:3100
+      basicAuth: false
+      isDefault: true
+      version: 1
+      editable: false
+    EOF
+    # mkdir -p /etc/grafana/provisioning/dashboards
+    cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 300
+      options:
+        path: /etc/grafana/provisioning/dashboards
+    EOF
+    /run.sh

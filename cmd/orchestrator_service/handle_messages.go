@@ -57,7 +57,7 @@ func startMessageLoop(
 			var payload lib.MicroServiceData
 			err := json.Unmarshal(msg.Body, &payload)
 			if err != nil {
-				log.Printf("Error decoding CreateServicePayload: %v", err)
+				logger.Sugar().Infow("Error decoding CreateServicePayload: %v", err)
 				return
 			}
 			handleCreateService(dockerClient, payload)
@@ -74,7 +74,7 @@ func startMessageLoop(
 			// ...
 
 		default:
-			log.Printf("Unknown message type: %s", msg.Type)
+			logger.Sugar().Infow("Unknown message type: %s", msg.Type)
 		}
 
 		// ... (Acknowledge the message)

@@ -18,7 +18,7 @@ func GetEtcdClient(endpoints string) *clientv3.Client {
 		DialTimeout: 5 * time.Second,
 	})
 	if err != nil {
-		log.Fatal(err)
+		logger.Sugar().Fatalw("Error in creating ETCD client %v", err)
 	}
 
 	return cli
@@ -51,25 +51,25 @@ func CreateEtcdLeaseObject(etcdClient *clientv3.Client, key string, value string
 	// Create a lease with a 5-second TTL
 	lease, err := etcdClient.Grant(context.Background(), options.leaseTime)
 	if err != nil {
-		log.Fatal(err)
+		logger.Sugar().Fatal(err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	// Write agent information to etcd with the lease attached
 	_, err = etcdClient.Put(ctx, key, value, clientv3.WithLease(lease.ID))
 	if err != nil {
-		log.Fatalf("Failed creating a item with lease in etcd: %s", err)
+		logger.Sugar().Fatalw("Failed creating a item with lease in etcd: %s", err)
 	}
 
 	// Keep the lease alive by refreshing it periodically
 	leaseKeepAlive, err := etcdClient.KeepAlive(context.Background(), lease.ID)
 	if err != nil {
-		log.Fatalf("Failed starting the keepalive for etcd: %s", err)
+		logger.Sugar().Fatalw("Failed starting the keepalive for etcd: %s", err)
 	}
 
 	// Periodically refresh the lease
 	for range leaseKeepAlive {
-		log.Debugf("Lease refreshed on key: %s", key)
+		logger.Sugar().Debugw("Lease refreshed on key: %s", key)
 	}
 }
 
@@ -77,13 +77,13 @@ func UnmarshalStackFile(fileLocation string) MicroServiceData {
 
 	yamlFile, err := os.ReadFile(fileLocation)
 	if err != nil {
-		log.Errorf("Failed to read the YAML file: %v", err)
+		logger.Sugar().Errorw("Failed to read the YAML file: %v", err)
 	}
 
 	service := MicroServiceData{}
 	err = yaml.Unmarshal(yamlFile, &service)
 	if err != nil {
-		log.Errorf("Failed to unmarshal the YAML file: %v", err)
+		logger.Sugar().Errorw("Failed to unmarshal the YAML file: %v", err)
 	}
 	return service
 }
@@ -103,14 +103,14 @@ func SetMicroservicesEtcd(etcdClient EtcdClient, fileLocation string, etcdPath s
 
 		jsonPayload, err := json.Marshal(payload)
 		if err != nil {
-			log.Errorf("Failed to marshal the payload to JSON: %v", err)
+			logger.Sugar().Errorw("Failed to marshal the payload to JSON: %v", err)
 			return nil, err
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_, err = etcdClient.Put(ctx, fmt.Sprintf("%s/%s", etcdPath, serviceName), string(jsonPayload))
 		if err != nil {
-			log.Errorf("Failed creating service config in etcd: %s", err)
+			logger.Sugar().Errorw("Failed creating service config in etcd: %s", err)
 			return nil, err
 		}
 		processedServices[serviceName] = payload
@@ -143,12 +143,12 @@ func GetKeyValueMap(etcdClient *clientv3.Client, pathName string) (map[string]st
 
 	resp, err := etcdClient.Get(ctx, pathName, clientv3.WithPrefix())
 	if err != nil {
-		log.Errorf("failed to get keys with prefix %s from etcd: %v", pathName, err)
+		logger.Sugar().Errorw("failed to get keys with prefix %s from etcd: %v", pathName, err)
 		return nil, err
 	}
 
 	if len(resp.Kvs) == 0 {
-		log.Errorf("no keys with prefix %s found in etcd", pathName)
+		logger.Sugar().Errorw("no keys with prefix %s found in etcd", pathName)
 		return nil, err
 	}
 
@@ -172,7 +172,7 @@ func RegisterJSONArray[T any](jsonContent []byte, target Iterable, etcdClient *c
 
 	err := json.Unmarshal(jsonContent, &target)
 	if err != nil {
-		log.Errorf("failed to unmarshal JSON content: %v", err)
+		logger.Sugar().Errorw("failed to unmarshal JSON content: %v", err)
 		return err
 	}
 
@@ -181,7 +181,7 @@ func RegisterJSONArray[T any](jsonContent []byte, target Iterable, etcdClient *c
 
 		jsonRep, err := json.Marshal(element)
 		if err != nil {
-			log.Errorf("Failed to Marshal config: %v", err)
+			logger.Sugar().Errorw("Failed to Marshal config: %v", err)
 			return err
 		}
 
@@ -190,7 +190,7 @@ func RegisterJSONArray[T any](jsonContent []byte, target Iterable, etcdClient *c
 
 		_, err = etcdClient.Put(ctx, fmt.Sprintf("%s/%s", key, string(element.GetName())), string(jsonRep))
 		if err != nil {
-			log.Errorf("Failed creating archetypesJSON in etcd: %s", err)
+			logger.Sugar().Errorw("Failed creating archetypesJSON in etcd: %s", err)
 			return err
 		}
 	}
@@ -210,19 +210,19 @@ func GetAndUnmarshalJSON[T any](etcdClient *clientv3.Client, key string, target 
 	// Get the value from etcd.
 	resp, err := etcdClient.Get(ctx, key)
 	if err != nil {
-		log.Errorf("failed to get value from etcd: %v", err)
+		logger.Sugar().Errorw("failed to get value from etcd: %v", err)
 		return nil, err
 	}
 
 	if len(resp.Kvs) == 0 {
-		log.Errorf("no value found for key: %s", key)
+		logger.Sugar().Errorw("no value found for key: %s", key)
 		return nil, err
 	}
 
 	// Unmarshal the JSON value into the target struct.
 	err = json.Unmarshal(resp.Kvs[0].Value, target)
 	if err != nil {
-		log.Errorf("failed to unmarshal JSON: %v", err)
+		logger.Sugar().Errorw("failed to unmarshal JSON: %v", err)
 		return nil, err
 	}
 
@@ -276,7 +276,7 @@ func SaveStructToEtcd[T any](etcdClient *clientv3.Client, key string, target T) 
 	// Marshal the target struct into a JSON representation
 	jsonRep, err := json.Marshal(target)
 	if err != nil {
-		log.Errorf("failed to marshal struct: %v", err)
+		logger.Sugar().Errorw("failed to marshal struct: %v", err)
 		return err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -285,7 +285,7 @@ func SaveStructToEtcd[T any](etcdClient *clientv3.Client, key string, target T) 
 	_, err = etcdClient.Put(ctx, key, string(jsonRep))
 
 	if err != nil {
-		log.Errorf("failed to save struct to etcd: %v", err)
+		logger.Sugar().Errorw("failed to save struct to etcd: %v", err)
 		return err
 	}
 
@@ -300,13 +300,13 @@ func GetPrefixListEtcd[T any](client KVGetter, prefix string, target *T) ([]T, e
 
 	var targets []T
 	if err != nil {
-		log.Errorf("Failed to get from etcd: %v", err)
+		logger.Sugar().Errorw("Failed to get from etcd: %v", err)
 		return nil, err
 	}
 
 	for _, kv := range resp.Kvs {
 		if err := json.Unmarshal(kv.Value, &target); err != nil {
-			log.Errorf("Failed to unmarshal value for key %s: %v", kv.Key, err)
+			logger.Sugar().Errorw("Failed to unmarshal value for key %s: %v", kv.Key, err)
 			continue
 		}
 

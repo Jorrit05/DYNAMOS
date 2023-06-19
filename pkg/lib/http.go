@@ -106,13 +106,13 @@ func GenericGetHandler[T any](w http.ResponseWriter, req *http.Request, etcdClie
 		targetList, err := GetPrefixListEtcd(etcdClient, etcdRoot, &target)
 
 		if err != nil {
-			log.Printf("Error in requesting config: %s", err)
+			logger.Sugar().Infow("Error in requesting config: %s", err)
 			http.Error(w, "Error in requesting config", http.StatusInternalServerError)
 			return
 		}
 		jsonData, err = json.Marshal(&targetList)
 		if err != nil {
-			log.Fatalf("Failed to convert map to JSON: %v", err)
+			logger.Sugar().Fatalw("Failed to convert map to JSON: %v", err)
 		}
 
 	default:
@@ -121,7 +121,7 @@ func GenericGetHandler[T any](w http.ResponseWriter, req *http.Request, etcdClie
 		jsonData, err = GetAndUnmarshalJSON(etcdClient, key, &target)
 
 		if err != nil {
-			log.Printf("Unknown path: %s", trimmedPath)
+			logger.Sugar().Infow("Unknown path: %s", trimmedPath)
 			http.Error(w, "Unknown request", http.StatusNotFound)
 			return
 		}
@@ -142,21 +142,21 @@ func GenericPutToEtcd[T any](w http.ResponseWriter, req *http.Request, etcdClien
 	body, err := io.ReadAll(req.Body)
 	req.Body.Close()
 	if err != nil {
-		log.Printf("handler: Error reading body: %v", err)
+		logger.Sugar().Infow("handler: Error reading body: %v", err)
 		http.Error(w, "handler: Error reading request body", http.StatusBadRequest)
 		return
 	}
 
 	err = json.Unmarshal(body, &target)
 	if err != nil {
-		log.Errorf("failed to marshal struct: %v", err)
+		logger.Sugar().Errorw("failed to marshal struct: %v", err)
 		http.Error(w, "Failed parsing body", http.StatusBadRequest)
 		return
 	}
 
 	name := target.GetName()
 	if name == "" {
-		log.Errorf("Body does not have a name.: %v", err)
+		logger.Sugar().Errorw("Body does not have a name.: %v", err)
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
@@ -165,7 +165,7 @@ func GenericPutToEtcd[T any](w http.ResponseWriter, req *http.Request, etcdClien
 	// (even if they are empty)
 	jsonRep, err := json.Marshal(target)
 	if err != nil {
-		log.Errorf("failed to marshal struct: %v", err)
+		logger.Sugar().Errorw("failed to marshal struct: %v", err)
 		http.Error(w, "Failed parsing body", http.StatusBadRequest)
 		return
 	}
@@ -178,12 +178,12 @@ func GenericPutToEtcd[T any](w http.ResponseWriter, req *http.Request, etcdClien
 	_, err = etcdClient.Put(ctx, key, string(jsonRep))
 
 	if err != nil {
-		log.Printf("Error in saving the  new archetype: %s", err)
+		logger.Sugar().Infow("Error in saving the  new archetype: %s", err)
 		http.Error(w, "Error in saving the  new archetype", http.StatusInternalServerError)
 		return
 	}
 
-	log.Infof("Added %s", key)
+	logger.Sugar().Infow("Added %s", key)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
 }
@@ -192,7 +192,7 @@ func PostRequest(url string, body string) ([]byte, error) {
 	reqBody := bytes.NewBufferString(body)
 	req, err := http.NewRequest(http.MethodPost, url, reqBody)
 	if err != nil {
-		log.Printf("Failed to create request: %v", err)
+		logger.Sugar().Infow("Failed to create request: %v", err)
 		return []byte(""), err
 	}
 
@@ -208,20 +208,20 @@ func PostRequest(url string, body string) ([]byte, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Failed to make request: %v", err)
+		logger.Sugar().Infow("Failed to make request: %v", err)
 		return []byte(""), err
 	}
 	defer resp.Body.Close()
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Failed to read response body: %v", err)
+		logger.Sugar().Infow("Failed to read response body: %v", err)
 		return []byte(""), err
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		err = fmt.Errorf(fmt.Sprintf("Bad response from server: %s", resp.Status))
-		log.Printf("%v", err)
+		logger.Sugar().Infow("%v", err)
 		return []byte(""), err
 	}
 

@@ -32,6 +32,9 @@
 		},
 		{
 			"path": "cmd/rabbitmq-sidecar"
+		},
+		{
+			"path": "cmd/test_service"
 		}
 	],
 	"settings": {}
