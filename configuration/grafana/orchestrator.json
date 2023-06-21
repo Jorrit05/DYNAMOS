@@ -11,12 +11,6 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
         "type": "dashboard"
       }
     ]
@@ -24,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -35,11 +29,11 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 22,
+        "w": 21,
         "x": 0,
         "y": 0
       },
-      "id": 4,
+      "id": 2,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -56,52 +50,14 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "editorMode": "code",
-          "expr": "{job=\"varlogs\"} | json | service=~\"unl1.*\"\n",
-          "key": "Q-c2d712b8-f75a-46df-be5a-15274976b12d-0",
+          "editorMode": "builder",
+          "expr": "{app=\"policy-enforcer\"} |= ``",
+          "key": "Q-1f6642bf-d825-4ec5-b65c-ff7ab866272f-0",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Agents",
-      "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 22,
-        "x": 0,
-        "y": 8
-      },
-      "id": 3,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "showTime": false,
-        "sortOrder": "Descending",
-        "wrapLogMessage": false
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "editorMode": "code",
-          "expr": "{job=\"varlogs\"} | json | service=\"orchestrator_service\"\n",
-          "key": "Q-da7516e4-11e9-46f8-a781-3092ec1cf2ea-0",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Orchestrator",
+      "title": "PolicyEnforcer",
       "type": "logs"
     },
     {
@@ -111,11 +67,11 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 21,
         "x": 0,
-        "y": 19
+        "y": 8
       },
-      "id": 5,
+      "id": 1,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -132,19 +88,18 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "editorMode": "code",
-          "expr": "{job=\"varlogs\"} | json | service=\"reasoner_service\"",
-          "key": "Q-c4808b8e-3c36-47f5-9aa5-1c338d172ce3-0",
+          "editorMode": "builder",
+          "expr": "{app=\"orchestrator\"} |= ``",
+          "key": "Q-70907535-9385-4a4d-be8b-107e1df77e06-0",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Reasoner",
+      "title": "Orchestrator",
       "type": "logs"
     }
   ],
   "refresh": "",
-  "revision": 1,
   "schemaVersion": 38,
   "style": "dark",
   "tags": [],
@@ -152,13 +107,13 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Logs",
-  "uid": "2AQPehPVz",
-  "version": 1,
+  "title": "Orchestrator",
+  "uid": "c19a62fc-3436-4020-9ff6-c715958946e9",
+  "version": 2,
   "weekStart": ""
 }

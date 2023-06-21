@@ -11,6 +11,8 @@ service SideCar {
   rpc StartService(ServiceRequest) returns (google.protobuf.Empty) {}
   rpc Consume(ConsumeRequest) returns (stream RabbitMQMessage) {}
   rpc SendRequestApproval(RequestApproval) returns  (google.protobuf.Empty) {}
+  rpc SendValidationResponse(ValidationResponse) returns  (google.protobuf.Empty) {}
+
 }
 
 
@@ -38,12 +40,12 @@ message Auth {
 
 message ValidationResponse {
   string type = 1;
-  string request_type = 2;
-  repeated string valid_data_providers = 3;
-  repeated string invalid_data_providers = 4;
-  Auth auth = 5;
-  repeated string allowed_arche_types = 6;
-  repeated string allowed_compute_providers = 7;
+  repeated string valid_data_providers = 2;
+  repeated string invalid_data_providers = 3;
+  Auth auth = 4;
+  repeated string allowed_arche_types = 5;
+  repeated string allowed_compute_providers = 6;
+  User User = 7;
 }
 
 message User {

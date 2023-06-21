@@ -1,4 +1,4 @@
-/agents/unl1_agent
+<!-- /agents/unl1_agent
 /agents/unl2_agent
 /microservices/anonymize_service
 /microservices/query_service
@@ -13,7 +13,7 @@ Todo?:
 /unl1_agent/services/input_queue
 /unl1_agent/services/output_queue
 
-/request-types/sql-data-request -> JSON definition
+/request-types/sql-data-request -> JSON definition -->
 
 /requestTypes/sqlDataRequest -> JSON definition
 /archetypes/computeToData -> JSON definition

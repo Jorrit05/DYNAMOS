@@ -26,6 +26,7 @@ type SideCarClient interface {
 	StartService(ctx context.Context, in *ServiceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Consume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ConsumeClient, error)
 	SendRequestApproval(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sideCarClient struct {
@@ -86,6 +87,15 @@ func (c *sideCarClient) SendRequestApproval(ctx context.Context, in *RequestAppr
 	return out, nil
 }
 
+func (c *sideCarClient) SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendValidationResponse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SideCarServer is the server API for SideCar service.
 // All implementations must embed UnimplementedSideCarServer
 // for forward compatibility
@@ -93,6 +103,7 @@ type SideCarServer interface {
 	StartService(context.Context, *ServiceRequest) (*emptypb.Empty, error)
 	Consume(*ConsumeRequest, SideCar_ConsumeServer) error
 	SendRequestApproval(context.Context, *RequestApproval) (*emptypb.Empty, error)
+	SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSideCarServer()
 }
 
@@ -108,6 +119,9 @@ func (UnimplementedSideCarServer) Consume(*ConsumeRequest, SideCar_ConsumeServer
 }
 func (UnimplementedSideCarServer) SendRequestApproval(context.Context, *RequestApproval) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendRequestApproval not implemented")
+}
+func (UnimplementedSideCarServer) SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendValidationResponse not implemented")
 }
 func (UnimplementedSideCarServer) mustEmbedUnimplementedSideCarServer() {}
 
@@ -179,6 +193,24 @@ func _SideCar_SendRequestApproval_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SideCar_SendValidationResponse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ValidationResponse)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).SendValidationResponse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/SendValidationResponse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).SendValidationResponse(ctx, req.(*ValidationResponse))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SideCar_ServiceDesc is the grpc.ServiceDesc for SideCar service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -193,6 +225,10 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendRequestApproval",
 			Handler:    _SideCar_SendRequestApproval_Handler,
+		},
+		{
+			MethodName: "SendValidationResponse",
+			Handler:    _SideCar_SendValidationResponse_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

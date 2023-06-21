@@ -14,11 +14,17 @@ import (
 )
 
 var (
-	logger                      = lib.InitLogger()
-	etcdClient *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
-	c          pb.SideCarClient
-	conn       *grpc.ClientConn
+	logger                         = lib.InitLogger()
+	etcdClient    *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
+	c             pb.SideCarClient
+	conn          *grpc.ClientConn
+	mutex         = &sync.Mutex{}
+	validationMap = make(map[string]*validation)
 )
+
+type validation struct {
+	response chan *pb.ValidationResponse
+}
 
 func main() {
 	defer logger.Sync() // flushes buffer, if any

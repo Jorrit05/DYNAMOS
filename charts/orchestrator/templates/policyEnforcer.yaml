@@ -17,7 +17,7 @@ spec:
       containers:
       - name: policy-enforcer
         image: policy_enforcer:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         # resources:
         #   requests:
         #     memory: "128Mi"
@@ -26,7 +26,7 @@ spec:
 
       - name: rabbitmq-sidecar
         image: rabbitmq-sidecar:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3005
         env:

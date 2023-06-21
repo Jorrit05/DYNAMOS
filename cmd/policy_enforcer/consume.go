@@ -51,6 +51,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 			}
 
 			logger.Sugar().Infof("User name: %s", requestApproval.User.UserName)
+			checkRequestApproval(&requestApproval)
 
 		default:
 			logger.Sugar().Fatalf("Unknown message type: %s", grpcMsg.Type)

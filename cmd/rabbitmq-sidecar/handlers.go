@@ -28,3 +28,20 @@ func (s *server) SendRequestApproval(ctx context.Context, in *pb.RequestApproval
 
 	return send(message, "policyEnforcer-in")
 }
+
+func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationResponse) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal ValidationResponse failed: %s", err)
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Do other stuff
+	message := amqp.Publishing{
+		Body: data,
+		Type: "validationResponse",
+	}
+
+	return send(message, "orchestrator-in")
+}
