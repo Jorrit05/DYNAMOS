@@ -9,6 +9,7 @@ import (
 
 func archetypesHandler(etcdClient *clientv3.Client, root string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("Entering archetypesHandler")
 		switch r.Method {
 		case http.MethodGet:
 			// Call your handler for GET

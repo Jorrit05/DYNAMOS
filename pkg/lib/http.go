@@ -96,17 +96,21 @@ func (a Agreement) GetName() string {
 }
 
 func GenericGetHandler[T any](w http.ResponseWriter, req *http.Request, etcdClient *clientv3.Client, etcdRoot string) {
-	trimmedPath := strings.TrimPrefix(req.URL.Path, fmt.Sprintf("%s/", etcdRoot))
+	trimmedPath := strings.TrimPrefix(req.URL.Path, etcdRoot) //fmt.Sprintf("%s/", etcdRoot))
 	fmt.Println("trimmedPath: " + trimmedPath)
+	fmt.Println("req.URL.Path: " + req.URL.Path)
 	var jsonData []byte
 	var err error
 	var target *T
 	switch trimmedPath {
 	case "":
+		fallthrough
+	case "/":
+		logger.Info("Start GetPrefixListEtcd")
 		targetList, err := GetPrefixListEtcd(etcdClient, etcdRoot, &target)
 
 		if err != nil {
-			logger.Sugar().Infow("Error in requesting config: %s", err)
+			logger.Sugar().Infof("Error in requesting config: %s", err)
 			http.Error(w, "Error in requesting config", http.StatusInternalServerError)
 			return
 		}
@@ -116,12 +120,12 @@ func GenericGetHandler[T any](w http.ResponseWriter, req *http.Request, etcdClie
 		}
 
 	default:
-		key := fmt.Sprintf("%s/%s", etcdRoot, trimmedPath)
+		key := fmt.Sprintf("%s%s", etcdRoot, trimmedPath)
 		fmt.Println(key)
 		jsonData, err = GetAndUnmarshalJSON(etcdClient, key, &target)
 
 		if err != nil {
-			logger.Sugar().Infow("Unknown path: %s", trimmedPath)
+			logger.Sugar().Infof("Unknown path: %s", trimmedPath)
 			http.Error(w, "Unknown request", http.StatusNotFound)
 			return
 		}
@@ -142,7 +146,7 @@ func GenericPutToEtcd[T any](w http.ResponseWriter, req *http.Request, etcdClien
 	body, err := io.ReadAll(req.Body)
 	req.Body.Close()
 	if err != nil {
-		logger.Sugar().Infow("handler: Error reading body: %v", err)
+		logger.Sugar().Infof("handler: Error reading body: %v", err)
 		http.Error(w, "handler: Error reading request body", http.StatusBadRequest)
 		return
 	}
@@ -178,12 +182,12 @@ func GenericPutToEtcd[T any](w http.ResponseWriter, req *http.Request, etcdClien
 	_, err = etcdClient.Put(ctx, key, string(jsonRep))
 
 	if err != nil {
-		logger.Sugar().Infow("Error in saving the  new archetype: %s", err)
+		logger.Sugar().Infof("Error in saving the  new archetype: %s", err)
 		http.Error(w, "Error in saving the  new archetype", http.StatusInternalServerError)
 		return
 	}
 
-	logger.Sugar().Infow("Added %s", key)
+	logger.Sugar().Infof("Added %s", key)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
 }
@@ -192,7 +196,7 @@ func PostRequest(url string, body string) ([]byte, error) {
 	reqBody := bytes.NewBufferString(body)
 	req, err := http.NewRequest(http.MethodPost, url, reqBody)
 	if err != nil {
-		logger.Sugar().Infow("Failed to create request: %v", err)
+		logger.Sugar().Infof("Failed to create request: %v", err)
 		return []byte(""), err
 	}
 
@@ -208,20 +212,20 @@ func PostRequest(url string, body string) ([]byte, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Sugar().Infow("Failed to make request: %v", err)
+		logger.Sugar().Infof("Failed to make request: %v", err)
 		return []byte(""), err
 	}
 	defer resp.Body.Close()
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logger.Sugar().Infow("Failed to read response body: %v", err)
+		logger.Sugar().Infof("Failed to read response body: %v", err)
 		return []byte(""), err
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		err = fmt.Errorf(fmt.Sprintf("Bad response from server: %s", resp.Status))
-		logger.Sugar().Infow("%v", err)
+		logger.Sugar().Infof("%v", err)
 		return []byte(""), err
 	}
 

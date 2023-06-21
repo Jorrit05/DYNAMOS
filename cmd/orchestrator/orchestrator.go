@@ -1,73 +1,93 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"github.com/gorilla/handlers"
-
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
 	logger                      = lib.InitLogger()
 	etcdClient *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
+	c          pb.SideCarClient
+	conn       *grpc.ClientConn
 )
 
 func main() {
 	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
-	// Set up a connection to the server.
 
-	conn, err := grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		logger.Sugar().Fatalw("did not connect to grpc server: %v", err)
-
-	}
+	c, conn = lib.InitializeRabbit(grpcAddr, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 	defer conn.Close()
-	c := pb.NewSideCarClient(conn)
 
-	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	r, err := c.StartService(ctx, &pb.ServiceRequest{ServiceName: serviceName, RoutingKey: serviceName, QueueAutoDelete: false, StartConsuming: false})
-	if err != nil {
-		logger.Sugar().Fatalw("could not greet: %v", err)
-	}
-	logger.Sugar().Infow("Greeting: %s", r.GetMessage())
-	registerPolicyEnforcerConfiguration()
+	// Define a WaitGroup
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		startConsumingWithRetry(c, fmt.Sprintf("%s-in", serviceName), 5, 5*time.Second)
+
+		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
+	}()
+
+	go registerPolicyEnforcerConfiguration()
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
-	// Connect to AMQ queue, declare own routingKey as queue, start listening for messages
-	// _, conn, _, err := lib.SetupConnection(serviceName, serviceName, false)
-	// if err != nil {
-	// 	logger.Sugar().Fatalw("Failed to setup proper connection to RabbitMQ: %v", err)
-	// }
-	// defer conn.Close()
-
 	mux := http.NewServeMux()
-	mux.HandleFunc("/archetypes/", archetypesHandler(etcdClient, "/archetypes"))
-	mux.HandleFunc("/requesttypes/", requestTypesHandler(etcdClient, "/requestTypes"))
-	mux.HandleFunc("/requestTypes/", requestTypesHandler(etcdClient, "/requestTypes"))
-	mux.HandleFunc("/microservices/", microserviceMetadataHandler(etcdClient, "/microservices"))
-	mux.HandleFunc("/policyEnforcer/", agreementsHandler(etcdClient, "/policyEnforcer"))
 
-	mux.HandleFunc("/requestapproval", requestApprovalHandler())
+	apiMux := http.NewServeMux()
+	apiMux.HandleFunc("/archetypes", archetypesHandler(etcdClient, "/archetypes"))
+	apiMux.HandleFunc("/archetypes/", archetypesHandler(etcdClient, "/archetypes"))
 
-	logger.Sugar().Infow("Starting http server on %s/30011", port)
+	apiMux.HandleFunc("/requesttypes", requestTypesHandler(etcdClient, "/requestTypes"))
+	apiMux.HandleFunc("/requestTypes", requestTypesHandler(etcdClient, "/requestTypes"))
+
+	apiMux.HandleFunc("/requesttypes/", requestTypesHandler(etcdClient, "/requestTypes"))
+	apiMux.HandleFunc("/requestTypes/", requestTypesHandler(etcdClient, "/requestTypes"))
+
+	apiMux.HandleFunc("/microservices", microserviceMetadataHandler(etcdClient, "/microservices"))
+	apiMux.HandleFunc("/microservices/", microserviceMetadataHandler(etcdClient, "/microservices"))
+
+	apiMux.HandleFunc("/policyEnforcer", agreementsHandler(etcdClient, "/policyEnforcer"))
+	apiMux.HandleFunc("/policyEnforcer/", agreementsHandler(etcdClient, "/policyEnforcer"))
+
+	apiMux.HandleFunc("/requestapproval", requestApprovalHandler())
+	logger.Info(apiVersion) // prints /api/v1
+
+	mux.Handle(apiVersion+"/", http.StripPrefix(apiVersion, apiMux))
+
+	logger.Sugar().Infow("Starting http server on: ", "port", port)
 	go func() {
-		if err := http.ListenAndServe(port, handlers.CORS(originsOk, headersOk, methodsOk)(mux)); err != nil {
+		if err := http.ListenAndServe(port, logMiddleware(handlers.CORS(originsOk, headersOk, methodsOk)(mux))); err != nil {
 			logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
 		}
 	}()
 
-	select {}
+	// go func() {
+	// 	if err := http.ListenAndServe(port, handlers.CORS(originsOk, headersOk, methodsOk)(mux)); err != nil {
+	// 		logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
+	// 	}
+	// }()
 
+	wg.Wait()
+
+}
+
+func logMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Log the request
+		logger.Sugar().Infow("Received request", "method", r.Method, "path", r.URL.Path)
+
+		// Call the next handler
+		next.ServeHTTP(w, r)
+	})
 }

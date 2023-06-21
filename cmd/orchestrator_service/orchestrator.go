@@ -67,7 +67,7 @@ func main() {
 func handler(w http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		logger.Sugar().Infow("handler: Error reading body: %v", err)
+		logger.Sugar().Infof("handler: Error reading body: %v", err)
 		http.Error(w, "handler: Error reading request body", http.StatusBadRequest)
 		return
 	}
@@ -76,7 +76,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	var orchestratorRequest lib.OrchestratorRequest
 	err = json.Unmarshal([]byte(body), &orchestratorRequest)
 	if err != nil {
-		logger.Sugar().Infow("Error unmarshalling: %v", err)
+		logger.Sugar().Infof("Error unmarshalling: %v", err)
 		http.Error(w, "Error parsing request", http.StatusBadRequest)
 		return
 	}
@@ -90,7 +90,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	case "architecture":
 
 	default:
-		logger.Sugar().Infow("Unknown message type: %s", orchestratorRequest.Type)
+		logger.Sugar().Infof("Unknown message type: %s", orchestratorRequest.Type)
 		http.Error(w, "Unknown request", http.StatusNotFound)
 		return
 	}
@@ -195,7 +195,7 @@ func getAllowedProviders(name string, requestedOrganizations []string, reqConfig
 // func handler(w http.ResponseWriter, req *http.Request) {
 // 	body, err := ioutil.ReadAll(req.Body)
 // 	if err != nil {
-// 		logger.Sugar().Infow("handler: Error reading body: %v", err)
+// 		logger.Sugar().Infof("handler: Error reading body: %v", err)
 // 		http.Error(w, "handler: Error reading request body", http.StatusBadRequest)
 // 		return
 // 	}
@@ -224,16 +224,16 @@ func getAllowedProviders(name string, requestedOrganizations []string, reqConfig
 // 		Body:          body,
 // 		// Headers:       amqp.Table{"context": json.Marshal()},
 // 	}
-// 	logger.Sugar().Infow("handler: 3, %s", routingKey)
+// 	logger.Sugar().Infof("handler: 3, %s", routingKey)
 
 // 	if err := lib.Publish(outputChannel, routingKey, convertedAmqMessage, ""); err != nil {
-// 		logger.Sugar().Infow("Handler 4: Error publishing: %s", err)
+// 		logger.Sugar().Infof("Handler 4: Error publishing: %s", err)
 // 	}
 
 // 	// Wait for the response from the response channel
 // 	select {
 // 	case msg := <-responseChan:
-// 		logger.Sugar().Infow("handler: 5, msg received: %s", msg.Body)
+// 		logger.Sugar().Infof("handler: 5, msg received: %s", msg.Body)
 // 		w.Write(msg.Body)
 // 	case <-ctx.Done():
 // 		logger.Info("handler: 6, context timed out")

@@ -9,10 +9,7 @@ import (
 	"runtime"
 )
 
-var serviceName = "orchestrator"
-var port = ":8081"
-var grpcAddr = "localhost:3005"
-var apiVersion = "/api/v1"
+var serviceName = "test"
 
 var requestTypeConfigLocation = addEtcdDir("requestType.json")
 var archetypeConfigLocation = addEtcdDir("archetype.json")
@@ -20,8 +17,8 @@ var microserviceMetadataConfigLocation = addEtcdDir("microservices.json")
 var agreementsConfigLocation = addEtcdDir("agreements.json")
 var agentConfigLocation = addEtcdDir("agents_temp.json")
 
+var logFileLocation = fmt.Sprintf("/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/cmd/test/%s.log", serviceName)
 var etcdEndpoints = "http://localhost:30005"
-var policyEnforcerEndpoint = "http://localhost:8082"
 
 func addEtcdDir(val string) string {
 	_, filename, _, ok := runtime.Caller(0)

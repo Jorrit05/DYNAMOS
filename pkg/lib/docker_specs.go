@@ -195,7 +195,7 @@ func CreateDockerService(cli *client.Client, spec swarm.ServiceSpec) types.Servi
 	}
 
 	// Print the service ID
-	logger.Sugar().Infow("ID: %s", response.ID)
+	logger.Sugar().Infof("ID: %s", response.ID)
 
 	return response
 }
@@ -223,7 +223,7 @@ func UpdateServiceReplicas(cli *client.Client, serviceID string, replicas uint64
 		return err
 	}
 
-	logger.Sugar().Infow("responseWarnings: %s", strings.Join(response.Warnings, ","))
+	logger.Sugar().Infof("responseWarnings: %s", strings.Join(response.Warnings, ","))
 
 	return nil
 }

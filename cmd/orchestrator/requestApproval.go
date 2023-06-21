@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 )
@@ -20,35 +23,62 @@ func requestApprovalHandler() http.HandlerFunc {
 			return
 		}
 
-		// Get the 'type' field of the message
-		var msgType messageType
-		err = json.Unmarshal(body, &msgType)
+		var reqApproval lib.RequestApproval
+		err = json.Unmarshal(body, &reqApproval)
 		if err != nil {
-			logger.Sugar().Infow("%s: Error unmarshalling body: %v", serviceName, err)
-			http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
+			logger.Sugar().Errorf("Error unmarshalling reqApproval: %v", err)
 			return
 		}
-		switch msgType.Type {
-		case "requestApproval":
 
-			// Convert to struct
-			var requestApproval lib.RequestApproval
-			err = json.Unmarshal(body, &requestApproval)
-			if err != nil {
-				logger.Sugar().Infow("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
-				http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
-				return
-			}
-
-			handleRequestApproval(w, &requestApproval)
-			return
-
-		default:
-			// Respond with a 405 'Method Not Allowed' HTTP response if the method isn't supported
-			http.Error(w, "Invalid msg", http.StatusNotFound)
-			return
+		// Convert the JSON request to a protobuf message
+		protoRequest := &pb.RequestApproval{
+			Type: reqApproval.Type,
+			User: &pb.User{
+				ID:       reqApproval.User.ID,
+				UserName: reqApproval.User.UserName,
+			},
+			DataProviders: reqApproval.DataProviders,
+			SyncServices:  reqApproval.SyncServices,
 		}
+
+		logger.Info("Sending request approval")
+		c.SendRequestApproval(context.Background(), protoRequest)
+
+		// On succesful requestApproval
+		//   - Reply with AcceptedDataRequest
+		//   - Start a composition request
+		w.WriteHeader(http.StatusOK)
+
+		// // Get the 'type' field of the message
+		// var msgType messageType
+		// err = json.Unmarshal(body, &msgType)
+		// if err != nil {
+		// 	logger.Sugar().Infof("%s: Error unmarshalling body: %v", serviceName, err)
+		// 	http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
+		// 	return
+		// }
+		// switch msgType.Type {
+		// case "requestApproval":
+
+		// 	// Convert to struct
+		// 	var requestApproval lib.RequestApproval
+		// 	err = json.Unmarshal(body, &requestApproval)
+		// 	if err != nil {
+		// 		logger.Sugar().Infof("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
+		// 		http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
+		// 		return
+		// 	}
+
+		// 	handleRequestApproval(w, &requestApproval)
+		// 	return
+
+		// default:
+		// 	// Respond with a 405 'Method Not Allowed' HTTP response if the method isn't supported
+		// 	http.Error(w, "Invalid msg", http.StatusNotFound)
+		// 	return
+		// }
 	}
+
 }
 
 func handleRequestApproval(w http.ResponseWriter, requestApproval *lib.RequestApproval) {

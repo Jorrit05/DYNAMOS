@@ -10,7 +10,7 @@ func GetRequestBody(w http.ResponseWriter, r *http.Request, serviceName string) 
 	r.Body.Close()
 
 	if err != nil {
-		logger.Sugar().Infow("%s: Error reading body: %v", serviceName, err)
+		logger.Sugar().Infof("%s: Error reading body: %v", serviceName, err)
 		http.Error(w, "Error reading request body", http.StatusBadRequest)
 		return nil, err
 	}

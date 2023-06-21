@@ -1,21 +1,12 @@
-# debug-pod.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: debug
-  namespace: {{ .Values.Namespace }}
-spec:
-  containers:
-  - name: debug
-    image: ubuntu
-    command: ['sleep', '3600']
-    stdin: true
-    tty: true
-
-    volumeMounts:
-    - name: service-logs
-      mountPath: /var/log/service_logs
-  volumes:
-  - name: service-logs
-    persistentVolumeClaim:
-      claimName: logging-pvc
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: debug
+#   namespace: {{ .Values.Namespace }}
+# spec:
+#   containers:
+#   - name: debug
+#     image: nicolaka/netshoot
+#     command: ['sleep', '3600']
+#     stdin: true
+#     tty: true

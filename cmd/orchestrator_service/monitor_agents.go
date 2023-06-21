@@ -18,9 +18,9 @@ func watchEtcdDirectory(client *clientv3.Client, etcdHandler, pathName string) {
 		for _, event := range watchResp.Events {
 			// Check if the event is a new entry
 			if event.Type == clientv3.EventTypePut {
-				logger.Sugar().Infow("Entry added or updated: %s = %s\n", event.Kv.Key, event.Kv.Value)
+				logger.Sugar().Infof("Entry added or updated: %s = %s\n", event.Kv.Key, event.Kv.Value)
 			} else if event.Type == clientv3.EventTypeDelete {
-				logger.Sugar().Infow("Entry deleted: %s\n", event.Kv.Key)
+				logger.Sugar().Infof("Entry deleted: %s\n", event.Kv.Key)
 			}
 		}
 	}

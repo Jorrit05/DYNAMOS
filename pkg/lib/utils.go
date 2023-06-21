@@ -52,14 +52,14 @@ func GetDefaultRoutingKey(serviceName string) string {
 	} else {
 		routingKey = "service." + strings.Split(routingKey, "_")[0]
 	}
-	logger.Sugar().Infow("GetDefaultRoutingKey: %s", routingKey)
+	logger.Sugar().Infof("GetDefaultRoutingKey: %s", routingKey)
 	return routingKey
 }
 
 // func ConvertRequest(req *http.Request) {
 // 	body, err := ioutil.ReadAll(req.Body)
 // 	if err != nil {
-// 		logger.Sugar().Infow("Error reading body: %v", err)
+// 		logger.Sugar().Infof("Error reading body: %v", err)
 // 		http.Error(w, "Error reading request body", http.StatusBadRequest)
 // 		return
 // 	}

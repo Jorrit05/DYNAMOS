@@ -40,7 +40,7 @@ func main() {
 // 	fmt.Println("This is an info message using fmt.Println")
 // 	logger.Info("This is an info message using log.Println")
 
-// 	logger.Sugar().Infow("This is a formatted info message using log.Printf: %d", 42)
+// 	logger.Sugar().Infof("This is a formatted info message using log.Printf: %d", 42)
 
 // 	// fmt.
 // 	go printsth()

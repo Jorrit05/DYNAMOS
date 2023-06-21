@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	log, logFile                  = lib.InitLogger(serviceName, logFileLocation)
-	etcdClient   *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
+	logger                      = lib.InitLogger()
+	etcdClient *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
 )
 
 func main() {

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v4.23.3
-// source: rabbitMQ.proto
+// source: pkg/proto/rabbitMQ.proto
 
 package proto
 
@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -22,8 +23,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SideCarClient interface {
-	// Sends a greeting
-	StartService(ctx context.Context, in *ServiceRequest, opts ...grpc.CallOption) (*ServiceReply, error)
+	StartService(ctx context.Context, in *ServiceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Consume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ConsumeClient, error)
+	SendRequestApproval(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sideCarClient struct {
@@ -34,9 +36,50 @@ func NewSideCarClient(cc grpc.ClientConnInterface) SideCarClient {
 	return &sideCarClient{cc}
 }
 
-func (c *sideCarClient) StartService(ctx context.Context, in *ServiceRequest, opts ...grpc.CallOption) (*ServiceReply, error) {
-	out := new(ServiceReply)
+func (c *sideCarClient) StartService(ctx context.Context, in *ServiceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.SideCar/StartService", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sideCarClient) Consume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ConsumeClient, error) {
+	stream, err := c.cc.NewStream(ctx, &SideCar_ServiceDesc.Streams[0], "/proto.SideCar/Consume", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &sideCarConsumeClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type SideCar_ConsumeClient interface {
+	Recv() (*RabbitMQMessage, error)
+	grpc.ClientStream
+}
+
+type sideCarConsumeClient struct {
+	grpc.ClientStream
+}
+
+func (x *sideCarConsumeClient) Recv() (*RabbitMQMessage, error) {
+	m := new(RabbitMQMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *sideCarClient) SendRequestApproval(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendRequestApproval", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +90,9 @@ func (c *sideCarClient) StartService(ctx context.Context, in *ServiceRequest, op
 // All implementations must embed UnimplementedSideCarServer
 // for forward compatibility
 type SideCarServer interface {
-	// Sends a greeting
-	StartService(context.Context, *ServiceRequest) (*ServiceReply, error)
+	StartService(context.Context, *ServiceRequest) (*emptypb.Empty, error)
+	Consume(*ConsumeRequest, SideCar_ConsumeServer) error
+	SendRequestApproval(context.Context, *RequestApproval) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSideCarServer()
 }
 
@@ -56,8 +100,14 @@ type SideCarServer interface {
 type UnimplementedSideCarServer struct {
 }
 
-func (UnimplementedSideCarServer) StartService(context.Context, *ServiceRequest) (*ServiceReply, error) {
+func (UnimplementedSideCarServer) StartService(context.Context, *ServiceRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartService not implemented")
+}
+func (UnimplementedSideCarServer) Consume(*ConsumeRequest, SideCar_ConsumeServer) error {
+	return status.Errorf(codes.Unimplemented, "method Consume not implemented")
+}
+func (UnimplementedSideCarServer) SendRequestApproval(context.Context, *RequestApproval) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendRequestApproval not implemented")
 }
 func (UnimplementedSideCarServer) mustEmbedUnimplementedSideCarServer() {}
 
@@ -90,6 +140,45 @@ func _SideCar_StartService_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SideCar_Consume_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ConsumeRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SideCarServer).Consume(m, &sideCarConsumeServer{stream})
+}
+
+type SideCar_ConsumeServer interface {
+	Send(*RabbitMQMessage) error
+	grpc.ServerStream
+}
+
+type sideCarConsumeServer struct {
+	grpc.ServerStream
+}
+
+func (x *sideCarConsumeServer) Send(m *RabbitMQMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _SideCar_SendRequestApproval_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestApproval)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).SendRequestApproval(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/SendRequestApproval",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).SendRequestApproval(ctx, req.(*RequestApproval))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SideCar_ServiceDesc is the grpc.ServiceDesc for SideCar service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -101,7 +190,17 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "StartService",
 			Handler:    _SideCar_StartService_Handler,
 		},
+		{
+			MethodName: "SendRequestApproval",
+			Handler:    _SideCar_SendRequestApproval_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "rabbitMQ.proto",
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Consume",
+			Handler:       _SideCar_Consume_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "pkg/proto/rabbitMQ.proto",
 }

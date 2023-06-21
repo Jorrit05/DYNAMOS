@@ -276,7 +276,7 @@ func SaveStructToEtcd[T any](etcdClient *clientv3.Client, key string, target T) 
 	// Marshal the target struct into a JSON representation
 	jsonRep, err := json.Marshal(target)
 	if err != nil {
-		logger.Sugar().Errorw("failed to marshal struct: %v", err)
+		logger.Sugar().Fatalw("failed to marshal struct: %v", err)
 		return err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -285,7 +285,7 @@ func SaveStructToEtcd[T any](etcdClient *clientv3.Client, key string, target T) 
 	_, err = etcdClient.Put(ctx, key, string(jsonRep))
 
 	if err != nil {
-		logger.Sugar().Errorw("failed to save struct to etcd: %v", err)
+		logger.Sugar().Fatalw("failed to save struct to etcd: %v", err)
 		return err
 	}
 

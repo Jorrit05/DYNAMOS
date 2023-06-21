@@ -36,7 +36,7 @@ kubectl get events
 kubectl exec -it <pod_name> -- /bin/bash
 
 kubectl create secret generic rabbit --from-literal=password=$(openssl rand -base64 12) -n core
-kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n unl1
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n core
 kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand -base64 12) --from-literal=db_dba_password=$(openssl rand -base64 12) -n core
 
 kubectl get secret "rabbit" -o json | jq -r ".[\"data\"][\"password\"]" | base64 -d
@@ -53,6 +53,7 @@ kubectl label namespace default istio-injection=enabled
 kubectl label namespace uva istio-injection=enabled
 kubectl label namespace vu istio-injection=enabled
 kubectl label namespace core istio-injection=enabled
+kubectl label namespace orchestrator istio-injection=enabled
 
 istioctl install --set profile=default -y
 
@@ -85,4 +86,4 @@ docker container ls --filter "name=etcd_cluster" --format "{{.ID}}" | xargs -n1 
 
 
 # proto
-protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. \--go-grpc_opt=paths=source_relative rabbitMQ.proto
+protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative rabbitMQ.proto

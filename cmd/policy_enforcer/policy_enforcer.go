@@ -4,29 +4,39 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
+
+	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
 var (
-	log, logFile                  = lib.InitLogger(logFileLocation, serviceName)
-	etcdClient   *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
+	logger                      = lib.InitLogger()
+	etcdClient *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
+	c          pb.SideCarClient
+	conn       *grpc.ClientConn
 )
 
 func main() {
 
-	defer logger.Sync() // flushes buffer, if any
-	defer etcdClient.Close()
-
-	// Connect to AMQ queue, declare own routingKey as queue, start listening for messages
-	_, conn, channel, err := lib.SetupConnection(serviceName, routingKey, false)
-	if err != nil {
-		logger.Sugar().Fatalw("Failed to setup proper connection to RabbitMQ: %v", err)
-	}
+	c, conn = lib.InitializeRabbit(grpcAddr, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 	defer conn.Close()
 
-	select {}
+	// Define a WaitGroup
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		startConsumingWithRetry(c, fmt.Sprintf("%s-in", serviceName), 5, 5*time.Second)
+
+		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
+	}()
+
+	wg.Wait()
 
 }
 
@@ -40,14 +50,14 @@ func agreementsHandler(etcdRoot string) http.HandlerFunc {
 		var requestApproval lib.RequestApproval
 		err = json.Unmarshal(body, &requestApproval)
 		if err != nil {
-			logger.Sugar().Infow("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
+			logger.Sugar().Infof("%s: Error unmarshalling body into RequestApproval: %v", serviceName, err)
 			http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
 			return
 		}
 
 		err = checkRequestApproval(&requestApproval)
 		if err != nil {
-			logger.Sugar().Infow("%s: checkRequestApproval: %v", serviceName, err)
+			logger.Sugar().Infof("%s: checkRequestApproval: %v", serviceName, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -70,7 +80,7 @@ func checkDataStewards(requestApproval *lib.RequestApproval) {
 	for _, steward := range requestApproval.DataProviders {
 		output, err := lib.GetValueFromEtcd(etcdClient, "/policyEnforcer/agreements/"+steward)
 		if err != nil {
-			fmt.Println("do somthing")
+			fmt.Println("do something")
 		}
 
 		if output == "" {

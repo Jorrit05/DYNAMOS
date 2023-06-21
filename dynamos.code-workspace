@@ -25,16 +25,16 @@
 			"path": "cmd/test"
 		},
 		{
-			"path": "cmd/policyEnforcer"
-		},
-		{
 			"path": "pkg/proto"
 		},
 		{
 			"path": "cmd/rabbitmq-sidecar"
 		},
 		{
-			"path": "cmd/test_service"
+			"path": "cmd/anonymize_service"
+		},
+		{
+			"path": "cmd/policy_enforcer"
 		}
 	],
 	"settings": {}

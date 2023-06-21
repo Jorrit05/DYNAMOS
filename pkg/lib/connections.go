@@ -28,7 +28,7 @@ func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
 			break // no error, break out of loop
 		}
 
-		logger.Sugar().Infow("Failed to connect to RabbitMQ: %v", err)
+		logger.Sugar().Infof("Failed to connect to RabbitMQ: %v", err)
 		time.Sleep(10 * time.Second) // wait for 10 seconds before retrying
 	}
 
@@ -45,7 +45,7 @@ func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
 // The service name in format '<name>_service' is used to declare the queue.
 //
 // The routingKey service.<name> is used when binding the queue to the exchange, the exchange will publish messages to all queues that match the routingkey pattern
-func SetupConnection(serviceName string, routingKey string, startConsuming bool, queueAutoDelete bool) (<-chan amqp.Delivery, *amqp.Connection, *amqp.Channel, error) {
+func SetupConnection(queueName string, routingKey string, queueAutoDelete bool) (<-chan amqp.Delivery, *amqp.Connection, *amqp.Channel, error) {
 
 	conn, channel, _ := getConnectionToRabbitMq()
 
@@ -55,7 +55,7 @@ func SetupConnection(serviceName string, routingKey string, startConsuming bool,
 		return nil, nil, nil, err
 	}
 
-	queue, err := DeclareQueue(serviceName, channel, queueAutoDelete)
+	queue, err := DeclareQueue(queueName, channel, queueAutoDelete)
 	if err != nil {
 		logger.Sugar().Fatalw("Failed to declare queue: %v", err)
 		return nil, nil, nil, err
@@ -74,18 +74,18 @@ func SetupConnection(serviceName string, routingKey string, startConsuming bool,
 		return nil, nil, nil, err
 	}
 
-	// Start listening to queue defined by environment var INPUT_QUEUE
-	if startConsuming {
-		messages, err := Consume(os.Getenv("INPUT_QUEUE"), channel)
-		if err != nil {
-			logger.Sugar().Fatalw("Failed to register consumer: %v", err)
-			return nil, nil, nil, err
-		} else {
-			logger.Sugar().Infow("%s listening to (consumer of): %s", serviceName, os.Getenv("INPUT_QUEUE"))
-		}
+	// // Start listening to queue defined by environment var INPUT_QUEUE
+	// if startConsuming != "" {
+	// 	messages, err := Consume(os.Getenv("INPUT_QUEUE"), channel)
+	// 	if err != nil {
+	// 		logger.Sugar().Fatalw("Failed to register consumer: %v", err)
+	// 		return nil, nil, nil, err
+	// 	} else {
+	// 		logger.Sugar().Infof("%s listening to (consumer of): %s", queueName, os.Getenv("INPUT_QUEUE"))
+	// 	}
 
-		return messages, conn, channel, nil
-	}
+	// 	return messages, conn, channel, nil
+	// }
 
 	return nil, conn, channel, nil
 }
@@ -101,7 +101,7 @@ func StartNewConsumer() (<-chan amqp.Delivery, *amqp.Connection) {
 			break // no error, break out of loop
 		}
 
-		logger.Sugar().Infow("Failed to register consumer %s, retrying... %v", consumer, err)
+		logger.Sugar().Infof("Failed to register consumer %s, retrying... %v", consumer, err)
 		time.Sleep(10 * time.Second) // wait for 10 seconds before retrying
 	}
 
@@ -109,7 +109,7 @@ func StartNewConsumer() (<-chan amqp.Delivery, *amqp.Connection) {
 		logger.Sugar().Fatalw("Failed to setup proper connection to RabbitMQ after 7 attempts: %v", err)
 	}
 
-	logger.Sugar().Infow("Registered consumer: %s", os.Getenv("INPUT_QUEUE"))
+	logger.Sugar().Infof("Registered consumer: %s", os.Getenv("INPUT_QUEUE"))
 	return messages, conn
 }
 
@@ -118,10 +118,10 @@ func StartMessageLoop(fn serviceFunc, messages <-chan amqp.Delivery, channel *am
 		exchangeName = "topic_exchange"
 	}
 
-	logger.Sugar().Infow("before messageloop of %s", routingKey)
+	logger.Sugar().Infof("before messageloop of %s", routingKey)
 	// Message loop stays alive
 	for msg := range messages {
-		logger.Sugar().Infow("StartMessageLoop: Received message: %v", string(msg.Body))
+		logger.Sugar().Infof("StartMessageLoop: Received message: %v", string(msg.Body))
 
 		newMsg, err := fn(msg)
 
@@ -136,7 +136,7 @@ func StartMessageLoop(fn serviceFunc, messages <-chan amqp.Delivery, channel *am
 		} else {
 			err := channel.PublishWithContext(context.Background(), exchangeName, routingKey, false, false, newMsg)
 			if err != nil {
-				logger.Sugar().Infow("StartMessageLoop: Error publishing message: %v", err)
+				logger.Sugar().Infof("StartMessageLoop: Error publishing message: %v", err)
 			}
 		}
 	}
@@ -213,11 +213,11 @@ func Publish(chann *amqp.Channel, routingKey string, message amqp.Publishing, ex
 	if exchangeName == "" {
 		exchangeName = "topic_exchange"
 	}
-	logger.Sugar().Infow("Publish: exchangeName: %s, routingKey: %s", exchangeName, routingKey)
+	logger.Sugar().Infof("Publish: exchangeName: %s, routingKey: %s", exchangeName, routingKey)
 
 	err := chann.PublishWithContext(context.Background(), exchangeName, routingKey, false, false, message)
 	if err != nil {
-		logger.Sugar().Infow("Publish: 2 %s", err)
+		logger.Sugar().Infof("Publish: 2 %s", err)
 		return err
 	}
 	logger.Info("Publish: 3")
