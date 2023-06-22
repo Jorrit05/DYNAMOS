@@ -1,10 +1,11 @@
-package lib
+package etcd
 
 import (
 	"context"
 	"errors"
 	"testing"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/stretchr/testify/assert"
 	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -119,7 +120,7 @@ func (m *mockKVGetter) Get(ctx context.Context, key string, opts ...clientv3.OpO
 	return m.response, m.err
 }
 func TestGetPrefixListEtcd(t *testing.T) {
-	logger = InitLogger()
+	logger = lib.InitLogger()
 	// Prepare a mock response:
 	kvs := []*mvccpb.KeyValue{
 		{
@@ -141,12 +142,12 @@ func TestGetPrefixListEtcd(t *testing.T) {
 	}
 
 	// Call the function with the mock client:
-	var target MyType
+	var target TestType
 	result, err := GetPrefixListEtcd(mockClient, "/my/prefix", &target)
 
 	// Assert that no error occurred and the result is as expected:
 	assert.NoError(t, err)
-	expectedResult := []MyType{
+	expectedResult := []TestType{
 		{ID: "1", Name: "one"},
 		{ID: "2", Name: "two"},
 	}

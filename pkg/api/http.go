@@ -1,4 +1,4 @@
-package lib
+package api
 
 import (
 	"bytes"
@@ -6,12 +6,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
+	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	clientv3 "go.etcd.io/etcd/client/v3"
+)
+
+var (
+	logger *zap.Logger
 )
 
 type User struct {
@@ -60,21 +66,6 @@ type MicroserviceMetadata struct {
 	AllowedOutputs []string `json:"allowedOutputs"`
 }
 
-type Auth struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-}
-
-type ValidationResponse struct {
-	Type                    string   `json:"type"`
-	RequestType             string   `json:"requestType"`
-	ValidDataProviders      []string `json:"validDataProviders"`
-	InvalidDataProviders    []string `json:"invalidDataProviders"`
-	Auth                    Auth     `json:"auth"`
-	AllowedArcheTypes       []string `json:"allowedArcheTypes"`
-	AllowedComputeProviders []string `json:"allowedComputeProviders"`
-}
-
 type Named interface {
 	GetName() string
 }
@@ -107,7 +98,7 @@ func GenericGetHandler[T any](w http.ResponseWriter, req *http.Request, etcdClie
 		fallthrough
 	case "/":
 		logger.Info("Start GetPrefixListEtcd")
-		targetList, err := GetPrefixListEtcd(etcdClient, etcdRoot, &target)
+		targetList, err := etcd.GetPrefixListEtcd(etcdClient, etcdRoot, &target)
 
 		if err != nil {
 			logger.Sugar().Infof("Error in requesting config: %s", err)
@@ -122,7 +113,7 @@ func GenericGetHandler[T any](w http.ResponseWriter, req *http.Request, etcdClie
 	default:
 		key := fmt.Sprintf("%s%s", etcdRoot, trimmedPath)
 		fmt.Println(key)
-		jsonData, err = GetAndUnmarshalJSON(etcdClient, key, &target)
+		jsonData, err = etcd.GetAndUnmarshalJSON(etcdClient, key, &target)
 
 		if err != nil {
 			logger.Sugar().Infof("Unknown path: %s", trimmedPath)
@@ -217,7 +208,7 @@ func PostRequest(url string, body string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logger.Sugar().Infof("Failed to read response body: %v", err)
 		return []byte(""), err

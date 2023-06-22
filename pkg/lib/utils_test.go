@@ -138,3 +138,88 @@ func TestSliceIntersectAndDifference(t *testing.T) {
 		}
 	}
 }
+
+func TestCreateMapFromSlice(t *testing.T) {
+	slice := []string{"unl1_agent", "unl2_agent", "unl3"}
+	expected := map[string]bool{"unl1_agent": true, "unl2_agent": true, "unl3": true}
+
+	result := createMapFromSlice(slice)
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetMatchedElements(t *testing.T) {
+	sliceA := []string{"unl1_agent", "unl2_agent", "unl3"}
+	sliceB := []string{"unl2_agent", "unl5"}
+	expected := []string{"unl2_agent"}
+
+	result, _ := GetMatchedElements(sliceA, sliceB)
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestGetNotMatchedElements(t *testing.T) {
+	mapA := map[string]bool{"unl1_agent": true, "unl3": true}
+	expected := []string{"unl1_agent", "unl3"}
+
+	result := GetNotMatchedElements(mapA)
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestSliceIntersectAndDifference2(t *testing.T) {
+	sliceA := []string{"unl1_agent", "unl2_agent", "unl3"}
+	sliceB := []string{"unl2_agent", "unl5"}
+	expectedMatched := []string{"unl2_agent"}
+	expectedNotMatched := []string{"unl1_agent", "unl3"}
+
+	matched, notMatched := SliceIntersectAndDifference(sliceA, sliceB)
+
+	if !reflect.DeepEqual(matched, expectedMatched) {
+		t.Errorf("Expected %v, got %v", expectedMatched, matched)
+	}
+
+	if !reflect.DeepEqual(notMatched, expectedNotMatched) {
+		t.Errorf("Expected %v, got %v", expectedNotMatched, notMatched)
+	}
+}
+
+func TestSliceIntersectAndDifferenceEmptySlice(t *testing.T) {
+	sliceA := []string{}
+	sliceB := []string{"unl2_agent", "unl5"}
+	expectedMatched := []string{}
+	expectedNotMatched := []string{}
+
+	matched, notMatched := SliceIntersectAndDifference(sliceA, sliceB)
+
+	if !reflect.DeepEqual(matched, expectedMatched) {
+		t.Errorf("Expected %v, got %v", expectedMatched, matched)
+	}
+
+	if !reflect.DeepEqual(notMatched, expectedNotMatched) {
+		t.Errorf("Expected %v, got %v", expectedNotMatched, notMatched)
+	}
+}
+
+func TestSliceIntersectAndDifferenceNoIntersection(t *testing.T) {
+	sliceA := []string{"unl1_agent", "unl3"}
+	sliceB := []string{"unl2_agent", "unl5"}
+	expectedMatched := []string{}
+	expectedNotMatched := []string{"unl1_agent", "unl3"}
+
+	matched, notMatched := SliceIntersectAndDifference(sliceA, sliceB)
+
+	if !reflect.DeepEqual(matched, expectedMatched) {
+		t.Errorf("Expected %v, got %v", expectedMatched, matched)
+	}
+
+	if !reflect.DeepEqual(notMatched, expectedNotMatched) {
+		t.Errorf("Expected %v, got %v", expectedNotMatched, notMatched)
+	}
+}

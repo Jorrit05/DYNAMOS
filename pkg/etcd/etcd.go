@@ -1,15 +1,13 @@
-package lib
+package etcd
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"gopkg.in/yaml.v2"
 )
 
 func GetEtcdClient(endpoints string) *clientv3.Client {
@@ -24,99 +22,63 @@ func GetEtcdClient(endpoints string) *clientv3.Client {
 	return cli
 }
 
-type leaseOptions struct {
-	leaseTime int64
-}
-
-type Option func(*leaseOptions)
-
-func LeaseTime(leaseTime int64) Option {
-	return func(options *leaseOptions) {
-		options.leaseTime = leaseTime
-	}
-}
-
-// Create object in Etcd with a default 5 second lease
-func CreateEtcdLeaseObject(etcdClient *clientv3.Client, key string, value string, opts ...Option) {
-	// Default options
-	options := &leaseOptions{
-		leaseTime: 5,
-	}
-
-	// Apply custom options
-	for _, opt := range opts {
-		opt(options)
-	}
-
-	// Create a lease with a 5-second TTL
-	lease, err := etcdClient.Grant(context.Background(), options.leaseTime)
+func PutEtcdWithLease(etcdClient *clientv3.Client, key string, value string) error {
+	// Create context
+	ctx, cancel := context.WithCancel(context.Background())
+	lease, err := etcdClient.Lease.Grant(ctx, 5)
 	if err != nil {
-		logger.Sugar().Fatal(err)
+		cancel()
+		return err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	// Write agent information to etcd with the lease attached
+
 	_, err = etcdClient.Put(ctx, key, value, clientv3.WithLease(lease.ID))
 	if err != nil {
-		logger.Sugar().Fatalw("Failed creating a item with lease in etcd: %s", err)
+		cancel()
+		return err
 	}
 
-	// Keep the lease alive by refreshing it periodically
-	leaseKeepAlive, err := etcdClient.KeepAlive(context.Background(), lease.ID)
+	etcdLeaseMap[key] = leaseStruct{
+		cancel:  cancel,
+		leaseID: lease.ID,
+	}
+
+	go keepAlive(etcdClient, lease, ctx, key)
+
+	return nil
+}
+
+func keepAlive(etcdClient *clientv3.Client, lease *clientv3.LeaseGrantResponse, ctx context.Context, key string) error {
+	leaseKeepAlive, err := etcdClient.KeepAlive(ctx, lease.ID)
 	if err != nil {
 		logger.Sugar().Fatalw("Failed starting the keepalive for etcd: %s", err)
+		return err
 	}
 
-	// Periodically refresh the lease
 	for range leaseKeepAlive {
-		logger.Sugar().Debugw("Lease refreshed on key: %s", key)
+		logger.Sugar().Debugf("Lease refreshed on key: " + key)
 	}
+	return nil
 }
 
-func UnmarshalStackFile(fileLocation string) MicroServiceData {
+func UpdateEtcdKeywithLease(etcdClient *clientv3.Client, key string, value string) error {
 
-	yamlFile, err := os.ReadFile(fileLocation)
-	if err != nil {
-		logger.Sugar().Errorw("Failed to read the YAML file: %v", err)
-	}
-
-	service := MicroServiceData{}
-	err = yaml.Unmarshal(yamlFile, &service)
-	if err != nil {
-		logger.Sugar().Errorw("Failed to unmarshal the YAML file: %v", err)
-	}
-	return service
-}
-
-// Take a given docker stack yaml file, and save all pertinent info (struct MicroServiceData), like the
-// required env variable and volumes etc. Into etcd.
-func SetMicroservicesEtcd(etcdClient EtcdClient, fileLocation string, etcdPath string) (map[string]MicroService, error) {
-	if etcdPath == "" {
-		etcdPath = "/microservices"
-	}
-
-	var service MicroServiceData = UnmarshalStackFile(fileLocation)
-
-	processedServices := make(map[string]MicroService)
-
-	for serviceName, payload := range service.Services {
-
-		jsonPayload, err := json.Marshal(payload)
-		if err != nil {
-			logger.Sugar().Errorw("Failed to marshal the payload to JSON: %v", err)
-			return nil, err
-		}
+	if leaseStruct, ok := etcdLeaseMap[key]; ok {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_, err = etcdClient.Put(ctx, fmt.Sprintf("%s/%s", etcdPath, serviceName), string(jsonPayload))
+		_, err := etcdClient.Put(ctx, key, value, clientv3.WithLease(leaseStruct.leaseID))
 		if err != nil {
-			logger.Sugar().Errorw("Failed creating service config in etcd: %s", err)
-			return nil, err
+			logger.Sugar().Fatalw("Failed updating item in etcd: %s", err)
+			return err
 		}
-		processedServices[serviceName] = payload
-
+	} else {
+		logger.Sugar().Infof("Couldn't find existing lease item, creating new item with key, %s", key)
+		return PutEtcdWithLease(etcdClient, key, value)
 	}
-	return processedServices, nil
+	return nil
+}
+
+func CancelLeaseEtcdKey(key string) {
+	etcdLeaseMap[key].cancel()
 }
 
 func GetValueFromEtcd(etcdClient *clientv3.Client, key string) (string, error) {
@@ -315,13 +277,4 @@ func GetPrefixListEtcd[T any](client KVGetter, prefix string, target *T) ([]T, e
 	}
 
 	return targets, err
-}
-
-type KVGetter interface {
-	Get(ctx context.Context, key string, opts ...clientv3.OpOption) (*clientv3.GetResponse, error)
-}
-
-type MyType struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }

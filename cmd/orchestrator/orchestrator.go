@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"github.com/gorilla/handlers"
@@ -15,7 +16,7 @@ import (
 
 var (
 	logger                         = lib.InitLogger()
-	etcdClient    *clientv3.Client = lib.GetEtcdClient(etcdEndpoints)
+	etcdClient    *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
 	c             pb.SideCarClient
 	conn          *grpc.ClientConn
 	mutex         = &sync.Mutex{}
@@ -62,6 +63,8 @@ func main() {
 
 	apiMux.HandleFunc("/microservices", microserviceMetadataHandler(etcdClient, "/microservices"))
 	apiMux.HandleFunc("/microservices/", microserviceMetadataHandler(etcdClient, "/microservices"))
+
+	apiMux.HandleFunc("/updateEtc", updateEtc)
 
 	apiMux.HandleFunc("/policyEnforcer", agreementsHandler(etcdClient, "/policyEnforcer"))
 	apiMux.HandleFunc("/policyEnforcer/", agreementsHandler(etcdClient, "/policyEnforcer"))

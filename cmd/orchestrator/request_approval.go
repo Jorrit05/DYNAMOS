@@ -7,20 +7,19 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-
-	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 )
 
 func requestApprovalHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := lib.GetRequestBody(w, r, serviceName)
+		body, err := api.GetRequestBody(w, r, serviceName)
 		if err != nil {
 			return
 		}
 
-		var reqApproval lib.RequestApproval
+		var reqApproval api.RequestApproval
 		err = json.Unmarshal(body, &reqApproval)
 		if err != nil {
 			logger.Sugar().Errorf("Error unmarshalling reqApproval: %v", err)
@@ -48,23 +47,28 @@ func requestApprovalHandler() http.HandlerFunc {
 		mutex.Lock()
 		validationMap[protoRequest.User.ID] = &validation{response: responseChan}
 		mutex.Unlock()
-		// On succesful requestApproval
-		//   - Reply with AcceptedDataRequest
-		//   - Start a composition request
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
+
 		select {
 		case msg := <-responseChan:
 			logger.Sugar().Infof("Received response, %s", msg.Type)
-
-			jsonData, err := json.Marshal(msg)
-			if err != nil {
-				logger.Sugar().Errorf("Error marshalling JSON, %s", err)
+			if msg.Type != "validationResponse" {
+				logger.Sugar().Errorf("Unexpected message received, type: %s", msg.Type)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
 			}
 
+			// On succesful requestApproval
+			//   - Reply with AcceptedDataRequest
+			//   - Start a composition request
+
+			go startCompositionRequest(msg)
+			createAcceptedDataRequest()
 			w.WriteHeader(http.StatusOK)
-			w.Write(jsonData)
+			// w.Write(jsonData)
+
 			return
 
 		case <-ctx.Done():

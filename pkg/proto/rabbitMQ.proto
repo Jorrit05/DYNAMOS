@@ -38,14 +38,19 @@ message Auth {
   string refresh_token = 2;
 }
 
+message DataProvider {
+  repeated string archeTypes = 1;
+  repeated string computeProviders = 2;
+}
+
 message ValidationResponse {
   string type = 1;
-  repeated string valid_data_providers = 2;
-  repeated string invalid_data_providers = 3;
-  Auth auth = 4;
-  repeated string allowed_arche_types = 5;
-  repeated string allowed_compute_providers = 6;
-  User User = 7;
+  string requestType = 2;
+  map<string, DataProvider> validDataProviders = 3;
+  repeated string invalidDataProviders = 4;
+  Auth auth = 5;
+  User user = 6;
+  bool request_approved = 7;
 }
 
 message User {

@@ -1,16 +1,34 @@
 {
 	"folders": [
 		{
-			"path": "cmd/orchestrator_service"
-		},
-		{
 			"path": "cmd/orchestrator"
 		},
 		{
 			"path": "cmd/archetype_playground"
 		},
 		{
+			"path": "cmd/rabbitmq-sidecar"
+		},
+		{
+			"path": "cmd/policy_enforcer"
+		},
+		{
+			"path": "cmd/agent_service"
+		},
+		{
+			"path": "cmd/agent"
+		},
+		{
 			"path": "pkg/lib"
+		},
+		{
+			"path": "pkg/etcd"
+		},
+		{
+			"path": "pkg/api"
+		},
+		{
+			"path": "pkg/proto"
 		},
 		{
 			"path": "docs"
@@ -23,18 +41,6 @@
 		},
 		{
 			"path": "cmd/test"
-		},
-		{
-			"path": "pkg/proto"
-		},
-		{
-			"path": "cmd/rabbitmq-sidecar"
-		},
-		{
-			"path": "cmd/anonymize_service"
-		},
-		{
-			"path": "cmd/policy_enforcer"
 		}
 	],
 	"settings": {}

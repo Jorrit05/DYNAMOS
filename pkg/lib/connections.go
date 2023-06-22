@@ -74,19 +74,6 @@ func SetupConnection(queueName string, routingKey string, queueAutoDelete bool) 
 		return nil, nil, nil, err
 	}
 
-	// // Start listening to queue defined by environment var INPUT_QUEUE
-	// if startConsuming != "" {
-	// 	messages, err := Consume(os.Getenv("INPUT_QUEUE"), channel)
-	// 	if err != nil {
-	// 		logger.Sugar().Fatalw("Failed to register consumer: %v", err)
-	// 		return nil, nil, nil, err
-	// 	} else {
-	// 		logger.Sugar().Infof("%s listening to (consumer of): %s", queueName, os.Getenv("INPUT_QUEUE"))
-	// 	}
-
-	// 	return messages, conn, channel, nil
-	// }
-
 	return nil, conn, channel, nil
 }
 

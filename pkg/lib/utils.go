@@ -96,22 +96,37 @@ func SplitImageAndTag(fullImageName string) (string, string) {
 	return splitted[0], splitted[1]
 }
 
-// SliceIntersectAndDifference takes two slices of strings and returns two slices:
-// one containing the matched elements (set intersection), and the other containing
-// the elements that did not match (set difference). This function treats the input slices
-// as sets and removes duplicate elements from the output slices.
-//
-// Example 1:
-// sliceA := []string{"unl1_agent", "unl2_agent", "unl3"}
-// sliceB := []string{"unl2_agent", "unl5"}
-// matched, notMatched := SliceIntersectAndDifference(sliceA, sliceB)
-// Output: matched = [unl2_agent], notMatched = [unl1_agent unl3]
-func SliceIntersectAndDifference(sliceA, sliceB []string) (matched []string, notMatched []string) {
-	mapA := make(map[string]bool)
+// createMapFromSlice takes a slice of strings and returns a map
+// where the keys are the elements of the slice and the values are set to true.
+// This effectively creates a set representation of the slice,
+// which will be used for efficient lookups.
+func createMapFromSlice(slice []string) map[string]bool {
+	m := make(map[string]bool)
 
-	for _, a := range sliceA {
-		mapA[a] = true
+	for _, element := range slice {
+		m[element] = true
 	}
+
+	return m
+}
+
+// getNotMatchedElements takes a map and a slice of strings and returns a slice containing the elements that did not match (set difference).
+// It iterates over the map keys and appends them into the notMatched slice.
+func GetNotMatchedElements(mapA map[string]bool) []string {
+	notMatched := []string{}
+
+	for key := range mapA {
+		notMatched = append(notMatched, key)
+	}
+
+	return notMatched
+}
+
+// getMatchedElements takes two slices of strings and returns a slice containing the matched elements (set intersection)
+// and a map that contains the elements of sliceA that are not matched. It uses a map for efficient lookup of matching elements.
+func GetMatchedElements(sliceA, sliceB []string) ([]string, map[string]bool) {
+	mapA := createMapFromSlice(sliceA)
+	matched := []string{}
 
 	for _, b := range sliceB {
 		if mapA[b] {
@@ -120,9 +135,22 @@ func SliceIntersectAndDifference(sliceA, sliceB []string) (matched []string, not
 		}
 	}
 
-	for key := range mapA {
-		notMatched = append(notMatched, key)
-	}
+	return matched, mapA
+}
+
+// // SliceIntersectAndDifference takes two slices of strings and returns two slices:
+// // one containing the matched elements (set intersection), and the other containing
+// // the elements that did not match (set difference). This function treats the input slices
+// // as sets and removes duplicate elements from the output slices.
+// //
+// // Example 1:
+// // sliceA := []string{"unl1_agent", "unl2_agent", "unl3"}
+// // sliceB := []string{"unl2_agent", "unl5"}
+// // matched, notMatched := SliceIntersectAndDifference(sliceA, sliceB)
+// // Output: matched = [unl2_agent], notMatched = [unl1_agent unl3]
+func SliceIntersectAndDifference(sliceA, sliceB []string) (matched []string, notMatched []string) {
+	matched, mapA := GetMatchedElements(sliceA, sliceB)
+	notMatched = GetNotMatchedElements(mapA)
 
 	return matched, notMatched
 }
@@ -136,4 +164,13 @@ func UnmarshalJsonFile[T any](fileLocation string, target *T) {
 	if err := json.Unmarshal(jsonRep, &target); err != nil {
 		logger.Sugar().Fatalw("Failed to unmarshall the config: %v", err)
 	}
+}
+
+// Returns a slice containing keys of the input map
+func mapKeysToSlice(inputMap map[string]struct{}) []string {
+	var outputSlice []string
+	for key := range inputMap {
+		outputSlice = append(outputSlice, key)
+	}
+	return outputSlice
 }
