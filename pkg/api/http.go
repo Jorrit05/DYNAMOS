@@ -10,15 +10,29 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 var (
-	logger *zap.Logger
+	logger = lib.InitLogger(logLevel)
 )
+
+type Auth struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+type SqlDataRequest struct {
+	Type                string            `json:"type"`
+	Query               string            `json:"query"`
+	Algorithm           string            `json:"algorithm"`
+	User                map[string]string `json:"user"`
+	Auth                Auth              `json:"auth"`
+	Providers           []string          `json:"providers"`
+	AuthorizedProviders map[string]string `json:"authorizedProviders"`
+}
 
 type User struct {
 	ID       string `json:"ID"`

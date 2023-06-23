@@ -17,3 +17,13 @@ func GetRequestBody(w http.ResponseWriter, r *http.Request, serviceName string) 
 
 	return body, nil
 }
+
+func LogMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Log the request
+		logger.Sugar().Infow("Received request", "method", r.Method, "path", r.URL.Path)
+
+		// Call the next handler
+		next.ServeHTTP(w, r)
+	})
+}

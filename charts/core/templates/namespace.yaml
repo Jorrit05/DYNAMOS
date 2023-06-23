@@ -24,3 +24,12 @@ metadata:
   annotations:
     "helm.sh/resource-policy": keep
     "app.kubernetes.io/managed-by": "Helm"
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name:  orchestrator
+  annotations:
+    "helm.sh/resource-policy": keep

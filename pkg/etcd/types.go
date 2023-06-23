@@ -3,12 +3,12 @@ package etcd
 import (
 	"context"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"go.uber.org/zap"
 )
 
 var (
-	logger       *zap.Logger
+	logger       = lib.InitLogger(logLevel)
 	etcdLeaseMap = make(map[string]leaseStruct)
 )
 

@@ -1,0 +1,30 @@
+{
+    "type": "sqlDataRequest",
+    "validDataProviders": {
+        "UVA": {
+            "archeTypes": [
+                "computeToData"
+            ],
+            "computeProviders": [
+                "surf"
+            ]
+        },
+        "VU": {
+            "archeTypes": [
+                "computeToData"
+            ]
+        }
+    },
+    "invalidDataProviders": [
+        "RUG"
+    ],
+    "auth": {
+        "access_token": "1234",
+        "refresh_token": "1234"
+    },
+    "user": {
+        "ID": "1234",
+        "UserName": "jorrit.stutterheim@cloudnation.nl"
+    },
+    "request_approved": true
+}

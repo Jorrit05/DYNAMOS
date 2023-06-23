@@ -43,7 +43,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 		logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
 
 		switch grpcMsg.Type {
-		case "requestApproval":
+		case "compositionRequest":
 			fallthrough
 
 		default:

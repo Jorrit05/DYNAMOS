@@ -11,6 +11,7 @@ spec:
       protocol: TCP
       port: 5672
       targetPort: 5672
+      nodePort: 30020
     - name: management
       protocol: TCP
       port: 15672

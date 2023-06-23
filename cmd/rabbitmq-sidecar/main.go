@@ -17,13 +17,12 @@ import (
 )
 
 var (
-	port        = flag.Int("port", 3005, "The server port")
-	logger      = lib.InitLogger()
-	channel     *amqp.Channel
-	conn        *amqp.Connection
-	messages    <-chan amqp.Delivery
-	routingKey  string
-	serviceName string
+	port       = flag.Int("port", 3005, "The server port")
+	logger     = lib.InitLogger(logLevel)
+	channel    *amqp.Channel
+	conn       *amqp.Connection
+	messages   <-chan amqp.Delivery
+	routingKey string
 )
 
 type server struct {
@@ -35,7 +34,7 @@ func (s *server) StartService(ctx context.Context, in *pb.ServiceRequest) (*empt
 
 	var err error
 	// Call the SetupConnection function and handle the message consumption inside this function
-	_, conn, channel, err = lib.SetupConnection(in.ServiceName, in.RoutingKey, in.QueueAutoDelete)
+	_, conn, channel, err = setupConnection(in.ServiceName, in.RoutingKey, in.QueueAutoDelete)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

@@ -15,10 +15,13 @@ import (
 //   - Get a result channel or endpoint
 //   - Return an access token
 func checkRequestApproval(requestApproval *pb.RequestApproval) error {
+	logger.Debug("Starting checkRequestApproval")
+
 	var agreements []api.Agreement
 
 	protoRequest := &pb.ValidationResponse{
-		Type: requestApproval.Type,
+		Type:        "validationResponse",
+		RequestType: requestApproval.Type,
 		User: &pb.User{
 			ID:       requestApproval.User.ID,
 			UserName: requestApproval.User.UserName,

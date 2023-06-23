@@ -172,19 +172,19 @@ func GetAndUnmarshalJSON[T any](etcdClient *clientv3.Client, key string, target 
 	// Get the value from etcd.
 	resp, err := etcdClient.Get(ctx, key)
 	if err != nil {
-		logger.Sugar().Errorw("failed to get value from etcd: %v", err)
+		logger.Sugar().Errorf("failed to get value from etcd: %v", err)
 		return nil, err
 	}
 
 	if len(resp.Kvs) == 0 {
-		logger.Sugar().Errorw("no value found for key: %s", key)
+		logger.Sugar().Errorw("no value found for", "key", key)
 		return nil, err
 	}
 
 	// Unmarshal the JSON value into the target struct.
 	err = json.Unmarshal(resp.Kvs[0].Value, target)
 	if err != nil {
-		logger.Sugar().Errorw("failed to unmarshal JSON: %v", err)
+		logger.Sugar().Errorf("failed to unmarshal JSON: %v", err)
 		return nil, err
 	}
 

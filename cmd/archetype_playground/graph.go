@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 )
 
-func generateGraphViz(requestType RequestType, services []Service, filename string) error {
+func generateGraphViz(requestType RequestType, services []MicroserviceMetada, filename string) error {
 	// Create a map of services for easy access
-	serviceMap := make(map[string]Service)
+	serviceMap := make(map[string]MicroserviceMetada)
 	for _, service := range services {
 		serviceMap[service.Name] = service
 	}

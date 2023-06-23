@@ -1,4 +1,4 @@
-targets := rabbitmq-sidecar policy_enforcer orchestrator
+targets := rabbitmq-sidecar policy_enforcer orchestrator agent
 
 
 prepare:

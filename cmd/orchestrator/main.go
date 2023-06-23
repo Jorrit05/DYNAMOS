@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -15,7 +16,7 @@ import (
 )
 
 var (
-	logger                         = lib.InitLogger()
+	logger                         = lib.InitLogger(logLevel)
 	etcdClient    *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
 	c             pb.SideCarClient
 	conn          *grpc.ClientConn
@@ -76,7 +77,7 @@ func main() {
 
 	logger.Sugar().Infow("Starting http server on: ", "port", port)
 	go func() {
-		if err := http.ListenAndServe(port, logMiddleware(handlers.CORS(originsOk, headersOk, methodsOk)(mux))); err != nil {
+		if err := http.ListenAndServe(port, api.LogMiddleware(handlers.CORS(originsOk, headersOk, methodsOk)(mux))); err != nil {
 			logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
 		}
 	}()
@@ -88,15 +89,4 @@ func main() {
 	// }()
 
 	wg.Wait()
-
-}
-
-func logMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Log the request
-		logger.Sugar().Infow("Received request", "method", r.Method, "path", r.URL.Path)
-
-		// Call the next handler
-		next.ServeHTTP(w, r)
-	})
 }

@@ -14,6 +14,7 @@ import (
 func requestApprovalHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Debug("Starting requestApprovalHandler")
 		body, err := api.GetRequestBody(w, r, serviceName)
 		if err != nil {
 			return

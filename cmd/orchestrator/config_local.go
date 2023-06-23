@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 	"path/filepath"
 	"runtime"
 )
@@ -13,7 +14,7 @@ var serviceName = "orchestrator"
 var port = ":8081"
 var grpcAddr = "localhost:3005"
 var apiVersion = "/api/v1"
-
+var logLevel = zap.DebugLevel
 var requestTypeConfigLocation = addEtcdDir("requestType.json")
 var archetypeConfigLocation = addEtcdDir("archetype.json")
 var microserviceMetadataConfigLocation = addEtcdDir("microservices.json")

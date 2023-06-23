@@ -10,7 +10,8 @@ type AgentDetails struct {
 	ActiveSince   *time.Time
 	ConfigUpdated *time.Time
 	// RoutingKeyOutput string
-	RoutingKey string
+	RoutingKey string `json:"routingKey"`
+	Dns        string `json:"dns"`
 	// QueueName    string
 	// AgentDetails MicroService
 }

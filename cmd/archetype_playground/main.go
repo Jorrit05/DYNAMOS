@@ -6,7 +6,7 @@ import (
 )
 
 type Node struct {
-	Service  *Service
+	Service  *MicroserviceMetada
 	OutEdges []*Node
 }
 
@@ -16,14 +16,10 @@ type RequestType struct {
 	OptionalServices []string `json:"optionalServices"`
 }
 
-type Service struct {
+type MicroserviceMetada struct {
 	Name           string   `json:"name"`
 	Label          string   `json:"label"`
 	AllowedOutputs []string `json:"AllowedOutputs"`
-}
-
-type Services struct {
-	Services []Service `json:"services"`
 }
 
 type User struct {
@@ -46,7 +42,7 @@ type Archetype struct {
 }
 
 type CompositionRequest struct {
-	Microservices []Service
+	Microservices []MicroserviceMetada
 	ArchetypeId   string
 	User          User
 	RequestType   string

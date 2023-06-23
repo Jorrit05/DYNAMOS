@@ -1,20 +1,17 @@
-package lib
+package main
 
 import (
 	"context"
-
 	"os"
+
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-var conn *amqp.Connection
-
-type serviceFunc func(message amqp.Delivery) (amqp.Publishing, error)
-
 func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
-	connectionString, err := GetAMQConnectionString()
+	connectionString, err := getAMQConnectionString()
+
 	if err != nil {
 		logger.Sugar().Fatalw("Failed to get an AMQ connectionString: %v", err)
 	}
@@ -23,7 +20,7 @@ func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
 	var channel *amqp.Channel
 
 	for i := 1; i <= 7; i++ { // maximum of 7 retries
-		conn, channel, err = Connect(connectionString)
+		conn, channel, err = connect(connectionString)
 		if err == nil {
 			break // no error, break out of loop
 		}
@@ -45,17 +42,17 @@ func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
 // The service name in format '<name>_service' is used to declare the queue.
 //
 // The routingKey service.<name> is used when binding the queue to the exchange, the exchange will publish messages to all queues that match the routingkey pattern
-func SetupConnection(queueName string, routingKey string, queueAutoDelete bool) (<-chan amqp.Delivery, *amqp.Connection, *amqp.Channel, error) {
+func setupConnection(queueName string, routingKey string, queueAutoDelete bool) (<-chan amqp.Delivery, *amqp.Connection, *amqp.Channel, error) {
 
 	conn, channel, _ := getConnectionToRabbitMq()
 
-	err := Exchange(channel)
+	err := exchange(channel)
 	if err != nil {
 		logger.Sugar().Fatalw("Failed to create exchange: %v", err)
 		return nil, nil, nil, err
 	}
 
-	queue, err := DeclareQueue(queueName, channel, queueAutoDelete)
+	queue, err := declareQueue(queueName, channel, queueAutoDelete)
 	if err != nil {
 		logger.Sugar().Fatalw("Failed to declare queue: %v", err)
 		return nil, nil, nil, err
@@ -77,13 +74,100 @@ func SetupConnection(queueName string, routingKey string, queueAutoDelete bool) 
 	return nil, conn, channel, nil
 }
 
-func StartNewConsumer() (<-chan amqp.Delivery, *amqp.Connection) {
+func connect(connectionString string) (*amqp.Connection, *amqp.Channel, error) {
+	var err error
+	conn, err = amqp.Dial(connectionString)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	channel, err := conn.Channel()
+	if err != nil {
+		return nil, nil, err
+	}
+	return conn, channel, nil
+}
+
+func declareQueue(name string, channel *amqp.Channel, autoDelete bool) (*amqp.Queue, error) {
+	queue, err := channel.QueueDeclare(
+		name,       // name
+		true,       // durable
+		autoDelete, // delete when unused
+		false,      // exclusive
+		false,      // no-wait
+		amqp.Table{
+			"x-dead-letter-exchange": "dead-letter-exchange",
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &queue, nil
+}
+
+func exchange(channel *amqp.Channel) error {
+	if err := channel.ExchangeDeclare(
+		"topic_exchange",
+		"topic",
+		true,  // durable
+		false, // auto delete
+		false, // internal
+		false, // no-wait
+		nil);  // arguments
+	err != nil {
+		return err
+	}
+	return nil
+}
+
+// ------------------------------------------------------------------------------------------------
+// OLD:
+// ------------------------------------------------------------------------------------------------
+
+func consume(queueName string, channel *amqp.Channel) (<-chan amqp.Delivery, error) {
+	messages, err := channel.Consume(
+		queueName, // queue
+		"",        // consumer
+		true,      // auto-ack
+		false,     // exclusive
+		false,     // no-local
+		false,     // no-wait
+		nil,       // args
+	)
+	if err != nil {
+		return nil, err
+	}
+	return messages, nil
+}
+
+func publish(chann *amqp.Channel, routingKey string, message amqp.Publishing, exchangeName string) error {
+	if exchangeName == "" {
+		exchangeName = "topic_exchange"
+	}
+	logger.Sugar().Infof("Publish: exchangeName: %s, routingKey: %s", exchangeName, routingKey)
+
+	err := chann.PublishWithContext(context.Background(), exchangeName, routingKey, false, false, message)
+	if err != nil {
+		logger.Sugar().Infof("Publish: 2 %s", err)
+		return err
+	}
+	logger.Info("Publish: 3")
+
+	return nil
+}
+
+func close(channel *amqp.Channel) {
+	channel.Close()
+	conn.Close()
+}
+
+func startNewConsumer() (<-chan amqp.Delivery, *amqp.Connection) {
 	conn, channel, _ := getConnectionToRabbitMq()
 	var messages <-chan amqp.Delivery
 	var err error
 	var consumer = os.Getenv("INPUT_QUEUE")
 	for i := 1; i <= 7; i++ { // maximum of 7 retries
-		messages, err = Consume(consumer, channel)
+		messages, err = consume(consumer, channel)
 		if err == nil {
 			break // no error, break out of loop
 		}
@@ -100,7 +184,9 @@ func StartNewConsumer() (<-chan amqp.Delivery, *amqp.Connection) {
 	return messages, conn
 }
 
-func StartMessageLoop(fn serviceFunc, messages <-chan amqp.Delivery, channel *amqp.Channel, routingKey string, exchangeName string) {
+type serviceFunc func(message amqp.Delivery) (amqp.Publishing, error)
+
+func startMessageLoop(fn serviceFunc, messages <-chan amqp.Delivery, channel *amqp.Channel, routingKey string, exchangeName string) {
 	if exchangeName == "" {
 		exchangeName = "topic_exchange"
 	}
@@ -127,87 +213,4 @@ func StartMessageLoop(fn serviceFunc, messages <-chan amqp.Delivery, channel *am
 			}
 		}
 	}
-}
-
-func Connect(connectionString string) (*amqp.Connection, *amqp.Channel, error) {
-	var err error
-	conn, err = amqp.Dial(connectionString)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	channel, err := conn.Channel()
-	if err != nil {
-		return nil, nil, err
-	}
-	return conn, channel, nil
-}
-
-func DeclareQueue(name string, channel *amqp.Channel, autoDelete bool) (*amqp.Queue, error) {
-	queue, err := channel.QueueDeclare(
-		name,       // name
-		true,       // durable
-		autoDelete, // delete when unused
-		false,      // exclusive
-		false,      // no-wait
-		amqp.Table{
-			"x-dead-letter-exchange": "dead-letter-exchange",
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &queue, nil
-}
-
-func Close(channel *amqp.Channel) {
-	channel.Close()
-	conn.Close()
-}
-
-func Exchange(channel *amqp.Channel) error {
-	if err := channel.ExchangeDeclare(
-		"topic_exchange",
-		"topic",
-		true,  // durable
-		false, // auto delete
-		false, // internal
-		false, // no-wait
-		nil);  // arguments
-	err != nil {
-		return err
-	}
-	return nil
-}
-
-func Consume(queueName string, channel *amqp.Channel) (<-chan amqp.Delivery, error) {
-	messages, err := channel.Consume(
-		queueName, // queue
-		"",        // consumer
-		true,      // auto-ack
-		false,     // exclusive
-		false,     // no-local
-		false,     // no-wait
-		nil,       // args
-	)
-	if err != nil {
-		return nil, err
-	}
-	return messages, nil
-}
-
-func Publish(chann *amqp.Channel, routingKey string, message amqp.Publishing, exchangeName string) error {
-	if exchangeName == "" {
-		exchangeName = "topic_exchange"
-	}
-	logger.Sugar().Infof("Publish: exchangeName: %s, routingKey: %s", exchangeName, routingKey)
-
-	err := chann.PublishWithContext(context.Background(), exchangeName, routingKey, false, false, message)
-	if err != nil {
-		logger.Sugar().Infof("Publish: 2 %s", err)
-		return err
-	}
-	logger.Info("Publish: 3")
-
-	return nil
 }

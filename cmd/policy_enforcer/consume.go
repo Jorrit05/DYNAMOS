@@ -23,6 +23,7 @@ func startConsumingWithRetry(c pb.SideCarClient, name string, maxRetries int, wa
 }
 
 func startConsuming(c pb.SideCarClient, from string) error {
+	logger.Debug("Start startConsuming function")
 	stream, err := c.Consume(context.Background(), &pb.ConsumeRequest{QueueName: from, AutoAck: true})
 	if err != nil {
 		logger.Sugar().Fatalf("Error on consume: %v", err)
@@ -44,7 +45,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 
 		switch grpcMsg.Type {
 		case "requestApproval":
-
+			logger.Debug("Received a requestApproval")
 			var requestApproval pb.RequestApproval
 			if err := grpcMsg.Body.UnmarshalTo(&requestApproval); err != nil {
 				logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)

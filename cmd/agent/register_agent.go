@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
@@ -14,11 +15,12 @@ func registerAgent() {
 	// Prepare agent configuration data
 	// var service lib.MicroServiceData = lib.UnmarshalStackFile("/var/log/stack-files/agents.yaml")
 	now := time.Now()
-	agentConfig := lib.AgentDetails{
+	agentConfig = lib.AgentDetails{
 		Name:          serviceName,
 		ActiveSince:   &now,
 		ConfigUpdated: &now,
 		RoutingKey:    serviceName + "-in",
+		Dns:           fmt.Sprintf("%s.%s.svc.cluster.local", strings.ToLower(serviceName), strings.ToLower(serviceName)),
 	}
 
 	// Serialize agent configuration data as JSON
@@ -30,7 +32,7 @@ func registerAgent() {
 	go etcd.PutEtcdWithLease(etcdClient, fmt.Sprintf("/agents/%s", agentConfig.Name), string(configData))
 }
 
-func updateAgent(agentConfig *lib.AgentDetails) {
+func updateAgent() {
 
 	// Update the ActiveSince field
 	now := time.Now()

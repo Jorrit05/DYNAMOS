@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func generateChain(servicesToInclude []string, services []Service) ([]Service, error) {
+func generateChain(servicesToInclude []string, services []MicroserviceMetada) ([]MicroserviceMetada, error) {
 	// Build a map of nodes for each service
 	nodes := make(map[string]*Node)
 	for i := range services {
@@ -26,7 +26,7 @@ func generateChain(servicesToInclude []string, services []Service) ([]Service, e
 	}
 
 	// Filter the order to only include the services in servicesToInclude
-	filteredOrder := []Service{}
+	filteredOrder := []MicroserviceMetada{}
 	for _, node := range order {
 		if contains(servicesToInclude, node.Service.Name) {
 			filteredOrder = append(filteredOrder, *node.Service)
@@ -80,11 +80,11 @@ func topologicalSort(nodes map[string]*Node) ([]*Node, error) {
 }
 
 type SplitServices struct {
-	DataProviderServices    []Service
-	ComputeProviderServices []Service
+	DataProviderServices    []MicroserviceMetada
+	ComputeProviderServices []MicroserviceMetada
 }
 
-func splitServicesByArchetype(orderedServices []Service, computeProvider string) SplitServices {
+func splitServicesByArchetype(orderedServices []MicroserviceMetada, computeProvider string) SplitServices {
 	var splitServices SplitServices
 
 	for _, service := range orderedServices {

@@ -3,11 +3,9 @@
 
 package main
 
-import (
-	"fmt"
-	"path/filepath"
-	"runtime"
-)
+import "go.uber.org/zap"
+
+var logLevel = zap.DebugLevel
 
 var serviceName = "policyEnforcer"
 

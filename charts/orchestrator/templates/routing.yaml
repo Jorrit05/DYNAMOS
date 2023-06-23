@@ -1,21 +1,4 @@
 apiVersion: networking.istio.io/v1beta1
-kind: Gateway
-metadata:
-  name: orchestrator-gateway
-  namespace: {{ .Values.Namespace }}
-spec:
-  selector:
-    istio: ingressgateway # use istio default controller
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "*"
-
----
-apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: orchestrator-virtualservice
@@ -24,7 +7,7 @@ spec:
   hosts:
   - "*"
   gateways:
-  - orchestrator-gateway
+  - core/core-gateway
   http:
   - match:
     - uri:

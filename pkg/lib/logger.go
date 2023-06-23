@@ -9,9 +9,10 @@ var (
 	logger *zap.Logger
 )
 
-func InitLogger() *zap.Logger {
+func InitLogger(logLevel zapcore.Level) *zap.Logger {
 
 	config := zap.NewProductionConfig()
+	config.Level.SetLevel(logLevel)
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	config.EncoderConfig.EncodeCaller = zapcore.FullCallerEncoder
 	config.OutputPaths = []string{"stdout"}

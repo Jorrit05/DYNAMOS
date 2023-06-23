@@ -20,18 +20,6 @@ func ReadFile(fileName string) (string, error) {
 	return str, nil
 }
 
-func GetAMQConnectionString() (string, error) {
-	user := os.Getenv("AMQ_USER")
-	pw := os.Getenv("AMQ_PASSWORD")
-	dns := os.Getenv("RABBIT_DNS")
-
-	if os.Getenv("LOCAL_DEV") != "" {
-		dns = "localhost"
-	}
-
-	return fmt.Sprintf("amqp://%s:%s@%s:5672/", user, pw, dns), nil
-}
-
 func GetSQLConnectionString() (string, error) {
 	user := os.Getenv("DB_USER")
 	pwFile := os.Getenv("MYSQL_ROOT_PASSWORD_FILE")

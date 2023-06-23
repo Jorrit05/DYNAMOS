@@ -13,9 +13,6 @@
 			"path": "cmd/policy_enforcer"
 		},
 		{
-			"path": "cmd/agent_service"
-		},
-		{
 			"path": "cmd/agent"
 		},
 		{

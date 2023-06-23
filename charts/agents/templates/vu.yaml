@@ -1,29 +1,30 @@
-# orchestrator deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: policy-enforcer
-  namespace: {{ .Values.Namespace }}
+  name: vu
+  namespace: vu
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
-      app: policy-enforcer
+      app: vu
   template:
     metadata:
       labels:
-        app: policy-enforcer
+        app: vu
     spec:
       containers:
-      - name: policy-enforcer
-        image: policy_enforcer:latest
+      - name: vu
+        image: agent:latest
         imagePullPolicy: IfNotPresent
+        env:
+        - name: DATA_STEWARD_NAME
+          value: VU
         # resources:
         #   requests:
         #     memory: "128Mi"
         #   limits:
         #     memory: "256Mi"
-
       - name: rabbitmq-sidecar
         image: rabbitmq-sidecar:latest
         imagePullPolicy: IfNotPresent

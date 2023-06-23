@@ -39,10 +39,10 @@ func fetchRequestType(key string) RequestType {
 	}
 }
 
-func fetchServices(req *RequestType) []Service {
+func fetchServices(req *RequestType) []MicroserviceMetada {
 	if req == nil {
 		log.Print("RequestType is a nil pointer")
-		return []Service{}
+		return []MicroserviceMetada{}
 	}
 	// Define services
 	servicesJson := `[
@@ -68,13 +68,13 @@ func fetchServices(req *RequestType) []Service {
 		}
 	]`
 
-	var allServices []Service
+	var allServices []MicroserviceMetada
 	json.Unmarshal([]byte(servicesJson), &allServices)
 
 	return allServices
 }
 
-func filterServices(req *RequestType, allServices *[]Service) []Service {
+func filterServices(req *RequestType, allServices *[]MicroserviceMetada) []MicroserviceMetada {
 
 	// Create a map of the required and optional services for quick lookup
 	serviceMap := make(map[string]bool)
@@ -83,7 +83,7 @@ func filterServices(req *RequestType, allServices *[]Service) []Service {
 	}
 
 	// Filter the services to include only those that are required or optional
-	var filteredServices []Service
+	var filteredServices []MicroserviceMetada
 	for _, service := range *allServices {
 		if serviceMap[service.Name] {
 			filteredServices = append(filteredServices, service)
