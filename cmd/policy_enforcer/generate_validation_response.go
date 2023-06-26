@@ -23,20 +23,20 @@ func checkRequestApproval(requestApproval *pb.RequestApproval) error {
 		Type:        "validationResponse",
 		RequestType: requestApproval.Type,
 		User: &pb.User{
-			ID:       requestApproval.User.ID,
+			Id:       requestApproval.User.Id,
 			UserName: requestApproval.User.UserName,
 		},
 		RequestApproved: false,
 	}
 
 	getValidAgreements(requestApproval, &agreements, protoRequest)
-	if len(agreements) == 0 || len(protoRequest.ValidDataProviders) == 0 {
+	if len(agreements) == 0 || len(protoRequest.ValidDataproviders) == 0 {
 		logger.Sugar().Info("No agreements exist for this user ")
 
 		c.SendValidationResponse(context.Background(), protoRequest)
 	}
 
-	protoRequest.RequestApproved = len(protoRequest.ValidDataProviders) > 0
+	protoRequest.RequestApproved = len(protoRequest.ValidDataproviders) > 0
 
 	protoRequest.Auth = generateAuthToken()
 	c.SendValidationResponse(context.Background(), protoRequest)
@@ -53,7 +53,7 @@ func generateAuthToken() *pb.Auth {
 
 func getValidAgreements(requestApproval *pb.RequestApproval, agreements *[]api.Agreement, protoRequest *pb.ValidationResponse) {
 	var invalidDataproviders []string
-	protoRequest.ValidDataProviders = make(map[string]*pb.DataProvider)
+	protoRequest.ValidDataproviders = make(map[string]*pb.DataProvider)
 
 	for _, steward := range requestApproval.DataProviders {
 		output, err := etcd.GetValueFromEtcd(etcdClient, "/policyEnforcer/agreements/"+steward)
@@ -86,11 +86,11 @@ func getValidAgreements(requestApproval *pb.RequestApproval, agreements *[]api.A
 			continue
 		}
 		// Initalize after checking valid archetypes.
-		protoRequest.ValidDataProviders[steward] = &pb.DataProvider{}
+		protoRequest.ValidDataproviders[steward] = &pb.DataProvider{}
 		// Check if user allowed archetypes are actually supported archetypes in this agreement
-		protoRequest.ValidDataProviders[steward].ArcheTypes = matchedArchetypes
+		protoRequest.ValidDataproviders[steward].Archetypes = matchedArchetypes
 		// Add matching compute providers
-		protoRequest.ValidDataProviders[steward].ComputeProviders, _ = lib.GetMatchedElements(user.AllowedComputeProviders, agreement.ComputeProviders)
+		protoRequest.ValidDataproviders[steward].ComputeProviders, _ = lib.GetMatchedElements(user.AllowedComputeProviders, agreement.ComputeProviders)
 
 		agreement.Relations = map[string]api.Relation{
 			requestApproval.User.UserName: user,
@@ -100,5 +100,5 @@ func getValidAgreements(requestApproval *pb.RequestApproval, agreements *[]api.A
 
 	}
 
-	protoRequest.InvalidDataProviders = invalidDataproviders
+	protoRequest.InvalidDataproviders = invalidDataproviders
 }

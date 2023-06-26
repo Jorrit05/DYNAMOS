@@ -18,14 +18,14 @@ service SideCar {
 
 // The request message containing the user's name.
 message ServiceRequest {
-  string serviceName = 1;
-  string routingKey = 2;
-  bool queueAutoDelete = 3;
+  string service_name = 1;
+  string routing_key = 2;
+  bool queue_auto_delete = 3;
 }
 
 message ConsumeRequest {
-  string queueName = 1;
-  bool autoAck = 2;
+  string queue_name = 1;
+  bool auto_ack = 2;
 }
 
 message RabbitMQMessage {
@@ -39,30 +39,36 @@ message Auth {
 }
 
 message DataProvider {
-  repeated string archeTypes = 1;
-  repeated string computeProviders = 2;
+  repeated string archetypes = 1;
+  repeated string compute_providers = 2;
 }
 
 message ValidationResponse {
   string type = 1;
-  string requestType = 2;
-  map<string, DataProvider> validDataProviders = 3;
-  repeated string invalidDataProviders = 4;
+  string request_type = 2;
+  map<string, DataProvider> valid_dataproviders = 3;
+  repeated string invalid_dataproviders = 4;
   Auth auth = 5;
   User user = 6;
   bool request_approved = 7;
 }
 
 message User {
-  string ID = 1;
-  string UserName = 2;
+  string id = 1;
+  string user_name = 2;
 }
 
 message RequestApproval {
   string type = 1;
-  User User = 2;
+  User user = 2;
   repeated string data_providers = 3;
   bool sync_services = 4;
 }
 
-
+message AcceptedDataRequest  {
+  string type = 1;
+  User user = 2;
+  Auth auth = 3;
+  map<string, string> authorized_providers = 4;
+  string result_channel = 5;
+}

@@ -82,11 +82,5 @@ func main() {
 		}
 	}()
 
-	// go func() {
-	// 	if err := http.ListenAndServe(port, handlers.CORS(originsOk, headersOk, methodsOk)(mux)); err != nil {
-	// 		logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
-	// 	}
-	// }()
-
 	wg.Wait()
 }

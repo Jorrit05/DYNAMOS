@@ -31,14 +31,14 @@ func requestApprovalHandler() http.HandlerFunc {
 		protoRequest := &pb.RequestApproval{
 			Type: reqApproval.Type,
 			User: &pb.User{
-				ID:       reqApproval.User.ID,
+				Id:       reqApproval.User.Id,
 				UserName: reqApproval.User.UserName,
 			},
 			DataProviders: reqApproval.DataProviders,
 			SyncServices:  reqApproval.SyncServices,
 		}
 
-		logger.Info("Sending request approval")
+		logger.Debug("Sending request approval")
 		go c.SendRequestApproval(context.Background(), protoRequest)
 
 		// Create a channel to receive the response
@@ -46,7 +46,7 @@ func requestApprovalHandler() http.HandlerFunc {
 
 		// Store the request information in the map
 		mutex.Lock()
-		validationMap[protoRequest.User.ID] = &validation{response: responseChan}
+		validationMap[protoRequest.User.Id] = &validation{response: responseChan}
 		mutex.Unlock()
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
@@ -65,11 +65,9 @@ func requestApprovalHandler() http.HandlerFunc {
 			//   - Reply with AcceptedDataRequest
 			//   - Start a composition request
 
-			go startCompositionRequest(msg)
-			createAcceptedDataRequest()
-			w.WriteHeader(http.StatusOK)
-			// w.Write(jsonData)
+			// go startCompositionRequest(msg)
 
+			createAcceptedDataRequest(msg, w)
 			return
 
 		case <-ctx.Done():

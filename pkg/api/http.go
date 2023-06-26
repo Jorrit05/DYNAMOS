@@ -35,7 +35,7 @@ type SqlDataRequest struct {
 }
 
 type User struct {
-	ID       string `json:"ID"`
+	Id       string `json:"ID"`
 	UserName string `json:"userName"`
 	// Other fields...
 }

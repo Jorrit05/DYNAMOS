@@ -7,18 +7,6 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
-type RequestType struct {
-	Type             string   `json:"type"`
-	RequiredServices []string `json:"requiredServices"`
-	OptionalServices []string `json:"optionalServices"`
-}
-
-type MicroserviceMetada struct {
-	Name           string   `json:"name"`
-	Label          string   `json:"label"`
-	AllowedOutputs []string `json:"AllowedOutputs"`
-}
-
 func startCompositionRequest(validationResponse *pb.ValidationResponse) error {
 	logger.Debug("Entering startCompositionRequest")
 	// archetype := chooseArchetype(validationResponse)
@@ -34,6 +22,14 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse) error {
 		return err
 	}
 
+	msChain, err := generateChain([]string{}, msMetadata)
+	if err != nil {
+		return err
+	}
+
+	for _, chain := range msChain {
+		fmt.Println("Chain: " + chain.Name)
+	}
 	return nil
 }
 

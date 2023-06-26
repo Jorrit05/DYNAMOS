@@ -51,7 +51,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 			}
 			mutex.Lock()
 			// Look up the corresponding channel in the request map
-			requestData, ok := validationMap[validationResponse.User.ID]
+			requestData, ok := validationMap[validationResponse.User.Id]
 			mutex.Unlock()
 
 			if ok {
@@ -59,7 +59,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 				// Send a signal on the channel to indicate that the response is ready
 				requestData.response <- &validationResponse
 			} else {
-				logger.Sugar().Errorw("unknown validation response", "GUID", validationResponse.User.ID)
+				logger.Sugar().Errorw("unknown validation response", "GUID", validationResponse.User.Id)
 			}
 
 		default:
