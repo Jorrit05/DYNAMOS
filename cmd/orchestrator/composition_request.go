@@ -33,10 +33,7 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse) error {
 	if err != nil {
 		return err
 	}
-	logger.Sugar().Info(msMetadata[0])
-	logger.Sugar().Info(msMetadata[1])
-	logger.Sugar().Info(msMetadata[2])
-	logger.Sugar().Info(msMetadata[3])
+
 	return nil
 }
 
