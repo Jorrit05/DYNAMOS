@@ -13,6 +13,7 @@ spec:
       labels:
         app: uva
     spec:
+      serviceAccountName: job-creator-uva
       containers:
       - name: uva
         image: agent:latest
@@ -25,8 +26,8 @@ spec:
         #     memory: "128Mi"
         #   limits:
         #     memory: "256Mi"
-      - name: rabbitmq-sidecar
-        image: rabbitmq-sidecar:latest
+      - name: sidecar
+        image: sidecar:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3005
@@ -38,3 +39,4 @@ spec:
               key: password
         - name: AMQ_USER
           value: normal_user
+

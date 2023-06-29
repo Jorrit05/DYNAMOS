@@ -24,8 +24,8 @@ spec:
         #   limits:
         #     memory: "256Mi"
 
-      - name: rabbitmq-sidecar
-        image: rabbitmq-sidecar:latest
+      - name: sidecar
+        image: sidecar:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3005

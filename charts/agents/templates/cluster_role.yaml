@@ -1,0 +1,52 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: job-creator
+rules:
+- apiGroups: ["batch", "extensions"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: job-creator-uva
+  namespace: uva
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: job-creator-vu
+  namespace: vu
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: job-creator-uva
+  namespace: uva
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: job-creator
+subjects:
+- kind: ServiceAccount
+  name: job-creator-uva
+  namespace: uva
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: job-creator-vu
+  namespace: vu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: job-creator
+subjects:
+- kind: ServiceAccount
+  name: job-creator-vu
+  namespace: vu

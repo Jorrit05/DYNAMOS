@@ -1,31 +1,22 @@
 {
 	"folders": [
 		{
-			"path": "cmd/orchestrator"
+			"path": "go/cmd/orchestrator"
 		},
 		{
-			"path": "cmd/archetype_playground"
+			"path": "go/cmd/archetype_playground"
 		},
 		{
-			"path": "cmd/rabbitmq-sidecar"
+			"path": "go/cmd/sidecar"
 		},
 		{
-			"path": "cmd/policy_enforcer"
+			"path": "go/cmd/policy_enforcer"
 		},
 		{
-			"path": "cmd/agent"
+			"path": "go/cmd/agent"
 		},
 		{
-			"path": "pkg/lib"
-		},
-		{
-			"path": "pkg/etcd"
-		},
-		{
-			"path": "pkg/api"
-		},
-		{
-			"path": "pkg/proto"
+			"path": "go/pkg"
 		},
 		{
 			"path": "docs"
@@ -37,7 +28,19 @@
 			"path": "charts"
 		},
 		{
-			"path": "cmd/test"
+			"path": "proto-files"
+		},
+		{
+			"path": "python"
+		},
+		{
+			"path": "go/cmd/test"
+		},
+		{
+			"path": "stack"
+		},
+		{
+			"path": "go/cmd/algorithm"
 		}
 	],
 	"settings": {}

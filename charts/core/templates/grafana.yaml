@@ -29,10 +29,10 @@ spec:
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
               value: "Admin"
-            - name: GF_SERVER_ROOT_URL
-              value: "http://localhost:80/grafana"
-            - name: GF_SERVER_SERVE_FROM_SUB_PATH
-              value: "true"
+            # - name: GF_SERVER_ROOT_URL
+            #   value: "http://localhost:80/grafana"
+            # - name: GF_SERVER_SERVE_FROM_SUB_PATH
+            #   value: "true"
 
           volumeMounts:
             - name: grafana-dashboards
@@ -61,9 +61,10 @@ spec:
       protocol: TCP
       port: 3000
       targetPort: 3000
+      nodePort: 30001
+  type: NodePort
 
 ---
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -75,7 +76,7 @@ data:
     # set -euc
 
     mkdir -p /etc/grafana/provisioning/datasources
-    cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+    cat <<EOF > /etc/grafana/provisioning/datasources/datasources.yaml
     apiVersion: 1
     datasources:
     - name: Loki
@@ -87,8 +88,17 @@ data:
       isDefault: true
       version: 1
       editable: false
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      orgId: 1
+      url: http://prometheus-server.{{ .Values.Namespace }}.svc.cluster.local
+      basicAuth: false
+      isDefault: false
+      version: 1
+      editable: false
     EOF
-    # mkdir -p /etc/grafana/provisioning/dashboards
+
     cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
     apiVersion: 1
     providers:

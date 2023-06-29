@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/Jorrit05/DYNAMOS/pkg/proto";
+import "google/protobuf/empty.proto";
+
+
+// The sidecar definition.
+service Etcd {
+  rpc InitEtcd(google.protobuf.Empty) returns (google.protobuf.Empty){}
+  rpc GetDatasetMetadata(EtcdKey) returns (Dataset) {}
+}
+
+message EtcdKey{
+  string path = 1;
+}
+message Dataset {
+  string name = 1;
+  string type = 2;
+  string delimiter = 3;
+  repeated string tables = 4;
+}

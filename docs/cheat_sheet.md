@@ -37,6 +37,10 @@ kubectl exec -it <pod_name> -- /bin/bash
 
 kubectl create secret generic rabbit --from-literal=password=$(openssl rand -base64 12) -n core
 kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n core
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n orchestrator
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n uva
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n vu
+
 kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand -base64 12) --from-literal=db_dba_password=$(openssl rand -base64 12) -n core
 
 kubectl get secret "rabbit" -o json | jq -r ".[\"data\"][\"password\"]" | base64 -d
@@ -54,8 +58,17 @@ kubectl label namespace uva istio-injection=enabled
 kubectl label namespace vu istio-injection=enabled
 kubectl label namespace core istio-injection=enabled
 kubectl label namespace orchestrator istio-injection=enabled
+kubectl label namespace argo istio-injection=enabled
 
 istioctl install --set profile=default -y
+
+
+kubectl label namespace core istio-injection-
+kubectl label namespace uva istio-injection-
+kubectl label namespace vu istio-injection-
+kubectl label namespace orchestrator istio-injection-
+kubectl label namespace argo istio-injection-
+
 
 # SQL
 
@@ -87,3 +100,12 @@ docker container ls --filter "name=etcd_cluster" --format "{{.ID}}" | xargs -n1 
 
 # proto
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative rabbitMQ.proto
+
+# ARgo
+https://github.com/argoproj/argo-workflows/releases/tag/v3.4.8
+
+
+# Prometheus
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install -f /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/prometheus.yaml prometheus prometheus-community/prometheus

@@ -1,3 +1,0 @@
-{"file":"/app/cmd/reasoner/reasoner.go:43","func":"main.main","level":"info","msg":"Starting http server on 8081/30011","service":"reasoner_service","time":"2023-05-09T12:13:47Z"}
-{"file":"/app/cmd/reasoner/reasoner.go:43","func":"main.main","level":"info","msg":"Starting http server on 8081/30011","service":"reasoner_service","time":"2023-05-09T15:31:58Z"}
-{"file":"/app/cmd/reasoner/reasoner.go:43","func":"main.main","level":"info","msg":"Starting http server on 8081/30011","service":"reasoner_service","time":"2023-05-09T15:34:36Z"}

@@ -24,3 +24,4 @@ go.work
 __debug_bin
 node_modules
 .env.local
+datasets/*.csv

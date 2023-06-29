@@ -1,0 +1,8 @@
+[
+    {
+        "name": "wageGap",
+        "type" : "csv",
+        "delimiter": ";",
+        "tables": ["Aanstellingen", "Personen"]
+    }
+]

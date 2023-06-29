@@ -28,8 +28,8 @@ spec:
         #     memory: "128Mi"
         #   limits:
         #     memory: "256Mi"
-      - name: rabbitmq-sidecar
-        image: rabbitmq-sidecar:latest
+      - name: sidecar
+        image: sidecar:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3005
@@ -60,6 +60,6 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-      # nodePort: 30010
-  # type: NodePort
+      nodePort: 30010
+  type: NodePort
 
