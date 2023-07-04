@@ -6,6 +6,7 @@ option go_package = "github.com/Jorrit05/DYNAMOS/pkg/proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 
+
 // The sidecar definition.
 service SideCar {
   rpc InitRabbitMq(ServiceRequest) returns (google.protobuf.Empty) {}
@@ -14,6 +15,7 @@ service SideCar {
   rpc SendValidationResponse(ValidationResponse) returns  (google.protobuf.Empty) {}
   rpc SendCompositionRequest(CompositionRequest) returns  (google.protobuf.Empty) {}
 }
+
 
 message ServiceRequest {
   string service_name = 1;

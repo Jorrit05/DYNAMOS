@@ -12,6 +12,7 @@ import (
 )
 
 func (s *server) InitRabbitMq(ctx context.Context, in *pb.ServiceRequest) (*emptypb.Empty, error) {
+	logger.Debug("Starting InitRabbitMq")
 	logger.Sugar().Infow("Received:", "Servicename", in.ServiceName, "RoutingKey", in.RoutingKey)
 
 	var err error

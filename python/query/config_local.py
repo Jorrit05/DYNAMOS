@@ -1,2 +1,2 @@
 grpc_addr = "localhost:"
-service_name = "queryService"
+service_name = "query"

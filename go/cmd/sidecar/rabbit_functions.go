@@ -10,6 +10,7 @@ import (
 )
 
 func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
+	logger.Debug("Start getConnectionToRabbitMq")
 	connectionString, err := getAMQConnectionString()
 
 	if err != nil {
@@ -18,16 +19,17 @@ func getConnectionToRabbitMq() (*amqp.Connection, *amqp.Channel, error) {
 
 	var conn *amqp.Connection
 	var channel *amqp.Channel
+	conn, channel, err = connect(connectionString)
 
-	for i := 1; i <= 7; i++ { // maximum of 7 retries
-		conn, channel, err = connect(connectionString)
-		if err == nil {
-			break // no error, break out of loop
-		}
+	// for i := 1; i <= 7; i++ { // maximum of 7 retries
+	// 	conn, channel, err = connect(connectionString)
+	// 	if err == nil {
+	// 		break // no error, break out of loop
+	// 	}
 
-		logger.Sugar().Infof("Failed to connect to RabbitMQ: %v", err)
-		time.Sleep(10 * time.Second) // wait for 10 seconds before retrying
-	}
+	// 	logger.Sugar().Infof("Failed to connect to RabbitMQ: %v", err)
+	// 	time.Sleep(10 * time.Second) // wait for 10 seconds before retrying
+	// }
 
 	if err != nil {
 		logger.Sugar().Fatalw("Failed to setup proper connection to RabbitMQ after 7 attempts: %v", err)

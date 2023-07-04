@@ -66,10 +66,10 @@ func main() {
 			ID:       "GUID",
 			UserName: "jstutterheim@uva.nl",
 		},
-		DataProviders:         []string{"VU", "UVA"},
-		ComputeProvider:       "",
-		RequestType:           "sqlDataRequest",
-		RequiredMicroservices: []string{"anonymize_service"},
+		DataProviders:   []string{"VU", "UVA"},
+		ComputeProvider: "",
+		RequestType:     "sqlDataRequest",
+		// RequiredMicroservices: []string{"anonymize_service"},
 	}
 
 	// Returns requiredServices & optionalServices for sqlDataRequest
@@ -98,8 +98,8 @@ func main() {
 		return
 	}
 
-	// archetype := fetchFromETCD("/archetypes/computeToData")
-	archetype := fetchFromETCD("/archetypes/dataThroughTtp")
+	archetype := fetchFromETCD("/archetypes/computeToData")
+	// archetype := fetchFromETCD("/archetypes/dataThroughTtp")
 
 	splits := splitServicesByArchetype(chain, archetype.ComputeProvider)
 

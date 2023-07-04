@@ -1,14 +1,15 @@
 import pandas as pd
 from pandasql import sqldf
 import re
-from grpc_lib import EtcdClient, MsCommunication
 import os
+from grpc_lib import EtcdClient, MsCommunication
+from my_logger import InitLogger
 if os.getenv('ENV') == 'PROD':
     import config_prod as config
 else:
     import config_local as config
 
-
+logger = InitLogger()
 
 def load_and_query_csv(file_path_prefix, query):
     # Extract table names from the query
@@ -30,10 +31,16 @@ def load_and_query_csv(file_path_prefix, query):
 
 
 def main():
-    print("Starting Query service")
-    microserviceCommunicator = MsCommunication()
-    microserviceCommunicator.SendData()
-    print("Finishing work, exiting")
+    logger.info("Starting Query service")
+    if int(os.getenv("FIRST")) > 0:
+        logger.info("First service")
+    else:
+        logger.info("Not the first service")
+
+    # microserviceCommunicator = MsCommunication()
+    # response = microserviceCommunicator.SendData()
+
+    logger.info("Finishing work, exiting")
     exit(0)
     # Define the prefix of your CSV files' paths
     file_path_prefix = '/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/datasets/'

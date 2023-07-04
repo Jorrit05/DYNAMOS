@@ -39,7 +39,7 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 	// Define the job
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      compositionRequest.User.UserName,
+			Name:      "jorrit", //compositionRequest.User.UserName,
 			Namespace: dataStewardName,
 			Labels:    map[string]string{"app": dataStewardName},
 		},
@@ -61,25 +61,25 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 	// Add the containers to the job
 	port := firstPortMicroservice
 	nrOfServices := len(compositionRequest.Microservices)
+	firstService := "1"
+	lastService := "0"
 	for i, name := range compositionRequest.Microservices {
-		order := i + 1
+		order := i
 		port = port + order
-		lastService := "0"
+
 		if i == nrOfServices-1 {
-			// This will make the port nr > 60000
-			// The last service both realizes it's last and know
-			// which port number to set up for the service before it (-100000)
 			lastService = "1"
 		}
-
+		logger.Sugar().Infow("job info:", "name: ", name, "Port: ", port)
 		container := v1.Container{
 			Name:            name,
 			Image:           fmt.Sprintf("%s:latest", name),
 			ImagePullPolicy: v1.PullIfNotPresent,
-			Env:             []v1.EnvVar{{Name: "ORDER", Value: strconv.Itoa(port)}, {Name: "LAST", Value: lastService}},
+			Env:             []v1.EnvVar{{Name: "ORDER", Value: strconv.Itoa(port)}, {Name: "LAST", Value: lastService}, {Name: "FIRST", Value: firstService}},
 			// Add additional container configuration here as needed
 		}
 		job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, container)
+		firstService = "0"
 	}
 
 	job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, addSidecar())
@@ -99,7 +99,7 @@ func addSidecar() v1.Container {
 		Name:            name,
 		Image:           fmt.Sprintf("%s:latest", name),
 		ImagePullPolicy: v1.PullIfNotPresent,
-		Env:             []v1.EnvVar{{Name: "ORDER", Value: strconv.Itoa(50052)}, {Name: "AMQ_PASSWORD", Value: os.Getenv("AMQ_PASSWORD")}, {Name: "AMQ_USER", Value: os.Getenv("AMQ_USER")}},
+		Env:             []v1.EnvVar{{Name: "ORDER", Value: strconv.Itoa(firstPortMicroservice - 1)}, {Name: "AMQ_PASSWORD", Value: os.Getenv("AMQ_PASSWORD")}, {Name: "AMQ_USER", Value: os.Getenv("AMQ_USER")}},
 		// Add additional container configuration here as needed
 	}
 }

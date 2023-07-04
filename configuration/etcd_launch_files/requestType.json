@@ -2,12 +2,12 @@
     {
         "name": "sqlDataRequest",
         "requiredServices": [
-            "queryService",
-            "algorithmService"
+            "query",
+            "algorithm"
         ],
         "optionalServices": [
-            "anonymizeService",
-            "graphService"
+            "anonymize",
+            "graph"
         ]
     }
 ]

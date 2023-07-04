@@ -18,6 +18,7 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 	}
 
 	var msMetadata []MicroserviceMetada
+	// Returns both optional and required Microservices
 	err = getMicroserviceMetadata(&msMetadata, &request)
 	if err != nil {
 		return err
@@ -26,6 +27,9 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 	msChain, err := generateChain([]string{}, msMetadata)
 	if err != nil {
 		return err
+	}
+	for _, ms := range msChain {
+		logger.Info(ms.Name)
 	}
 
 	//	{
@@ -67,15 +71,15 @@ func getMicroserviceMetadata(microserviceMetada *[]MicroserviceMetada, request *
 		*microserviceMetada = append(*microserviceMetada, metadataObject)
 	}
 
-	for _, ms := range request.OptionalServices {
-		var metadataObject MicroserviceMetada
+	// for _, ms := range request.OptionalServices {
+	// 	var metadataObject MicroserviceMetada
 
-		_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", ms), &metadataObject)
-		if err != nil {
-			return err
-		}
-		*microserviceMetada = append(*microserviceMetada, metadataObject)
-	}
+	// 	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", ms), &metadataObject)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	*microserviceMetada = append(*microserviceMetada, metadataObject)
+	// }
 
 	return nil
 }

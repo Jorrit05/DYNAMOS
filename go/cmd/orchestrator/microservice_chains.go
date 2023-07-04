@@ -1,8 +1,6 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func generateChain(servicesToInclude []string, services []MicroserviceMetada) ([]MicroserviceMetada, error) {
 
@@ -17,7 +15,10 @@ func generateChain(servicesToInclude []string, services []MicroserviceMetada) ([
 	for _, service := range services {
 		node := nodes[service.Name]
 		for _, output := range service.AllowedOutputs {
-			node.OutEdges = append(node.OutEdges, nodes[output])
+			// logger.Debug("OUTPUT:" + output)
+			if nodes[output] != nil {
+				node.OutEdges = append(node.OutEdges, nodes[output])
+			}
 		}
 	}
 
@@ -54,6 +55,7 @@ func topologicalSort(nodes map[string]*Node) ([]*Node, error) {
 	visit = func(node *Node) error {
 		// Return an error if we've already visited this node in the current path (i.e., there's a cycle)
 		if temp[node.Service.Name] {
+			logger.Sugar().Error("cycle detected")
 			return fmt.Errorf("cycle detected")
 		}
 

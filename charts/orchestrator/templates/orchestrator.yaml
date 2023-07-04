@@ -31,8 +31,6 @@ spec:
       - name: sidecar
         image: sidecar:latest
         imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 3005
         env:
         - name: AMQ_PASSWORD
           valueFrom:

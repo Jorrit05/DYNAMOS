@@ -33,6 +33,7 @@ class SecureChannel:
         while retries < self.max_retries:
             try:
                 self.channel = grpc.insecure_channel(self.grpc_addr)
+                print( self.channel)
                 if self.channel:  # Check if the connection is successful
                     print("Succesfully connected to: " + self.grpc_addr)
                     break
@@ -82,6 +83,7 @@ class MsCommunication(SecureChannel):
 
     def SendData(self):
 
+
         # Instantiate your protobuf message
         communication = msServerTypes.MicroserviceCommunication()
 
@@ -99,4 +101,5 @@ class MsCommunication(SecureChannel):
 
         communication.metadata = "Sample Metadata"
         print(communication.metadata)
-        self.client.SendData(data_struct)
+        print(communication.type)
+        self.client.SendData(communication)

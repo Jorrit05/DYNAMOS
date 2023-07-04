@@ -3,7 +3,6 @@ module github.com/Jorrit05/DYNAMOS
 go 1.20
 
 require (
-	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/docker/docker v23.0.3+incompatible
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/google/uuid v1.3.0

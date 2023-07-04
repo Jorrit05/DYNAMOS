@@ -37,21 +37,22 @@ func StartGrpcMicroserviceServer(port int64) {
 	serverInstance := &server{}
 
 	pb.RegisterMicroserviceServer(s, serverInstance)
-
+	logger.Info("pb.RegisterMicroserviceServer(s, serverInstance)")
 	if err := s.Serve(lis); err != nil {
 		logger.Sugar().Fatalw("failed to serve: %v", err)
 	}
+	logger.Info("Ending StartGrpcMicroserviceServer")
 }
 
 func (s *server) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
+	logger.Info("Start SendData")
 	switch data.Type {
 	case "sqlDataRequest":
-		logger.Sugar().Debug("switching on sqlDataRequest")
+		logger.Sugar().Info("switching on sqlDataRequest")
 		// Callback funcs
-		os.Exit(0)
+		// os.Exit(0)
 
 	default:
-		// Respond with a 405 'Method Not Allowed' HTTP response if the method isn't supported
 		logger.Sugar().Errorf("Unknown message type: %v", data.Type)
 	}
 	return &emptypb.Empty{}, nil
@@ -91,10 +92,11 @@ func main() {
 		conn = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(int(port+1)))
 		defer conn.Close()
 	}
+	logger.Info("started GRPC server")
 
 	// Do work
+	time.Sleep(40 * time.Second)
 
-	time.Sleep(20 * time.Second)
 	logger.Info("Exiting algorithm service")
 	os.Exit(0)
 }

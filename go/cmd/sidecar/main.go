@@ -19,6 +19,7 @@ var (
 type server struct {
 	pb.UnimplementedSideCarServer
 	pb.UnimplementedEtcdServer
+	pb.UnimplementedHealthServer
 }
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 	serverInstance := &server{}
 	pb.RegisterSideCarServer(s, serverInstance)
 	pb.RegisterEtcdServer(s, serverInstance)
+	pb.RegisterHealthServer(s, serverInstance)
 
 	if err := s.Serve(lis); err != nil {
 		logger.Sugar().Fatalw("failed to serve: %v", err)
