@@ -26,7 +26,6 @@ func (s *server) InitRabbitMq(ctx context.Context, in *pb.ServiceRequest) (*empt
 	return &emptypb.Empty{}, nil
 }
 
-// func (s *server) Consume(ctx context.Context, in *pb.ConsumeRequest) (*emptypb.Empty, error) {
 func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer) error {
 	logger.Debug("Starting Consume")
 	var err error
@@ -60,6 +59,11 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 		case "compositionRequest":
 			if err := s.handleCompositionRequestResponse(msg, stream); err != nil {
 				logger.Sugar().Errorf("Error handling validation response: %v", err)
+				return status.Error(codes.Internal, err.Error())
+			}
+		case "sqlDataRequest":
+			if err := s.handleSqlDataRequestResponse(msg, stream); err != nil {
+				logger.Sugar().Errorf("Error handling sqlData response: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
 		// Handle other message types...

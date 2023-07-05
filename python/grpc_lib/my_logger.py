@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 
+
 def InitLogger():
 # Set up the logger
     logger = logging.getLogger(os.path.basename(sys.argv[0])) # use program name as logger name
@@ -17,4 +18,5 @@ def InitLogger():
     # Add the formatter to the handler and the handler to the logger
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
+
     return logger

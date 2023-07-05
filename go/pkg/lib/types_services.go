@@ -15,3 +15,10 @@ type AgentDetails struct {
 	// QueueName    string
 	// AgentDetails MicroService
 }
+
+type JobUserInfo struct {
+	Name        string `json:"name"`
+	RequestType string `json:"requestType"`
+	JobName     string `json:"jobName"`
+	ArcheType   string `json:"archetype"`
+}

@@ -42,3 +42,8 @@ func (s *server) handleRequestApprovalResponse(msg amqp.Delivery, stream pb.Side
 func (s *server) handleCompositionRequestResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
 	return s.handleResponse(msg, stream, &pb.CompositionRequest{})
 }
+
+func (s *server) handleSqlDataRequestResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+	logger.Debug("Starting handleSqlDataRequestResponse")
+	return s.handleResponse(msg, stream, &pb.SqlDataRequest{})
+}

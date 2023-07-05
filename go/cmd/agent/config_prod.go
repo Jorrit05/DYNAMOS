@@ -14,3 +14,4 @@ var grpcAddr = "localhost:50051"
 var firstPortMicroservice = 50052
 var backoffLimit = int32(6)
 var ttl = int32(60)
+var kubeconfig = ""

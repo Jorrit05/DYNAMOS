@@ -1,27 +1,28 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-
-	"github.com/Jorrit05/DYNAMOS/pkg/lib"
-	"go.uber.org/zap"
+	"time"
 )
 
-var (
-	logLevel = zap.LevelFlag("level", zap.InfoLevel, "log level")
-
-	logger = lib.InitLogger(*logLevel)
-
-	port          = flag.Int("port", 3005, "The server port")
-	etcdEndpoints = "http://localhost:30005"
-	serviceName   = "test"
-)
+func getTarget() string {
+	time.Sleep(5 * time.Second)
+	return "RESULT"
+}
 
 func main() {
 
-	flag.Parse()
-	logger.Debug("Debug")
-	logger.Info(fmt.Sprintf("Port: %v", *port))
+	// Create a channel that can hold a string value
+	targetChan := make(chan string)
 
+	// Start a goroutine that gets the target and sends it to the channel
+	go func() {
+		target := getTarget() // assuming getTarget returns a string
+		targetChan <- target
+	}()
+
+	fmt.Println("start wait")
+	target := <-targetChan
+
+	fmt.Println("Result: " + target)
 }

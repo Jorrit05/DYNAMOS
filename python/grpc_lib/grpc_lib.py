@@ -3,48 +3,46 @@ import os
 import time
 
 from google.protobuf.empty_pb2 import Empty
-import rabbitMQ_pb2_grpc as rabbit
-import rabbitMQ_pb2 as rabbitTypes
 import microserviceCommunication_pb2 as msServerTypes
 import microserviceCommunication_pb2_grpc as msServer
+import health_pb2_grpc as healthServer
+import health_pb2 as healthTypes
 
 import etcd_pb2_grpc as etcd
 from google.protobuf.struct_pb2 import Struct
 import etcd_pb2 as etcdTypes
-
-if os.getenv('ENV') == 'PROD':
-    import config_prod as config
-else:
-    import config_local as config
-
 import grpc
 import time
+from my_logger import InitLogger
 
 class SecureChannel:
-    def __init__(self, grpc_addr, max_retries=5, retry_delay=2):
+    def __init__(self, grpc_addr, grpc_port):
+        self.logger = InitLogger()
+        if grpc_port == "":
+            self.logger.fatal("Grpc port is undefined")
+
         self.channel = None
         self.grpc_addr = grpc_addr
-        self.max_retries = max_retries
-        self.retry_delay = retry_delay
+        self.grpc_port = grpc_port
         self.connect()
 
     def connect(self):
-        retries = 0
-        while retries < self.max_retries:
-            try:
-                self.channel = grpc.insecure_channel(self.grpc_addr)
-                print( self.channel)
-                if self.channel:  # Check if the connection is successful
-                    print("Succesfully connected to: " + self.grpc_addr)
-                    break
-            except Exception as e:  # Catch and print the exception if there is one
-                print(f"Failed to establish a secure channel. Attempt: {retries+1}")
-                print(f"Exception: {str(e)}")
-                retries += 1
-                time.sleep(self.retry_delay)  # Wait before the next retry
-        else:  # The 'else' clause in the 'while' loop executes when the loop finishes without break
-            raise Exception("Failed to establish a secure channel after maximum retries.")
+        self.channel = grpc.insecure_channel(self.grpc_addr + self.grpc_port)
+        health_stub = healthServer.HealthStub(self.channel)
 
+        for i in range(1, 8):  # maximum of 7 retries
+            try:
+                response = health_stub.Check(healthTypes.HealthCheckRequest())
+                if response.status == healthTypes.HealthCheckResponse.SERVING:
+                    break  # The sidecar is ready, so break the loop.
+            except grpc.RpcError as e:
+                self.logger.warning(f"Could not check: {e.details()}")
+
+            self.logger.info("Sleep 1 second")
+            time.sleep(1)  # Wait a second before checking again.
+
+            if i == 7:
+                raise Exception(f"Could not connect with gRPC after {i} tries")
 
 
 class EtcdClient(SecureChannel):
@@ -61,19 +59,6 @@ class EtcdClient(SecureChannel):
         path = etcdTypes.EtcdKey()
         path.path = key
         return self.client.GetDatasetMetadata(path)
-
-class RabbitClient(SecureChannel):
-    def __init__(self, grpc_addr, service_request):
-        super().__init__(grpc_addr)
-        self.client = rabbit.SideCarStub(self.channel)
-        self.initialize_rabbit(service_request)
-
-    def initialize_rabbit(self, service_request):
-        try:
-            self.client.InitRabbitMq(service_request)
-            print("Service started successfully")
-        except grpc.RpcError as e:
-            print(f"Attempt : could not establish connection with RabbitMQ: {e}")
 
 class MsCommunication(SecureChannel):
     def __init__(self):

@@ -3,6 +3,7 @@ module github.com/Jorrit05/DYNAMOS
 go 1.20
 
 require (
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/docker/docker v23.0.3+incompatible
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/google/uuid v1.3.0
@@ -27,12 +28,14 @@ require (
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
+	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

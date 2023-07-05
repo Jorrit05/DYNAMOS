@@ -1,35 +1,32 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
-
-	"github.com/Jorrit05/DYNAMOS/pkg/api"
+	"strings"
 )
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		body, err := api.GetRequestBody(w, r, serviceName)
-		if err != nil {
+		logger.Debug("Entering authMiddleware")
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, "Authorization header is missing", http.StatusUnauthorized)
 			return
 		}
 
-		var sqlDataRequest api.SqlDataRequest
-		err = json.Unmarshal(body, &sqlDataRequest)
-		if err != nil {
-			logger.Sugar().Errorf("Error unmarshalling SqlDataRequest: %v", err)
+		headerParts := strings.Split(authHeader, " ")
+		if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
+			http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
 			return
 		}
 
-		if sqlDataRequest.Auth.AccessToken != "1234" {
+		token := headerParts[1]
 
-			logger.Warn("Invalid token: " + sqlDataRequest.Auth.AccessToken)
-			http.Error(w, "Invalid token", http.StatusForbidden)
-			return
-		}
+		// TODO: validate the token
 
-		//TOD
+		logger.Sugar().Debugf("Your token: %s", token)
+
+		//TODO
 		// Add auth value to request context for later use in handlers if needed
 		// ctx := context.WithValue(r.Context(), "auth", auth)
 		// r = r.WithContext(ctx)

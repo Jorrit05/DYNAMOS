@@ -7,8 +7,37 @@ import (
 	"os"
 	"strings"
 
+	"regexp"
+
 	"github.com/google/uuid"
 )
+
+// Function expects a valid email address and the length of the desired GUID
+// Example:
+//
+// fmt.Println(GeneratePodNameWithGUID("example.two@cloud.com", 8))
+// prints: example-two-12345678 (some GUID of length 8, prefixed with a hyphen)
+func GeneratePodNameWithGUID(email string, length int) string {
+	// Extract the part before '@' symbol
+	atIndex := strings.Index(email, "@")
+	if atIndex == -1 {
+		return ""
+	}
+	domain := email[:atIndex]
+
+	// Remove special characters and replace with hyphen
+	re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	domain = re.ReplaceAllString(domain, "-")
+
+	// Generate a random GUID of the given length
+	guid := uuid.New().String()
+	if len(guid) > length {
+		guid = guid[:length]
+	}
+
+	// Construct the final email address
+	return fmt.Sprintf("%s-%s", domain, guid)
+}
 
 func ReadFile(fileName string) (string, error) {
 	data, err := os.ReadFile(fileName)

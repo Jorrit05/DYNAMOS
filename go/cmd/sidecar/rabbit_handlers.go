@@ -69,3 +69,20 @@ func (s *server) SendCompositionRequest(ctx context.Context, in *pb.CompositionR
 
 	return send(message, in.Target)
 }
+
+func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal requestApproval failed: %s", err)
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Do other stuff
+	message := amqp.Publishing{
+		Body: data,
+		Type: "sqlDataRequest",
+	}
+
+	return send(message, in.Target)
+}

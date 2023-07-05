@@ -41,6 +41,11 @@ class SideCarStub(object):
                 request_serializer=rabbitMQ__pb2.CompositionRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
+        self.SendSqlDataRequest = channel.unary_unary(
+                '/proto.SideCar/SendSqlDataRequest',
+                request_serializer=rabbitMQ__pb2.SqlDataRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
 
 
 class SideCarServicer(object):
@@ -77,6 +82,12 @@ class SideCarServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendSqlDataRequest(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SideCarServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -103,6 +114,11 @@ def add_SideCarServicer_to_server(servicer, server):
             'SendCompositionRequest': grpc.unary_unary_rpc_method_handler(
                     servicer.SendCompositionRequest,
                     request_deserializer=rabbitMQ__pb2.CompositionRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'SendSqlDataRequest': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendSqlDataRequest,
+                    request_deserializer=rabbitMQ__pb2.SqlDataRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -197,6 +213,23 @@ class SideCar(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/proto.SideCar/SendCompositionRequest',
             rabbitMQ__pb2.CompositionRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SendSqlDataRequest(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/proto.SideCar/SendSqlDataRequest',
+            rabbitMQ__pb2.SqlDataRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

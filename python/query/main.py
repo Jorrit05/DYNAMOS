@@ -2,14 +2,21 @@ import pandas as pd
 from pandasql import sqldf
 import re
 import os
-from grpc_lib import EtcdClient, MsCommunication
+from grpc_lib import EtcdClient
+from rabbit_client import RabbitClient
+from microservice_client import MsCommunication
 from my_logger import InitLogger
 if os.getenv('ENV') == 'PROD':
     import config_prod as config
 else:
     import config_local as config
 
+
+# globals
 logger = InitLogger()
+rabbitClient = None
+microserviceCommunicator = None
+
 
 def load_and_query_csv(file_path_prefix, query):
     # Extract table names from the query
@@ -31,16 +38,22 @@ def load_and_query_csv(file_path_prefix, query):
 
 
 def main():
-    logger.info("Starting Query service")
-    if int(os.getenv("FIRST")) > 0:
-        logger.info("First service")
-    else:
-        logger.info("Not the first service")
+    logger.debug("Starting Query service")
 
-    # microserviceCommunicator = MsCommunication()
+
+    if int(os.getenv("FIRST")) > 0:
+        logger.debug("First service")
+        job_name = os.getenv("JOB_NAME")
+        rabbitClient = RabbitClient(config.grpc_addr, job_name, job_name, True)
+        rabbitClient._consume_with_retry(job_name, 10, 2)
+    else:
+        logger.debug("Not the first service")
+        #TODO: Setup listener service for Python
+        # microserviceCommunicator = MsCommunication(config.grpc_addr)
+        # microserviceCommunicator.
     # response = microserviceCommunicator.SendData()
 
-    logger.info("Finishing work, exiting")
+    logger.debug("Finishing work, exiting")
     exit(0)
     # Define the prefix of your CSV files' paths
     file_path_prefix = '/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/datasets/'

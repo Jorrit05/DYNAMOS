@@ -26,3 +26,6 @@ Todo?:
 /policyEnforcer/agreements/RUG -> JSON definition
 /dataStewards/UVA (agent availability in the distributed system)
 <!-- /microservices/queryService/deploymentData -> JSON deployment definition -->
+
+/activeJobs/fullName -> jobName?
+/activeJobs/Jobname -> Full struct?

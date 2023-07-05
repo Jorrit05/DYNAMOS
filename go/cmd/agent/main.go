@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -52,12 +53,12 @@ func main() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	agentMux := http.NewServeMux()
-	agentMux.HandleFunc("/agent/v1/sqlDataRequest", sqlDataRequestHandler())
+	agentMux.HandleFunc(fmt.Sprintf("/agent/v1/sqlDataRequest/%s", strings.ToLower(serviceName)), sqlDataRequestHandler())
 
 	wrappedAgentMux := authMiddleware(agentMux)
 
 	mux := http.NewServeMux()
-	mux.Handle("/agent/v1/sqlDataRequest", wrappedAgentMux)
+	mux.Handle(fmt.Sprintf("/agent/v1/sqlDataRequest/%s", strings.ToLower(serviceName)), wrappedAgentMux)
 
 	logger.Sugar().Infow("Starting http server on: ", "port", port)
 	go func() {

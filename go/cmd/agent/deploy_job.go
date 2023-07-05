@@ -6,24 +6,49 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	rest "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
+
+func getKubeConfig() (*rest.Config, error) {
+	var config *rest.Config
+	var err error
+
+	if local {
+		// Use out-of-cluster configuration
+		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			logger.Sugar().Errorf("failed to build config: %v", err)
+			return nil, err
+		}
+	} else {
+		// Use in-cluster configuration
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			logger.Sugar().Errorf("failed to build config: %v", err)
+			return nil, err
+		}
+	}
+
+	return config, nil
+}
 
 func deployJob(compositionRequest *pb.CompositionRequest) error {
 	logger.Debug("Starting deployJob")
 	// Create context
 	ctx := context.TODO()
 
-	// Use the current context in kubeconfig
-	config, err := rest.InClusterConfig()
+	config, err := getKubeConfig()
 	if err != nil {
-		logger.Sugar().Errorf("failed to build config: %v", err)
 		return err
 	}
 
@@ -35,13 +60,17 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 	}
 
 	dataStewardName := strings.ToLower(os.Getenv("DATA_STEWARD_NAME"))
+	jobName := lib.GeneratePodNameWithGUID(compositionRequest.User.UserName, 8)
+	logger.Sugar().Debugw("Pod info:", "dataStewardName: ", dataStewardName, "jobName: ", jobName)
+
+	go registerUserWithJob(compositionRequest, jobName)
 
 	// Define the job
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "jorrit", //compositionRequest.User.UserName,
+			Name:      jobName,
 			Namespace: dataStewardName,
-			Labels:    map[string]string{"app": dataStewardName},
+			Labels:    map[string]string{"app": dataStewardName, "jobName": jobName},
 		},
 		Spec: batchv1.JobSpec{
 			TTLSecondsAfterFinished: &ttl, // Clean up job TTL after it finishes
@@ -70,12 +99,20 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 		if i == nrOfServices-1 {
 			lastService = "1"
 		}
-		logger.Sugar().Infow("job info:", "name: ", name, "Port: ", port)
+
+		logger.Sugar().Debugw("job info:", "name: ", name, "Port: ", port)
+
 		container := v1.Container{
 			Name:            name,
 			Image:           fmt.Sprintf("%s:latest", name),
 			ImagePullPolicy: v1.PullIfNotPresent,
-			Env:             []v1.EnvVar{{Name: "ORDER", Value: strconv.Itoa(port)}, {Name: "LAST", Value: lastService}, {Name: "FIRST", Value: firstService}},
+			Env: []v1.EnvVar{
+				{Name: "ORDER", Value: strconv.Itoa(port)},
+				{Name: "LAST", Value: lastService},
+				{Name: "FIRST", Value: firstService},
+				{Name: "JOB_NAME", Value: jobName},
+				{Name: "SIDECAR_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
+			},
 			// Add additional container configuration here as needed
 		}
 		job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, container)
@@ -91,6 +128,30 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 	}
 
 	return nil
+}
+
+func registerUserWithJob(compositionRequest *pb.CompositionRequest, jobName string) {
+	logger.Debug("Entering registerUserWithJob")
+	var userData lib.JobUserInfo
+	userData.ArcheType = compositionRequest.ArchetypeId
+	userData.JobName = jobName
+	userData.Name = compositionRequest.User.UserName
+	userData.RequestType = compositionRequest.RequestType
+
+	jobNameKey := fmt.Sprintf("/activeJobs/%s", jobName)
+	userKey := fmt.Sprintf("/activeJobs/%s", compositionRequest.User.UserName)
+
+	// One entry with all related info with the jobName as key
+	err := etcd.SaveStructToEtcd[lib.JobUserInfo](etcdClient, jobNameKey, userData)
+	if err != nil {
+		logger.Sugar().Warnf("Error saving struct to etcd: %v", err)
+	}
+
+	// One entry with the jobName with the userName as key
+	err = etcd.PutValueToEtcd(etcdClient, userKey, jobName, etcd.WithMaxElapsedTime(time.Second*10))
+	if err != nil {
+		logger.Sugar().Warnf("Error saving jobname to etcd: %v", err)
+	}
 }
 
 func addSidecar() v1.Container {

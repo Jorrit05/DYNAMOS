@@ -109,3 +109,10 @@ https://github.com/argoproj/argo-workflows/releases/tag/v3.4.8
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 helm install -f /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/prometheus.yaml prometheus prometheus-community/prometheus
+
+
+# Python
+export ORDER="50053"
+export SIDECAR_PORT="50052"
+export JOB_NAME="python-12345"
+export FIRST="1"
