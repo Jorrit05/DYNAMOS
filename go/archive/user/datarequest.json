@@ -1,6 +1,0 @@
-{
-    "type" : "DataRequest",
-    "name" : "uva",
-    "providers" : ["unl1_agent", "unl2_agent", "unl3"],
-    "query" : "SELECT `first_name`, `last_name`, `sex`, `person_id` FROM `person` LIMIT 2"
-}
