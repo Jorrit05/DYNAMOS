@@ -6,28 +6,24 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
-	logger      = lib.InitLogger(logLevel)
-	conn        *grpc.ClientConn
-	lastService bool = false
-	stop             = make(chan struct{}) // channel to tell the server to stop
+	logger = lib.InitLogger(logLevel)
+	conn   *grpc.ClientConn
+
+	stop = make(chan struct{}) // channel to tell the server to stop
 
 )
 
-type server struct {
-	pb.UnimplementedMicroserviceServer
-}
-
 // This is the function being called by the last microservice
-func (s *server) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
-	logger.Info("Start SendData")
+func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunication) error {
+	logger.Info("Start handleSqlDataRequest")
 	switch data.Type {
 	case "sqlDataRequest":
 		logger.Sugar().Info("switching on sqlDataRequest")
@@ -36,21 +32,32 @@ func (s *server) SendData(ctx context.Context, data *pb.MicroserviceCommunicatio
 		metadata := data.Metadata
 
 		// Print each metadata field
+		logger.Sugar().Debugf("Length metadata: %s", strconv.Itoa(len(metadata)))
 		for key, value := range metadata {
 			fmt.Printf("Key: %s, Value: %+v\n", key, value)
 		}
 
 		// Unpack the data
 		dataStruct := data.Data
+		sqlDataRequest := &pb.SqlDataRequest{}
+		if err := data.UserRequest.UnmarshalTo(sqlDataRequest); err != nil {
+			logger.Sugar().Fatalf("Failed to unmarshal sqlDataRequest message: %v", err)
+		}
+		logger.Debug(sqlDataRequest.User.UserName)
 
 		// Print the entire data field
 		fmt.Println(dataStruct)
+		c := pb.NewMicroserviceClient(conn)
 
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		c.SendData(ctx, data)
 		close(stop)
 	default:
 		logger.Sugar().Errorf("Unknown message type: %v", data.Type)
 	}
-	return &emptypb.Empty{}, nil
+	return nil
 }
 
 func StartGrpcMicroserviceServer(port int64) <-chan struct{} {
@@ -65,10 +72,10 @@ func StartGrpcMicroserviceServer(port int64) <-chan struct{} {
 		s := grpc.NewServer()
 		serverInstance := &lib.SharedServer{}
 
-		pb.RegisterMicroserviceServer(s, &server{})
+		pb.RegisterMicroserviceServer(s, serverInstance)
 		pb.RegisterHealthServer(s, serverInstance)
 
-		logger.Info("pb.RegisterMicroserviceServer(s, serverInstance)")
+		serverInstance.RegisterCallback("sqlDataRequest", handleSqlDataRequest)
 
 		go func() {
 			<-stop
@@ -109,16 +116,19 @@ func main() {
 	if err != nil || err1 != nil {
 		logger.Sugar().Fatalf("Error determining port number: %v", err)
 	}
-	stopped := StartGrpcMicroserviceServer(port)
 
-	// Connect to following service.
+	// c pb.SideCarClient
 	if lastServiceInt > 0 {
-		// We are the last service
-		lastService = true
+		// We are the last service, connect to the sidecar
+		conn = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+		defer conn.Close()
 	} else {
+		// Connect to following service
 		conn = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(int(port+1)))
 		defer conn.Close()
 	}
+	stopped := StartGrpcMicroserviceServer(port)
+
 	logger.Info("started GRPC server")
 
 	// Wait for GRPC server to shutdown gracefully before quiting

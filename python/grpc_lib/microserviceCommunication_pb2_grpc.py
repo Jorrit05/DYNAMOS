@@ -16,11 +16,6 @@ class MicroserviceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.InitMicroServiceServer = channel.unary_unary(
-                '/proto.Microservice/InitMicroServiceServer',
-                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                )
         self.SendData = channel.unary_unary(
                 '/proto.Microservice/SendData',
                 request_serializer=microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
@@ -32,12 +27,6 @@ class MicroserviceServicer(object):
     """The sidecar definition.
     """
 
-    def InitMicroServiceServer(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def SendData(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -47,11 +36,6 @@ class MicroserviceServicer(object):
 
 def add_MicroserviceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'InitMicroServiceServer': grpc.unary_unary_rpc_method_handler(
-                    servicer.InitMicroServiceServer,
-                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
             'SendData': grpc.unary_unary_rpc_method_handler(
                     servicer.SendData,
                     request_deserializer=microserviceCommunication__pb2.MicroserviceCommunication.FromString,
@@ -67,23 +51,6 @@ def add_MicroserviceServicer_to_server(servicer, server):
 class Microservice(object):
     """The sidecar definition.
     """
-
-    @staticmethod
-    def InitMicroServiceServer(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/proto.Microservice/InitMicroServiceServer',
-            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def SendData(request,

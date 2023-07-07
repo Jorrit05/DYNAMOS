@@ -39,7 +39,7 @@ func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 	return conn
 }
 
-func InitializeRabbit(conn *grpc.ClientConn, in *pb.ServiceRequest) pb.SideCarClient {
+func InitializeSidecarMessaging(conn *grpc.ClientConn, in *pb.ServiceRequest) pb.SideCarClient {
 	c := pb.NewSideCarClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

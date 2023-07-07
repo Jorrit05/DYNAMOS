@@ -33,7 +33,7 @@ func main() {
 
 	conn = lib.GetGrpcConnection(grpcAddr)
 	defer conn.Close()
-	c := lib.InitializeRabbit(conn, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+	c := lib.InitializeSidecarMessaging(conn, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 
 	// Define a WaitGroup
 	var wg sync.WaitGroup

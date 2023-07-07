@@ -80,7 +80,7 @@ def process_sql_data_request(sqlDataRequest):
         logger.debug(result)
         data, metadata = dataframe_to_protobuf(result)
         microserviceCommunicator = MsCommunication(config.grpc_addr)
-        microserviceCommunicator.SendData("sqlDataRequest", data, metadata)
+        microserviceCommunicator.SendData("sqlDataRequest", data, metadata, sqlDataRequest)
     except FileNotFoundError:
         logger.error(f"File not found at path {config.dataset_filepath}")
     except Exception as e:

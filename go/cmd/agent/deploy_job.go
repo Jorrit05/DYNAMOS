@@ -163,6 +163,7 @@ func addSidecar() v1.Container {
 		ImagePullPolicy: v1.PullIfNotPresent,
 		Env: []v1.EnvVar{
 			{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
+			{Name: "TEMPORARY_JOB", Value: "true"},
 			{Name: "AMQ_USER", Value: rabbitMqUser},
 			{Name: "AMQ_PASSWORD",
 				ValueFrom: &v1.EnvVarSource{

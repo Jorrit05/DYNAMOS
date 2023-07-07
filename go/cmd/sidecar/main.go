@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -30,9 +31,18 @@ func main() {
 	logger.Sugar().Infof("Serving on %v", *port)
 	s := grpc.NewServer()
 	serverInstance := &server{}
+	sharedServer := &lib.SharedServer{}
 	pb.RegisterSideCarServer(s, serverInstance)
 	pb.RegisterEtcdServer(s, serverInstance)
-	pb.RegisterHealthServer(s, &lib.SharedServer{})
+	pb.RegisterHealthServer(s, sharedServer)
+
+	// This env variable is only defined if this job is deployed
+	// by a distributed agent
+	if os.Getenv("TEMPORARY_JOB") != "" {
+		pb.RegisterMicroserviceServer(s, sharedServer)
+		sharedServer.RegisterCallback("sqlDataRequest", handleSqlDataRequest)
+
+	}
 
 	if err := s.Serve(lis); err != nil {
 		logger.Sugar().Fatalw("failed to serve: %v", err)

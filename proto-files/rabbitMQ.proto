@@ -84,11 +84,11 @@ message CompositionRequest {
 
 message SqlDataRequest {
   string type = 1;
-  repeated string dataProviders = 2;
+  repeated string data_providers = 2;
   string query = 3;
   bool graph = 4;
   string algorithm = 5;
-  map<string, string> algorithmColumns = 6;
+  map<string, string> algorithm_columns = 6;
   User user = 7;
   string target = 8;
 }
