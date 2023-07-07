@@ -16,5 +16,5 @@ service Microservice {
 message MicroserviceCommunication {
   string type = 1;
   google.protobuf.Struct data = 2;
-  string metadata = 3;
+  map<string, string> metadata = 3;
 }

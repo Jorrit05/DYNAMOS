@@ -107,9 +107,9 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 			Image:           fmt.Sprintf("%s:latest", name),
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Env: []v1.EnvVar{
-				{Name: "ORDER", Value: strconv.Itoa(port)},
-				{Name: "LAST", Value: lastService},
+				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
 				{Name: "FIRST", Value: firstService},
+				{Name: "LAST", Value: lastService},
 				{Name: "JOB_NAME", Value: jobName},
 				{Name: "SIDECAR_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 			},
@@ -156,11 +156,24 @@ func registerUserWithJob(compositionRequest *pb.CompositionRequest, jobName stri
 
 func addSidecar() v1.Container {
 	name := "sidecar"
+
 	return v1.Container{
 		Name:            name,
 		Image:           fmt.Sprintf("%s:latest", name),
 		ImagePullPolicy: v1.PullIfNotPresent,
-		Env:             []v1.EnvVar{{Name: "ORDER", Value: strconv.Itoa(firstPortMicroservice - 1)}, {Name: "AMQ_PASSWORD", Value: os.Getenv("AMQ_PASSWORD")}, {Name: "AMQ_USER", Value: os.Getenv("AMQ_USER")}},
+		Env: []v1.EnvVar{
+			{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
+			{Name: "AMQ_USER", Value: rabbitMqUser},
+			{Name: "AMQ_PASSWORD",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "rabbit",
+						},
+						Key: "password",
+					},
+				},
+			}},
 		// Add additional container configuration here as needed
 	}
 }

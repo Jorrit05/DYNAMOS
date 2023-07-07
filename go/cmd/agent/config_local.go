@@ -16,3 +16,4 @@ var firstPortMicroservice = 50052
 var backoffLimit = int32(6)
 var ttl = int32(60)
 var kubeconfig = "/Users/jorrit/.kube/config"
+var rabbitMqUser = "normal_user"

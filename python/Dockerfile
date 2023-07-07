@@ -6,11 +6,18 @@ ARG NAME
 ENV NAME=$NAME
 
 WORKDIR /app
+RUN mkdir $NAME
+RUN mkdir grpc_lib
+RUN mkdir datasets
+
 COPY requirements.txt .
-COPY . /app
+COPY ./*.py /app/$NAME
+COPY ./grpc_lib/*.py /app/grpc_lib
+COPY ./*.csv /app/datasets
 
 RUN pip install --no-cache-dir -r requirements.txt
 
 ENV  ENV="PROD"
+ENV PYTHONPATH="/app/grpc_lib"
 
-CMD ["python", "/app/main.py"]
+CMD ["sh", "-c", "python /app/${NAME}/main.py"]

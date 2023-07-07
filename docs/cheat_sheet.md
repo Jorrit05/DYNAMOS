@@ -112,7 +112,13 @@ helm install -f /Users/jorrit/Documents/master-software-engineering/thesis/DYNAM
 
 
 # Python
-export ORDER="50053"
+export DESIGNATED_GRPC_PORT="50053"
 export SIDECAR_PORT="50052"
-export JOB_NAME="python-12345"
 export FIRST="1"
+export JOB_NAME=""
+
+# Algorithm
+export DESIGNATED_GRPC_PORT="50054"
+export SIDECAR_PORT="50052"
+export FIRST="0"
+export LAST="1"

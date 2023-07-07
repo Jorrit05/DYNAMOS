@@ -40,3 +40,21 @@ spec:
         - name: AMQ_USER
           value: normal_user
 
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: uva
+  namespace: uva
+spec:
+  selector:
+    app: uva
+  ports:
+    - name: http-uva-api
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30030
+  type: NodePort
+

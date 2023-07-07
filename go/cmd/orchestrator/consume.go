@@ -44,9 +44,8 @@ func startConsuming(c pb.SideCarClient, from string) error {
 
 		switch grpcMsg.Type {
 		case "validationResponse":
-
-			var validationResponse pb.ValidationResponse
-			if err := grpcMsg.Body.UnmarshalTo(&validationResponse); err != nil {
+			validationResponse := &pb.ValidationResponse{}
+			if err := grpcMsg.Body.UnmarshalTo(validationResponse); err != nil {
 				logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)
 			}
 			mutex.Lock()
@@ -57,7 +56,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 			if ok {
 				logger.Sugar().Info("Sending validation to channel")
 				// Send a signal on the channel to indicate that the response is ready
-				requestData.response <- &validationResponse
+				requestData.response <- validationResponse
 			} else {
 				logger.Sugar().Errorw("unknown validation response", "GUID", validationResponse.User.Id)
 			}

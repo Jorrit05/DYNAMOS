@@ -13,10 +13,13 @@ def InitLogger():
     console_handler.setLevel(logging.DEBUG)
 
     # Create a formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(filename)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s')
 
     # Add the formatter to the handler and the handler to the logger
     console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+
+    # Add the handler to the logger only if it has no handlers yet
+    if not logger.handlers:
+        logger.addHandler(console_handler)
 
     return logger

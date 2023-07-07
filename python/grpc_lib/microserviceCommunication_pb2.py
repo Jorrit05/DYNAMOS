@@ -15,7 +15,7 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fmicroserviceCommunication.proto\x12\x05proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\"b\n\x19MicroserviceCommunication\x12\x0c\n\x04type\x18\x01 \x01(\t\x12%\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x10\n\x08metadata\x18\x03 \x01(\t2\xa2\x01\n\x0cMicroservice\x12J\n\x16InitMicroServiceServer\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x12\x46\n\x08SendData\x12 .proto.MicroserviceCommunication\x1a\x16.google.protobuf.Empty\"\x00\x42\'Z%github.com/Jorrit05/DYNAMOS/pkg/protob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fmicroserviceCommunication.proto\x12\x05proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xc3\x01\n\x19MicroserviceCommunication\x12\x0c\n\x04type\x18\x01 \x01(\t\x12%\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct\x12@\n\x08metadata\x18\x03 \x03(\x0b\x32..proto.MicroserviceCommunication.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x32\xa2\x01\n\x0cMicroservice\x12J\n\x16InitMicroServiceServer\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x12\x46\n\x08SendData\x12 .proto.MicroserviceCommunication\x1a\x16.google.protobuf.Empty\"\x00\x42\'Z%github.com/Jorrit05/DYNAMOS/pkg/protob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -24,8 +24,12 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z%github.com/Jorrit05/DYNAMOS/pkg/proto'
-  _globals['_MICROSERVICECOMMUNICATION']._serialized_start=101
-  _globals['_MICROSERVICECOMMUNICATION']._serialized_end=199
-  _globals['_MICROSERVICE']._serialized_start=202
-  _globals['_MICROSERVICE']._serialized_end=364
+  _MICROSERVICECOMMUNICATION_METADATAENTRY._options = None
+  _MICROSERVICECOMMUNICATION_METADATAENTRY._serialized_options = b'8\001'
+  _globals['_MICROSERVICECOMMUNICATION']._serialized_start=102
+  _globals['_MICROSERVICECOMMUNICATION']._serialized_end=297
+  _globals['_MICROSERVICECOMMUNICATION_METADATAENTRY']._serialized_start=250
+  _globals['_MICROSERVICECOMMUNICATION_METADATAENTRY']._serialized_end=297
+  _globals['_MICROSERVICE']._serialized_start=300
+  _globals['_MICROSERVICE']._serialized_end=462
 # @@protoc_insertion_point(module_scope)

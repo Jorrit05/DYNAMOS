@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// Handle incoming AMQ messages.
 // Stream functionality to send responses to the 'main' container. Create a RabbitMQMessage type by making sure the type is easily accessible
 // and package the body.
 func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer, pbMsg proto.Message) error {
