@@ -18,7 +18,6 @@ import (
 var (
 	logger                         = lib.InitLogger(logLevel)
 	etcdClient    *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
-	c             pb.SideCarClient
 	conn          *grpc.ClientConn
 	mutex         = &sync.Mutex{}
 	validationMap = make(map[string]*validation)
@@ -34,7 +33,7 @@ func main() {
 
 	conn = lib.GetGrpcConnection(grpcAddr)
 	defer conn.Close()
-	c = lib.InitializeRabbit(conn, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+	c := lib.InitializeRabbit(conn, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 
 	// Define a WaitGroup
 	var wg sync.WaitGroup
@@ -71,7 +70,7 @@ func main() {
 	apiMux.HandleFunc("/policyEnforcer", agreementsHandler(etcdClient, "/policyEnforcer"))
 	apiMux.HandleFunc("/policyEnforcer/", agreementsHandler(etcdClient, "/policyEnforcer"))
 
-	apiMux.HandleFunc("/requestapproval", requestApprovalHandler())
+	apiMux.HandleFunc("/requestapproval", requestApprovalHandler(c))
 	logger.Info(apiVersion) // prints /api/v1
 
 	mux.Handle(apiVersion+"/", http.StripPrefix(apiVersion, apiMux))

@@ -8,7 +8,7 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
-func startCompositionRequest(validationResponse *pb.ValidationResponse, authorizedProviders *map[string]string) error {
+func startCompositionRequest(validationResponse *pb.ValidationResponse, authorizedProviders *map[string]string, c pb.SideCarClient) error {
 	logger.Debug("Entering startCompositionRequest")
 
 	var request RequestType

@@ -139,7 +139,7 @@ def main():
         logger.debug("Not the first service")
         exit(1)
 
-    print("Exiting main thread")
+    logger.debug("Exiting query service")
 
 
 if __name__ == "__main__":

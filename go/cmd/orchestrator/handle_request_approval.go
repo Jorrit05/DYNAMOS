@@ -14,7 +14,7 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
-func requestApprovalHandler() http.HandlerFunc {
+func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Starting requestApprovalHandler")
@@ -80,7 +80,7 @@ func requestApprovalHandler() http.HandlerFunc {
 				return
 			}
 
-			go startCompositionRequest(msg, &authorizedProviders)
+			go startCompositionRequest(msg, &authorizedProviders, c)
 
 			createAcceptedDataRequest(msg, w, &authorizedProviders)
 			return
