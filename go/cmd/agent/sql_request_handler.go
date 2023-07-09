@@ -4,16 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"github.com/gogo/protobuf/jsonpb"
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/encoding/protojson"
 )
-
-type TypeField struct {
-	Type string `json:"type"`
-}
 
 func sqlDataRequestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -40,15 +39,43 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		}
 
 		sqlDataRequest.Target = jobName
-
+		sqlDataRequest.ReturnAddress = agentConfig.RoutingKey
+		sqlDataRequest.CorrelationId = uuid.New().String()
 		logger.Debug("Sending sqlDataReqeuest ")
 		go c.SendSqlDataRequest(context.Background(), sqlDataRequest)
 
-		//Handle response information
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("send SqlDataRequest to: %s", jobName)))
+		// Create a channel to receive the response
+		responseChan := make(chan *pb.SqlDataRequestResponse)
 
-		// logger.Error("Unknown message type: " + typeField.Type)
-		// http.Error(w, "Page not found", http.StatusNotFound)
+		// Store the request information in the map
+		mutex.Lock()
+		responseMap[sqlDataRequest.CorrelationId] = &dataResponse{response: responseChan}
+		mutex.Unlock()
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+
+		select {
+		case msg := <-responseChan:
+			logger.Sugar().Infof("Received response, %s", msg.CorrelationId)
+
+			// Marshaling google.protobuf.Struct to JSON
+			m := &jsonpb.Marshaler{}
+			jsonString, err := m.MarshalToString(msg.Data)
+			if err != nil {
+				logger.Sugar().Errorf("Error in unmarshalling data: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("Error in returning result"))
+			}
+
+			//Handle response information
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(jsonString))
+			return
+
+		case <-ctx.Done():
+			http.Error(w, "Request timed out", http.StatusRequestTimeout)
+			return
+		}
 	}
 }

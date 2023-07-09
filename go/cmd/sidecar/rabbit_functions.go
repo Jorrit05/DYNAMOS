@@ -122,6 +122,11 @@ func exchange(channel *amqp.Channel) error {
 	return nil
 }
 
+func close_channel(channel *amqp.Channel) {
+	channel.Close()
+	conn.Close()
+}
+
 // ------------------------------------------------------------------------------------------------
 // OLD:
 // ------------------------------------------------------------------------------------------------
@@ -156,11 +161,6 @@ func publish(chann *amqp.Channel, routingKey string, message amqp.Publishing, ex
 	logger.Info("Publish: 3")
 
 	return nil
-}
-
-func close(channel *amqp.Channel) {
-	channel.Close()
-	conn.Close()
 }
 
 func startNewConsumer() (<-chan amqp.Delivery, *amqp.Connection) {

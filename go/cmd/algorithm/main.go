@@ -38,20 +38,17 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 		}
 
 		// Unpack the data
-		dataStruct := data.Data
+		// dataStruct := data.Data
 		sqlDataRequest := &pb.SqlDataRequest{}
 		if err := data.UserRequest.UnmarshalTo(sqlDataRequest); err != nil {
-			logger.Sugar().Fatalf("Failed to unmarshal sqlDataRequest message: %v", err)
+			logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 		}
-		logger.Debug(sqlDataRequest.User.UserName)
 
-		// Print the entire data field
-		fmt.Println(dataStruct)
 		c := pb.NewMicroserviceClient(conn)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-
+		// Just pass on the data for now...
 		c.SendData(ctx, data)
 		close(stop)
 	default:

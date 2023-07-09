@@ -80,8 +80,9 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 
 	// Do other stuff
 	message := amqp.Publishing{
-		Body: data,
-		Type: "sqlDataRequest",
+		CorrelationId: in.CorrelationId,
+		Body:          data,
+		Type:          "sqlDataRequest",
 	}
 
 	return send(message, in.Target)

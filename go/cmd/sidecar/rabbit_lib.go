@@ -62,10 +62,16 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 				return status.Error(codes.Internal, err.Error())
 			}
 		case "sqlDataRequest":
-			if err := s.handleSqlDataRequestResponse(msg, stream); err != nil {
+			if err := s.handleSqlDataRequest(msg, stream); err != nil {
 				logger.Sugar().Errorf("Error handling sqlData response: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
+		case "sqlDataRequestResponse":
+			if err := s.handleSqlDataRequestResponse(msg, stream); err != nil {
+				logger.Sugar().Errorf("Error handling SqlDataRequestResponse response: %v", err)
+				return status.Error(codes.Internal, err.Error())
+			}
+
 		// Handle other message types...
 		default:
 			logger.Sugar().Errorf("Unknown message type: %s", msg.Type)

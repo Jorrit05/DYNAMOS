@@ -5,7 +5,7 @@ package proto;
 option go_package = "github.com/Jorrit05/DYNAMOS/pkg/proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
-
+import "google/protobuf/struct.proto";
 
 // The sidecar definition.
 service SideCar {
@@ -91,4 +91,11 @@ message SqlDataRequest {
   map<string, string> algorithm_columns = 6;
   User user = 7;
   string target = 8;
+  string return_address = 9;
+  string correlation_id = 10;
+}
+
+message SqlDataRequestResponse {
+  string correlation_id = 1;
+  google.protobuf.Struct data = 2;
 }

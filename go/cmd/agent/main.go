@@ -25,7 +25,13 @@ var (
 	c           pb.SideCarClient
 	conn        *grpc.ClientConn
 	agentConfig lib.AgentDetails
+	mutex       = &sync.Mutex{}
+	responseMap = make(map[string]*dataResponse)
 )
+
+type dataResponse struct {
+	response chan *pb.SqlDataRequestResponse
+}
 
 func main() {
 	if !local {

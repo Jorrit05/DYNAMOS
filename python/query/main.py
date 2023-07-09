@@ -75,6 +75,7 @@ def dataframe_to_protobuf(df):
 def process_sql_data_request(sqlDataRequest):
     logger.debug("Start process_sql_data_request")
     try:
+        print(config.dataset_filepath)
         result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
         logger.debug("Got result")
         logger.debug(result)

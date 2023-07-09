@@ -52,6 +52,26 @@ func startConsuming(c pb.SideCarClient, from string) error {
 				logger.Sugar().Errorf("Failed to unmarshal compositionRequest message: %v", err)
 			}
 			go compositionRequestHandler(compositionRequest)
+		case "sqlDataRequestResponse":
+			logger.Debug("Received sqlDataRequestResponse")
+			sqlResult := &pb.SqlDataRequestResponse{}
+
+			if err := grpcMsg.Body.UnmarshalTo(sqlResult); err != nil {
+				logger.Sugar().Errorf("Failed to unmarshal sqlResult message: %v", err)
+			}
+
+			mutex.Lock()
+			// Look up the corresponding channel in the request map
+			requestData, ok := responseMap[sqlResult.CorrelationId]
+			mutex.Unlock()
+
+			if ok {
+				logger.Sugar().Info("Sending requestData to channel")
+				// Send a signal on the channel to indicate that the response is ready
+				requestData.response <- sqlResult
+			} else {
+				logger.Sugar().Errorw("unknown requestData response", "CorrelationId", sqlResult.CorrelationId)
+			}
 		default:
 			logger.Sugar().Fatalf("Unknown message type: %s", grpcMsg.Type)
 		}
