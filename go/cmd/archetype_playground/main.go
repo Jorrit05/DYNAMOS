@@ -88,8 +88,11 @@ func main() {
 		panic(err)
 	}
 	// Merge requestType requiredServices with PolicyResult.RequiredMicroservices
-	servicesToInclude := append(requestType.RequiredServices, policyResult.RequiredMicroservices...)
-	fmt.Println(servicesToInclude)
+	servicesToInclude := []string{}
+	// servicesToInclude := append(requestType.RequiredServices, policyResult.RequiredMicroservices...)
+	// fmt.Println("servicesToInclude")
+	// fmt.Println(servicesToInclude)
+	// fmt.Println("------------------------")
 
 	// Generate a service microservice chain for the request
 	chain, err := generateChain(servicesToInclude, services)

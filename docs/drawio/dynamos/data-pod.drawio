@@ -1,0 +1,40 @@
+<mxfile host="Electron" modified="2023-07-09T14:48:25.520Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.1 Chrome/112.0.5615.204 Electron/24.6.1 Safari/537.36" etag="nQ1n61vxo5rv8W8eTqwD" version="21.6.1" type="device">
+  <diagram name="Page-1" id="jLdzb3DCkJ2ukynXYpZx">
+    <mxGraphModel dx="1591" dy="1221" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-1" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="317" y="272" width="535" height="282.09" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-2" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="fVVcbGDnTZ7pWWNwm9e8-1">
+          <mxGeometry y="2.917354149141476" width="535" height="279.1726458508585" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-3" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Data pod&lt;/font&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#000000;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.vault;" vertex="1" parent="fVVcbGDnTZ7pWWNwm9e8-1">
+          <mxGeometry x="29.72222222222222" y="13.958632292542925" width="34.798870305309514" height="43.78822950170716" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-4" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;CSV files&lt;/font&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.documents;fillColor=#759C3E;gradientColor=none;" vertex="1" parent="fVVcbGDnTZ7pWWNwm9e8-1">
+          <mxGeometry x="44.58333333333333" y="121.20280419615024" width="104.02777777777777" height="109.11462863080804" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-5" value="&lt;font style=&quot;font-size: 19px;&quot;&gt;Datasets provided by a consortium partner&lt;br&gt;Can be different formats&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="fVVcbGDnTZ7pWWNwm9e8-1">
+          <mxGeometry x="74.30555555555556" width="445.83333333333337" height="78.16834083824037" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-6" value="&lt;font style=&quot;font-size: 19px;&quot;&gt;Other&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" vertex="1" parent="fVVcbGDnTZ7pWWNwm9e8-1">
+          <mxGeometry x="401.25" y="146.2027146320946" width="89.16666666666666" height="111.6690583403434" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-7" value="" style="group" vertex="1" connectable="0" parent="fVVcbGDnTZ7pWWNwm9e8-1">
+          <mxGeometry x="222.91666666666669" y="121.2028041961502" width="112.94444444444444" height="136.6689687762877" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-8" value="" style="shape=datastore;whiteSpace=wrap;html=1;" vertex="1" parent="fVVcbGDnTZ7pWWNwm9e8-7">
+          <mxGeometry width="104.02777777777777" height="125.62769063288631" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-9" value="" style="shape=datastore;whiteSpace=wrap;html=1;" vertex="1" parent="fVVcbGDnTZ7pWWNwm9e8-7">
+          <mxGeometry x="4.458333333333334" y="5.583452917017169" width="104.02777777777777" height="125.62769063288631" as="geometry" />
+        </mxCell>
+        <mxCell id="fVVcbGDnTZ7pWWNwm9e8-10" value="&lt;font style=&quot;font-size: 19px;&quot;&gt;Databases&lt;/font&gt;" style="shape=datastore;whiteSpace=wrap;html=1;" vertex="1" parent="fVVcbGDnTZ7pWWNwm9e8-7">
+          <mxGeometry x="8.916666666666668" y="11.041278143401449" width="104.02777777777777" height="125.62769063288631" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

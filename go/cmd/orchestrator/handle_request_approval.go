@@ -80,9 +80,15 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 				return
 			}
 
-			go startCompositionRequest(msg, &authorizedProviders, c)
+			// TODO: Might be able to improve processing by converting functions to go routines
+			// Seems a bit tricky though due to the response writer.
+			userTargets, err := startCompositionRequest(msg, authorizedProviders, c)
+			if err != nil {
+				logger.Sugar().Errorf("Error starting composition request: %v", err)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+			}
 
-			createAcceptedDataRequest(msg, w, &authorizedProviders)
+			createAcceptedDataRequest(msg, w, userTargets)
 			return
 
 		case <-ctx.Done():
@@ -93,10 +99,10 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 
 }
 
-func getAuthorizedProviders(validationResponse *pb.ValidationResponse) (map[string]string, error) {
-	authorizedProviders := make(map[string]string)
+func getAuthorizedProviders(validationResponse *pb.ValidationResponse) (map[string]lib.AgentDetails, error) {
+	authorizedProviders := make(map[string]lib.AgentDetails)
 
-	for key, _ := range validationResponse.ValidDataproviders {
+	for key := range validationResponse.ValidDataproviders {
 		var agentData lib.AgentDetails
 		json, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/agents/%s", key), &agentData)
 		if err != nil {
@@ -105,7 +111,7 @@ func getAuthorizedProviders(validationResponse *pb.ValidationResponse) (map[stri
 			// invalidProviders = append(invalidProviders, key)
 			continue
 		}
-		authorizedProviders[key] = agentData.Dns
+		authorizedProviders[key] = agentData
 	}
 	return authorizedProviders, nil
 }

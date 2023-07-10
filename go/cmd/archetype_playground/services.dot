@@ -1,9 +1,13 @@
 digraph G {
   query_service -> algorithm_service ;
   query_service -> anonymize_service [color=gray, fontcolor=gray, label="optional"] ;
+  query_service -> aggregate_service [color=gray, fontcolor=gray, label="optional"] ;
   query_service [color=black, style=solid];
   anonymize_service -> algorithm_service ;
+  anonymize_service -> aggregate_service [color=gray, fontcolor=gray, label="optional"] ;
   anonymize_service [color=gray, style=dashed];
+  aggregate_service -> algorithm_service ;
+  aggregate_service [color=gray, style=dashed];
   algorithm_service -> graph_service [color=gray, fontcolor=gray, label="optional"] ;
   algorithm_service [color=black, style=solid];
   graph_service [color=gray, style=dashed];

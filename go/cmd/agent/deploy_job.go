@@ -10,6 +10,7 @@ import (
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -42,7 +43,7 @@ func getKubeConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func deployJob(compositionRequest *pb.CompositionRequest) error {
+func deployJob(msChain []mschain.MicroserviceMetadata, compositionRequest *pb.CompositionRequest) error {
 	logger.Debug("Starting deployJob")
 	// Create context
 	ctx := context.TODO()
@@ -60,6 +61,10 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 	}
 
 	dataStewardName := strings.ToLower(os.Getenv("DATA_STEWARD_NAME"))
+	if dataStewardName == "" {
+		return fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
+	}
+
 	jobName := lib.GeneratePodNameWithGUID(compositionRequest.User.UserName, 8)
 	logger.Sugar().Debugw("Pod info:", "dataStewardName: ", dataStewardName, "jobName: ", jobName)
 
@@ -89,10 +94,10 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 
 	// Add the containers to the job
 	port := firstPortMicroservice
-	nrOfServices := len(compositionRequest.Microservices)
+	nrOfServices := len(msChain)
 	firstService := "1"
 	lastService := "0"
-	for i, name := range compositionRequest.Microservices {
+	for i, microservice := range msChain {
 		order := i
 		port = port + order
 
@@ -100,11 +105,11 @@ func deployJob(compositionRequest *pb.CompositionRequest) error {
 			lastService = "1"
 		}
 
-		logger.Sugar().Debugw("job info:", "name: ", name, "Port: ", port)
+		logger.Sugar().Debugw("job info:", "name: ", microservice.Name, "Port: ", port)
 
 		container := v1.Container{
-			Name:            name,
-			Image:           fmt.Sprintf("%s:latest", name),
+			Name:            microservice.Name,
+			Image:           fmt.Sprintf("%s:latest", microservice.Name),
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Env: []v1.EnvVar{
 				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
@@ -177,4 +182,40 @@ func addSidecar() v1.Container {
 			}},
 		// Add additional container configuration here as needed
 	}
+}
+
+func getRequiredMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata, request *mschain.RequestType, role string) error {
+
+	for _, ms := range request.RequiredServices {
+		var metadataObject mschain.MicroserviceMetadata
+
+		_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", ms), &metadataObject)
+		if err != nil {
+			return err
+		}
+
+		if role == "computeProvider" {
+			*microserviceMetada = append(*microserviceMetada, metadataObject)
+		} else if strings.EqualFold(metadataObject.Label, role) {
+			// Only append dataProvider microservices
+			*microserviceMetada = append(*microserviceMetada, metadataObject)
+		}
+	}
+
+	return nil
+}
+
+func getOptionalMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata, request *mschain.RequestType, role string) error {
+	//TODO: figure out a way to include enforced microservices
+
+	return nil
+}
+func RequestTypeMicroservices(requestType string) (mschain.RequestType, error) {
+	var request mschain.RequestType
+	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/requestTypes/%s", requestType), &request)
+	if err != nil {
+		return mschain.RequestType{}, err
+	}
+
+	return request, nil
 }

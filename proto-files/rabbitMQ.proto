@@ -76,9 +76,9 @@ message AcceptedDataRequest  {
 message CompositionRequest {
     string archetype_id = 1;
     string request_type = 2;
-    repeated string microservices = 3;
+    string role = 3;
     User user = 4;
-    string data_provider = 5;
+    repeated string data_providers = 5;
     string target = 6;
 }
 

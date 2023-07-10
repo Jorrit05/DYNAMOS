@@ -2,13 +2,18 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"time"
 )
 
-func getTarget() string {
-	time.Sleep(5 * time.Second)
+func getTarget(target chan string) string {
+	time.Sleep(3 * time.Second)
+	target <- "TEST"
 	return "RESULT"
+}
+func func2(target chan string) string {
+	x := <-target
+	fmt.Println(x)
+	return "3"
 }
 
 func main() {
@@ -16,17 +21,11 @@ func main() {
 	// Create a channel that can hold a string value
 	targetChan := make(chan string)
 
-	if os.Getenv("DESIGNATED_GRPC_PsORT") != "" {
-		fmt.Println("NOETOTET")
-	}
 	// Start a goroutine that gets the target and sends it to the channel
-	go func() {
-		target := getTarget() // assuming getTarget returns a string
-		targetChan <- target
-	}()
+	go getTarget(targetChan) // assuming getTarget returns a string
 
-	fmt.Println("start wait")
-	target := <-targetChan
+	func2(targetChan)
+	// target := <-targetChan
 
-	fmt.Println("Result: " + target)
+	// fmt.Println("Result: " + target)
 }

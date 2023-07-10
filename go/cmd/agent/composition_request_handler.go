@@ -1,14 +1,56 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
+	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
 func compositionRequestHandler(compositionRequest *pb.CompositionRequest) {
 	// get local requiredServices
+	// Generate microservice chain
 	// Spin up pod
 	// Save session information in etcd
 	//
 
-	deployJob(compositionRequest)
+	msChain, err := generateMicroserviceChain(compositionRequest)
+	if err != nil {
+		logger.Sugar().Errorf("Error generating microservice chain %v", err)
+		return
+	}
+
+	deployJob(msChain, compositionRequest)
+}
+
+func generateMicroserviceChain(compositionRequest *pb.CompositionRequest) ([]mschain.MicroserviceMetadata, error) {
+	var requestType mschain.RequestType
+	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/requestTypes/%s", compositionRequest.RequestType), &requestType)
+	if err != nil {
+		return nil, err
+	}
+
+	var msMetadata []mschain.MicroserviceMetadata
+
+	// Returns required Microservices
+	err = getRequiredMicroservices(&msMetadata, &requestType, compositionRequest.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	err = getOptionalMicroservices(&msMetadata, &requestType, compositionRequest.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	msChain, err := mschain.GenerateChain(msMetadata)
+	if err != nil {
+		return nil, err
+	}
+	for _, ms := range msChain {
+		logger.Info(ms.Name)
+	}
+
+	return msChain, nil
 }

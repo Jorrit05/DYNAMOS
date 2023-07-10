@@ -32,7 +32,7 @@ func fetchRequestType(key string) RequestType {
 		return RequestType{
 			Type:             "sqlDataRequest",
 			RequiredServices: []string{"query_service", "algorithm_service"},
-			OptionalServices: []string{"anonymize_service", "graph_service"},
+			OptionalServices: []string{"aggregate_service", "anonymize_service", "graph_service"},
 		}
 	default:
 		return RequestType{}
@@ -49,11 +49,16 @@ func fetchServices(req *RequestType) []MicroserviceMetada {
 		{
 			"name": "query_service",
 			"label": "DataProvider",
-			"allowedOutputs" : ["algorithm_service", "anonymize_service"]
+			"allowedOutputs" : ["algorithm_service", "anonymize_service", "aggregate_service"]
 		},
 		{
 			"name": "anonymize_service",
 			"label": "DataProvider",
+			"allowedOutputs" : ["algorithm_service", "aggregate_service"]
+		},
+		{
+			"name": "aggregate_service",
+			"label": "ComputeProvider",
 			"allowedOutputs" : ["algorithm_service"]
 		},
 		{

@@ -122,3 +122,16 @@ export DESIGNATED_GRPC_PORT="50054"
 export SIDECAR_PORT="50052"
 export FIRST="0"
 export LAST="1"
+
+
+# LInkerD
+
+https://linkerd.io/2.13/getting-started/
+
+linkerd install --crds | kubectl apply -f -
+linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
+linkerd check
+
+kubectl get -n emojivoto deploy -o yaml \
+  | linkerd inject - \
+  | kubectl apply -f -
