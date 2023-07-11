@@ -15,6 +15,7 @@ service SideCar {
   rpc SendValidationResponse(ValidationResponse) returns  (google.protobuf.Empty) {}
   rpc SendCompositionRequest(CompositionRequest) returns  (google.protobuf.Empty) {}
   rpc SendSqlDataRequest(SqlDataRequest) returns  (google.protobuf.Empty) {}
+  rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
 }
 
 message ServiceRequest {
@@ -79,7 +80,8 @@ message CompositionRequest {
     string role = 3;
     User user = 4;
     repeated string data_providers = 5;
-    string target = 6;
+    string destination_queue = 6;
+    string job_name =7;
 }
 
 message SqlDataRequest {
@@ -90,7 +92,7 @@ message SqlDataRequest {
   string algorithm = 5;
   map<string, string> algorithm_columns = 6;
   User user = 7;
-  string target = 8;
+  string destination_queue = 8;
   string return_address = 9;
   string correlation_id = 10;
 }
@@ -98,4 +100,9 @@ message SqlDataRequest {
 message SqlDataRequestResponse {
   string correlation_id = 1;
   google.protobuf.Struct data = 2;
+  string return_address = 3;
+  string job_name = 4;
+  map<string, string> metadata = 5;
+  google.protobuf.Any user_request = 6;
+  string destination_queue = 7;
 }

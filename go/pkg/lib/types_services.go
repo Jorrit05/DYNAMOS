@@ -21,4 +21,5 @@ type JobUserInfo struct {
 	RequestType string `json:"requestType"`
 	JobName     string `json:"jobName"`
 	ArcheType   string `json:"archetype"`
+	Role        string `json:"role"`
 }

@@ -33,3 +33,14 @@ metadata:
   name:  orchestrator
   annotations:
     "helm.sh/resource-policy": keep
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: surf
+  annotations:
+    "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"
+

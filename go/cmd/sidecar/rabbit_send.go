@@ -67,7 +67,7 @@ func (s *server) SendCompositionRequest(ctx context.Context, in *pb.CompositionR
 		Type: "compositionRequest",
 	}
 
-	return send(message, in.Target)
+	return send(message, in.DestinationQueue)
 }
 
 func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
@@ -85,5 +85,23 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 		Type:          "sqlDataRequest",
 	}
 
-	return send(message, in.Target)
+	return send(message, in.DestinationQueue)
+}
+
+func (s *server) SendSqlDataRequestResponse(ctx context.Context, in *pb.SqlDataRequestResponse) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal requestApproval failed: %s", err)
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Do other stuff
+	message := amqp.Publishing{
+		CorrelationId: in.CorrelationId,
+		Body:          data,
+		Type:          "sqlDataRequestResponse",
+	}
+
+	return send(message, in.DestinationQueue)
 }

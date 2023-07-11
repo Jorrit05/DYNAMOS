@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: surf
+  namespace: {{ .Values.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: surf
+  template:
+    metadata:
+      labels:
+        app: surf
+    spec:
+      serviceAccountName: job-creator-surf
+      containers:
+      - name: surf
+        image: agent:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DATA_STEWARD_NAME
+          value: SURF
+      - name: sidecar
+        image: sidecar:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3005
+        env:
+        - name: AMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbit
+              key: password
+        - name: AMQ_USER
+          value: normal_user
+

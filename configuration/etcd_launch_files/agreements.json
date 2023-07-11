@@ -6,11 +6,11 @@
                 "ID" : "GUID",
                 "requestTypes" : ["sqlDataRequest"],
                 "dataSets" : ["wageGap"],
-                "allowedArchetypes" : ["computeToData", "dataThroughTtp"],
-                "allowedComputeProviders" : ["surf"]
+                "allowedArchetypes" : ["dataThroughTtp", "computeToData"],
+                "allowedComputeProviders" : ["SURF"]
             }
         },
-        "computeProviders" : ["surf", "otherCompany"],
+        "computeProviders" : ["SURF", "otherCompany"],
         "archetypes" : ["computeToData", "dataThroughTtp",  "reproducableScience"]
     },
     {
@@ -20,11 +20,11 @@
                 "ID" : "GUID",
                 "requestTypes" : ["sqlDataRequest"],
                 "dataSets" : ["wageGap"],
-                "allowedArchetypes" : ["computeToData", "dataThroughTtp"],
-                "allowedComputeProviders" : ["surf"]
+                "allowedArchetypes" : ["dataThroughTtp"],
+                "allowedComputeProviders" : ["SURF"]
             }
         },
-        "computeProviders" : ["surf", "otherCompany"],
+        "computeProviders" : ["SURF", "otherCompany"],
         "archetypes" : ["computeToData", "dataThroughTtp",  "reproducableScience"]
     },
     {

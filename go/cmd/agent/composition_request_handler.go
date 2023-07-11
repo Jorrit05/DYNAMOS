@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
@@ -14,14 +15,27 @@ func compositionRequestHandler(compositionRequest *pb.CompositionRequest) {
 	// Spin up pod
 	// Save session information in etcd
 	//
+	logger.Debug("-----")
+	logger.Sugar().Debugf("%v", compositionRequest)
+	logger.Debug("-----")
 
-	msChain, err := generateMicroserviceChain(compositionRequest)
+	err := registerUserWithJob(compositionRequest)
 	if err != nil {
-		logger.Sugar().Errorf("Error generating microservice chain %v", err)
+		logger.Sugar().Errorf("Error in registering Job %v", err)
 		return
 	}
 
-	deployJob(msChain, compositionRequest)
+	if strings.EqualFold(compositionRequest.Role, "dataProvider") {
+		msChain, err := generateMicroserviceChain(compositionRequest)
+		if err != nil {
+			//Maybe save failed job info in etcd...
+			logger.Sugar().Errorf("Error generating microservice chain %v", err)
+			return
+		}
+		msChainMutex.Lock()
+		msChainMap[compositionRequest.JobName] = msChain
+		msChainMutex.Unlock()
+	}
 }
 
 func generateMicroserviceChain(compositionRequest *pb.CompositionRequest) ([]mschain.MicroserviceMetadata, error) {

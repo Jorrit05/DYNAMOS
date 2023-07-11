@@ -11,6 +11,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
 	"github.com/gorilla/handlers"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -20,13 +21,22 @@ import (
 )
 
 var (
-	logger                       = lib.InitLogger(logLevel)
-	etcdClient  *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
-	c           pb.SideCarClient
-	conn        *grpc.ClientConn
-	agentConfig lib.AgentDetails
-	mutex       = &sync.Mutex{}
-	responseMap = make(map[string]*dataResponse)
+	logger                           = lib.InitLogger(logLevel)
+	etcdClient      *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
+	c               pb.SideCarClient
+	conn            *grpc.ClientConn
+	agentConfig     lib.AgentDetails
+	mutex           = &sync.Mutex{}
+	ttpMutex        = &sync.Mutex{}
+	jobMutex        = &sync.Mutex{}
+	msChainMutex    = &sync.Mutex{}
+	waitingJobMutex = &sync.Mutex{}
+
+	responseMap   = make(map[string]*dataResponse)
+	thirdPartyMap = make(map[string]string)
+	jobCounter    = make(map[string]int)
+	msChainMap    = make(map[string][]mschain.MicroserviceMetadata)
+	waitingJobMap = make(map[string]string)
 )
 
 type dataResponse struct {
@@ -34,9 +44,12 @@ type dataResponse struct {
 }
 
 func main() {
-	if !local {
-		serviceName = os.Getenv("DATA_STEWARD_NAME")
+	serviceName = os.Getenv("DATA_STEWARD_NAME")
+
+	if local && serviceName == "SURF" {
+		port = ":8083"
 	}
+	// }
 
 	conn = lib.GetGrpcConnection(grpcAddr)
 	defer conn.Close()

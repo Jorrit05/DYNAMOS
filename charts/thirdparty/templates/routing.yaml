@@ -1,0 +1,39 @@
+# apiVersion: networking.istio.io/v1beta1
+# kind: VirtualService
+# metadata:
+#   name: uva-virtualservice
+#   namespace: uva
+# spec:
+#   hosts:
+#   - "uva.uva.svc.cluster.local"
+#   gateways:
+#   - core/core-gateway
+#   http:
+#   - match:
+#     - uri:
+#         prefix: /agent/v1/uva
+#     route:
+#     - destination:
+#         host: uva.uva.svc.cluster.local
+#         port:
+#           number: 8080
+# ---
+# apiVersion: networking.istio.io/v1beta1
+# kind: VirtualService
+# metadata:
+#   name: vu-virtualservice
+#   namespace: vu
+# spec:
+#   hosts:
+#   - "vu.vu.svc.cluster.local"
+#   gateways:
+#   - core/core-gateway
+#   http:
+#   - match:
+#     - uri:
+#         prefix: /agent/v1/vu
+#     route:
+#     - destination:
+#         host: vu.vu.svc.cluster.local
+#         port:
+#           number: 8080

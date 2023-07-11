@@ -11,6 +11,23 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
+type ErrKeyNotFound struct {
+	Key string
+}
+
+func (e *ErrKeyNotFound) Error() string {
+	return fmt.Sprintf("key %s not found in etcd", e.Key)
+}
+
+type ErrEtcdOperation struct {
+	Key string
+	Err error
+}
+
+func (e *ErrEtcdOperation) Error() string {
+	return fmt.Sprintf("failed to get key %s from etcd: %v", e.Key, e.Err)
+}
+
 func GetValueFromEtcd(etcdClient *clientv3.Client, key string, opts ...Option) (string, error) {
 	var value string
 	// Start with default options
@@ -26,12 +43,14 @@ func GetValueFromEtcd(etcdClient *clientv3.Client, key string, opts ...Option) (
 
 		resp, err := etcdClient.Get(ctx, key)
 		if err != nil {
-			return fmt.Errorf("failed to get key %s from etcd: %v", key, err)
+			return &ErrEtcdOperation{Key: key, Err: err}
+			// return fmt.Errorf("failed to get key %s from etcd: %v", key, err)
 		}
 
 		if len(resp.Kvs) == 0 {
 			// If key not found, return an error to trigger a retry
-			return fmt.Errorf("key %s not found in etcd", key)
+			return &ErrKeyNotFound{Key: key}
+			// return fmt.Errorf("key %s not found in etcd", key)
 		}
 
 		value = string(resp.Kvs[0].Value)

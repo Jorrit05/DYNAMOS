@@ -29,6 +29,7 @@ type SideCarClient interface {
 	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendCompositionRequest(ctx context.Context, in *CompositionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendSqlDataRequest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendSqlDataRequestResponse(ctx context.Context, in *SqlDataRequestResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sideCarClient struct {
@@ -116,6 +117,15 @@ func (c *sideCarClient) SendSqlDataRequest(ctx context.Context, in *SqlDataReque
 	return out, nil
 }
 
+func (c *sideCarClient) SendSqlDataRequestResponse(ctx context.Context, in *SqlDataRequestResponse, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendSqlDataRequestResponse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SideCarServer is the server API for SideCar service.
 // All implementations must embed UnimplementedSideCarServer
 // for forward compatibility
@@ -126,6 +136,7 @@ type SideCarServer interface {
 	SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error)
 	SendCompositionRequest(context.Context, *CompositionRequest) (*emptypb.Empty, error)
 	SendSqlDataRequest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
+	SendSqlDataRequestResponse(context.Context, *SqlDataRequestResponse) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSideCarServer()
 }
 
@@ -150,6 +161,9 @@ func (UnimplementedSideCarServer) SendCompositionRequest(context.Context, *Compo
 }
 func (UnimplementedSideCarServer) SendSqlDataRequest(context.Context, *SqlDataRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendSqlDataRequest not implemented")
+}
+func (UnimplementedSideCarServer) SendSqlDataRequestResponse(context.Context, *SqlDataRequestResponse) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendSqlDataRequestResponse not implemented")
 }
 func (UnimplementedSideCarServer) mustEmbedUnimplementedSideCarServer() {}
 
@@ -275,6 +289,24 @@ func _SideCar_SendSqlDataRequest_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SideCar_SendSqlDataRequestResponse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SqlDataRequestResponse)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).SendSqlDataRequestResponse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/SendSqlDataRequestResponse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).SendSqlDataRequestResponse(ctx, req.(*SqlDataRequestResponse))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SideCar_ServiceDesc is the grpc.ServiceDesc for SideCar service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -301,6 +333,10 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendSqlDataRequest",
 			Handler:    _SideCar_SendSqlDataRequest_Handler,
+		},
+		{
+			MethodName: "SendSqlDataRequestResponse",
+			Handler:    _SideCar_SendSqlDataRequestResponse_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

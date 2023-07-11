@@ -3,13 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
-	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	batchv1 "k8s.io/api/batch/v1"
@@ -43,41 +40,73 @@ func getKubeConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func deployJob(msChain []mschain.MicroserviceMetadata, compositionRequest *pb.CompositionRequest) error {
+func generateChainAndDeploy(jobName string) (string, error) {
+	logger.Debug("Starting generateChainAndDeploy")
+
+	// Get the matching composition request and determine our role
+	var compositionRequest *pb.CompositionRequest
+	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("%s/%s/%s", etcdJobRootKey, agentConfig.Name, jobName), &compositionRequest)
+	if err != nil {
+		logger.Sugar().Errorf("Error getting composition request: %v", err)
+		return "", err
+	}
+
+	msChain, err := generateMicroserviceChain(compositionRequest)
+	if err != nil {
+		logger.Sugar().Errorf("Error generating microservice chain %v", err)
+		return "", err
+	}
+
+	logger.Sugar().Debugf("%v", msChain)
+	actualJobName, err := deployJob(msChain, compositionRequest.JobName)
+	if err != nil {
+		logger.Sugar().Errorf("Error generating microservice chain %v", err)
+		return "", err
+	}
+
+	return actualJobName, nil
+}
+
+func deployJob(msChain []mschain.MicroserviceMetadata, jobName string) (string, error) {
 	logger.Debug("Starting deployJob")
 	// Create context
 	ctx := context.TODO()
 
 	config, err := getKubeConfig()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Create the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		logger.Sugar().Errorf("failed to create clientset: %v", err)
-		return err
+		return "", err
 	}
 
-	dataStewardName := strings.ToLower(os.Getenv("DATA_STEWARD_NAME"))
-	if dataStewardName == "" {
-		return fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
+	if serviceName == "" {
+		return "", fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
 	}
-
-	jobName := lib.GeneratePodNameWithGUID(compositionRequest.User.UserName, 8)
+	dataStewardName := strings.ToLower(serviceName)
 	logger.Sugar().Debugw("Pod info:", "dataStewardName: ", dataStewardName, "jobName: ", jobName)
 
-	go registerUserWithJob(compositionRequest, jobName)
+	// Get the jobname of this user
+	jobMutex.Lock()
+	jobCounter[jobName]++
+	newValue := jobCounter[jobName]
+	jobMutex.Unlock()
+
+	newJobName := jobName + strconv.Itoa(newValue)
 
 	// Define the job
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      jobName,
+			Name:      newJobName,
 			Namespace: dataStewardName,
-			Labels:    map[string]string{"app": dataStewardName, "jobName": jobName},
+			Labels:    map[string]string{"app": dataStewardName, "jobName": newJobName},
 		},
 		Spec: batchv1.JobSpec{
+			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
 			TTLSecondsAfterFinished: &ttl, // Clean up job TTL after it finishes
 			BackoffLimit:            &backoffLimit,
 			Template: v1.PodTemplateSpec{
@@ -115,7 +144,7 @@ func deployJob(msChain []mschain.MicroserviceMetadata, compositionRequest *pb.Co
 				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
 				{Name: "FIRST", Value: firstService},
 				{Name: "LAST", Value: lastService},
-				{Name: "JOB_NAME", Value: jobName},
+				{Name: "JOB_NAME", Value: newJobName},
 				{Name: "SIDECAR_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 			},
 			// Add additional container configuration here as needed
@@ -129,34 +158,19 @@ func deployJob(msChain []mschain.MicroserviceMetadata, compositionRequest *pb.Co
 	_, err = clientset.BatchV1().Jobs(dataStewardName).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		logger.Sugar().Errorf("failed to create job: %v", err)
-		return err
+		return "", err
 	}
 
-	return nil
-}
+	// // /agents/jobs/UVA/activeJob/jorrit-3141334
+	// jobNameKey := fmt.Sprintf("%s/%s/activeJob/%s", etcdJobRootKey, agentConfig.Name, jobName)
+	// // One entry with the jobName with the userName as key
+	// err = etcd.PutValueToEtcd(etcdClient, jobNameKey, jobName, etcd.WithMaxElapsedTime(time.Second*5))
+	// if err != nil {
+	// 	logger.Sugar().Warnf("Error saving jobname to etcd: %v", err)
+	// 	return "", err
+	// }
 
-func registerUserWithJob(compositionRequest *pb.CompositionRequest, jobName string) {
-	logger.Debug("Entering registerUserWithJob")
-	var userData lib.JobUserInfo
-	userData.ArcheType = compositionRequest.ArchetypeId
-	userData.JobName = jobName
-	userData.Name = compositionRequest.User.UserName
-	userData.RequestType = compositionRequest.RequestType
-
-	jobNameKey := fmt.Sprintf("/activeJobs/%s", jobName)
-	userKey := fmt.Sprintf("/activeJobs/%s", compositionRequest.User.UserName)
-
-	// One entry with all related info with the jobName as key
-	err := etcd.SaveStructToEtcd[lib.JobUserInfo](etcdClient, jobNameKey, userData)
-	if err != nil {
-		logger.Sugar().Warnf("Error saving struct to etcd: %v", err)
-	}
-
-	// One entry with the jobName with the userName as key
-	err = etcd.PutValueToEtcd(etcdClient, userKey, jobName, etcd.WithMaxElapsedTime(time.Second*10))
-	if err != nil {
-		logger.Sugar().Warnf("Error saving jobname to etcd: %v", err)
-	}
+	return jobName, nil
 }
 
 func addSidecar() v1.Container {
@@ -194,9 +208,9 @@ func getRequiredMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata
 			return err
 		}
 
-		if role == "computeProvider" {
+		if strings.EqualFold(metadataObject.Label, role) {
 			*microserviceMetada = append(*microserviceMetada, metadataObject)
-		} else if strings.EqualFold(metadataObject.Label, role) {
+		} else if strings.EqualFold("all", role) {
 			// Only append dataProvider microservices
 			*microserviceMetada = append(*microserviceMetada, metadataObject)
 		}

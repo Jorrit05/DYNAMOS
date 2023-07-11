@@ -68,7 +68,7 @@ func agreementsHandler(etcdClient *clientv3.Client, etcdRoot string) http.Handle
 		case http.MethodPut:
 			// Call your handler for PUT
 			agreement := &api.Agreement{}
-			api.GenericPutToEtcd[api.Agreement](w, r, etcdClient, etcdRoot, agreement)
+			api.GenericPutToEtcd[api.Agreement](w, r, etcdClient, etcdRoot+"/agreements", agreement)
 		default:
 			// Respond with a 405 'Method Not Allowed' HTTP response if the method isn't supported
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

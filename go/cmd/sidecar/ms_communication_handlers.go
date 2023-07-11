@@ -17,6 +17,9 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 	response := &pb.SqlDataRequestResponse{}
 	response.Data = data.Data
 	response.CorrelationId = sqlDataRequest.CorrelationId
+	response.Metadata = data.Metadata
+	response.UserRequest = data.UserRequest
+
 	// Marshaling google.protobuf.Struct to Proto wire format
 	body, err := proto.Marshal(response)
 	if err != nil {

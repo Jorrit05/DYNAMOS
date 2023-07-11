@@ -33,7 +33,6 @@ func registerAgent() {
 }
 
 func updateAgent() {
-
 	// Update the ActiveSince field
 	now := time.Now()
 	agentConfig.ConfigUpdated = &now

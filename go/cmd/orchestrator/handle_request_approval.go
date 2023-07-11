@@ -86,6 +86,7 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 			if err != nil {
 				logger.Sugar().Errorf("Error starting composition request: %v", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
 			}
 
 			createAcceptedDataRequest(msg, w, userTargets)

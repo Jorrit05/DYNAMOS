@@ -27,5 +27,5 @@ Todo?:
 /dataStewards/UVA (agent availability in the distributed system)
 <!-- /microservices/queryService/deploymentData -> JSON deployment definition -->
 
-/activeJobs/fullName -> jobName?
-/activeJobs/Jobname -> Full struct?
+/activeJobs/<agent>/fullName -> jobName?
+/activeJobs/<agent>/Jobname -> Full composition struct?

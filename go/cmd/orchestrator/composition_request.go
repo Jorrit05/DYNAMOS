@@ -12,10 +12,14 @@ import (
 
 func startCompositionRequest(validationResponse *pb.ValidationResponse, authorizedProviders map[string]lib.AgentDetails, c pb.SideCarClient) (map[string]string, error) {
 	logger.Debug("Entering startCompositionRequest")
-	archetype := chooseArchetype(validationResponse)
+	archetype, err := chooseArchetype(validationResponse)
+	if err != nil {
+		return nil, err
+	}
+	logger.Debug("ARCHETYPE: " + archetype)
 
 	var archetypeConfig api.Archetype
-	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/archetypes/%s", archetype), &archetypeConfig)
+	_, err = etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/archetypes/%s", archetype), &archetypeConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -26,21 +30,24 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 	compositionRequest.DataProviders = []string{}
 	compositionRequest.ArchetypeId = archetype
 	compositionRequest.RequestType = validationResponse.RequestType
+	compositionRequest.JobName = lib.GeneratePodNameWithGUID(validationResponse.User.UserName, 8)
 
+	// Use to return the proper endpoints to the user
 	userTargets := make(map[string]string)
 
-	// TODO: Here I am assuming that the initial archetype choice is correct
-	// and that this is the only possible archetype.
-	// I should probably build in that if there is no TTP online or available
-	// Or Universities have different TTPs. That these scenarios are handled as well.
 	if archetypeConfig.ComputeProvider != "other" {
-		compositionRequest.Role = "computeProvider"
+		// Compute to data
+		compositionRequest.Role = "all"
 		for key := range authorizedProviders {
-			compositionRequest.Target = authorizedProviders[key].RoutingKey
+			compositionRequest.DestinationQueue = authorizedProviders[key].RoutingKey
 			c.SendCompositionRequest(context.Background(), compositionRequest)
 			userTargets[key] = authorizedProviders[key].Dns
 		}
 	} else {
+		// TODO: Here I am assuming that the initial archetype choice is correct
+		// and that this is the only possible archetype.
+		// I should probably build in that if there is no TTP online or available
+		// Or Universities have different TTPs. That these scenarios are handled as well.
 		ttp, err := chooseThirdParty(validationResponse)
 		if err != nil {
 			return nil, err
@@ -48,15 +55,15 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 		// Send to each validData provider the role data provider
 		// Send to the thirdParty the role Compute provider
 		compositionRequest.Role = "dataProvider"
-
+		tmpDataProvider := []string{}
 		for key := range authorizedProviders {
-			compositionRequest.DataProviders = append(compositionRequest.DataProviders, key)
-			compositionRequest.Target = authorizedProviders[key].RoutingKey
+			tmpDataProvider = append(tmpDataProvider, key)
+			compositionRequest.DestinationQueue = authorizedProviders[key].RoutingKey
 			c.SendCompositionRequest(context.Background(), compositionRequest)
 		}
-
+		compositionRequest.DataProviders = tmpDataProvider
 		compositionRequest.Role = "computeProvider"
-		compositionRequest.Target = ttp.RoutingKey
+		compositionRequest.DestinationQueue = ttp.RoutingKey
 		userTargets[ttp.Name] = ttp.Dns
 		c.SendCompositionRequest(context.Background(), compositionRequest)
 	}
@@ -98,8 +105,39 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 	return userTargets, nil
 }
 
-func chooseArchetype(validationResponse *pb.ValidationResponse) string {
-	return "computeToData"
+// Just returns one of the entries that match. No logic behind it.
+// TODO: Make smarter
+func chooseArchetype(validationResponse *pb.ValidationResponse) (string, error) {
+	intersection := make(map[string]bool)
+
+	first := true
+	for _, dataProvider := range validationResponse.ValidDataproviders {
+		if first {
+			for _, archType := range dataProvider.Archetypes {
+				intersection[archType] = true
+			}
+			first = false
+		} else {
+			newIntersection := make(map[string]bool)
+			for _, archType := range dataProvider.Archetypes {
+				if intersection[archType] {
+					newIntersection[archType] = true
+				}
+			}
+			intersection = newIntersection
+		}
+	}
+
+	if len(intersection) == 0 {
+		return "", fmt.Errorf("no common archetypes found")
+	}
+
+	// return the first common archetype
+	for key := range intersection {
+		return key, nil
+	}
+
+	return "", fmt.Errorf("unexpected error: could not retrieve an archetype from the intersection")
 }
 
 func chooseThirdParty(validationResponse *pb.ValidationResponse) (lib.AgentDetails, error) {
