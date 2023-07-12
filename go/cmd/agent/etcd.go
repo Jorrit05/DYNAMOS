@@ -19,14 +19,14 @@ func getJobName(user string) (string, error) {
 	return jobName, nil
 }
 
-func getCompositionRequest(jobName string, compositionRequest *pb.CompositionRequest) error {
-	// /agents/jobs/UVA/jorrit-3141334
+func getCompositionRequest(jobName string) (*pb.CompositionRequest, error) {
+	var compositionRequest *pb.CompositionRequest
 	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("%s/%s/%s", etcdJobRootKey, agentConfig.Name, jobName), &compositionRequest)
 	if err != nil {
 		logger.Sugar().Errorf("Error getting composition request: %v", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return compositionRequest, nil
 }
 
 func registerUserWithJob(compositionRequest *pb.CompositionRequest) error {

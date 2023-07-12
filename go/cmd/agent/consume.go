@@ -60,6 +60,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 				logger.Sugar().Errorf("Failed to unmarshal sqlResult message: %v", err)
 			}
 
+			// Check if there is a job waiting for this result
 			waitingJobMutex.Lock()
 			waitingJobName, ok := waitingJobMap[sqlResult.CorrelationId]
 			waitingJobMutex.Unlock()
@@ -73,6 +74,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 				break
 			}
 
+			// Check if there is a http result waiting for this
 			mutex.Lock()
 			// Look up the corresponding channel in the request map
 			requestData, ok := responseMap[sqlResult.CorrelationId]
@@ -80,13 +82,18 @@ func startConsuming(c pb.SideCarClient, from string) error {
 
 			if ok {
 				logger.Sugar().Info("Sending requestData to channel")
+
 				// Send a signal on the channel to indicate that the response is ready
 				requestData.response <- sqlResult
+
+				mutex.Lock()
+				delete(responseMap, sqlResult.CorrelationId)
+				mutex.Unlock()
 				break
 			}
 
+			// Check if there is a third party where this goes back to
 			ttpMutex.Lock()
-			// Look up the corresponding channel in the request map
 			returnAddress, ok := thirdPartyMap[sqlResult.CorrelationId]
 			ttpMutex.Unlock()
 
@@ -109,34 +116,27 @@ func startConsuming(c pb.SideCarClient, from string) error {
 				logger.Sugar().Errorf("Failed to unmarshal sqlResult message: %v", err)
 			}
 
-			ttpMutex.Lock()
-			thirdPartyMap[sqlDataRequest.CorrelationId] = sqlDataRequest.ReturnAddress
-			ttpMutex.Unlock()
-
-			// Get the jobname of this user
-			jobName, err := getJobName(sqlDataRequest.User.UserName)
-			if err != nil {
-				break
-			}
-
-			msChainMutex.Lock()
-			msChain, ok := msChainMap[jobName]
-			msChainMutex.Unlock()
-
+			waitingJobMutex.Lock()
+			actualJobName, ok := waitingJobMap[sqlDataRequest.JobName]
+			waitingJobMutex.Unlock()
+			logger.Sugar().Warnf("jobName: %v", sqlDataRequest.JobName)
+			logger.Sugar().Warnf("actualJobName: %v", actualJobName)
 			if ok {
-				actualJobName, err := deployJob(msChain, jobName)
-				if err != nil {
-					break
-				}
-
 				sqlDataRequest.DestinationQueue = actualJobName
 				sqlDataRequest.ReturnAddress = agentConfig.RoutingKey
+				logger.Sugar().Infof("Sending SqlRequest to: %v", sqlDataRequest.DestinationQueue)
+				c.SendSqlDataRequest(context.Background(), sqlDataRequest)
 
-				logger.Sugar().Debugf("Sending sqlDataRequest to sidecar hopefully: %s", sqlDataRequest.DestinationQueue)
-				go c.SendSqlDataRequest(context.Background(), sqlDataRequest)
+				waitingJobMutex.Lock()
+				delete(waitingJobMap, sqlDataRequest.JobName)
+				waitingJobMutex.Unlock()
 			} else {
-				logger.Sugar().Warnf("unknown sqlRequest on job: %s", jobName)
+				logger.Sugar().Warnf("No job found for: %v", sqlDataRequest.JobName)
 			}
+
+			// ttpMutex.Lock()
+			// thirdPartyMap[sqlDataRequest.CorrelationId] = sqlDataRequest.ReturnAddress
+			// ttpMutex.Unlock()
 
 			// // /agents/jobs/UVA/activeJob/jorrit-3141334
 			// activeJobKey := fmt.Sprintf("%s/%s/activeJob/%s", etcdJobRootKey, agentConfig.Name, jobName)

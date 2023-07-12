@@ -40,16 +40,10 @@ func getKubeConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func generateChainAndDeploy(jobName string) (string, error) {
+func generateChainAndDeploy(compositionRequest *pb.CompositionRequest, sqlDataRequest *pb.SqlDataRequest) (string, error) {
 	logger.Debug("Starting generateChainAndDeploy")
 
-	// Get the matching composition request and determine our role
-	var compositionRequest *pb.CompositionRequest
-	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("%s/%s/%s", etcdJobRootKey, agentConfig.Name, jobName), &compositionRequest)
-	if err != nil {
-		logger.Sugar().Errorf("Error getting composition request: %v", err)
-		return "", err
-	}
+	// TODO: Parse SQL request for extra compute services
 
 	msChain, err := generateMicroserviceChain(compositionRequest)
 	if err != nil {
@@ -57,13 +51,13 @@ func generateChainAndDeploy(jobName string) (string, error) {
 		return "", err
 	}
 
-	logger.Sugar().Debugf("%v", msChain)
 	actualJobName, err := deployJob(msChain, compositionRequest.JobName)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
 		return "", err
 	}
 
+	logger.Sugar().Infow("Deployed job.", "actualJobName", actualJobName, "msChain", msChain)
 	return actualJobName, nil
 }
 
@@ -96,7 +90,7 @@ func deployJob(msChain []mschain.MicroserviceMetadata, jobName string) (string, 
 	newValue := jobCounter[jobName]
 	jobMutex.Unlock()
 
-	newJobName := jobName + strconv.Itoa(newValue)
+	newJobName := jobName + dataStewardName + strconv.Itoa(newValue)
 
 	// Define the job
 	job := &batchv1.Job{
@@ -170,7 +164,7 @@ func deployJob(msChain []mschain.MicroserviceMetadata, jobName string) (string, 
 	// 	return "", err
 	// }
 
-	return jobName, nil
+	return newJobName, nil
 }
 
 func addSidecar() v1.Container {

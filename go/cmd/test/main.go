@@ -1,65 +1,27 @@
 package main
 
-import "errors"
+import (
+	"context"
+	"fmt"
 
-// func chooseArchetype() {
-// 	var allArchetypes [][]string
-// 	dataproviderMap := make(map[string][]string)
-// 	dataproviderMap["1"] = []string{"computeToData", "dataThroughTtp"}
-// 	dataproviderMap["2"] = []string{"computeToData", "dataThroughTtp"}
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
+	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+)
 
-// 	for _, dataProvider := range dataproviderMap {
-// 		allArchetypes = append(allArchetypes, dataProvider)
-// 	}
-
-// 	var results [][]string
-// 	for i, _ := range allArchetypes {
-// 		results = append(results, intersect.HashGeneric(allArchetypes[i], allArchetypes[i+1]))
-
-// 	}
-// 	test := intersect.HashGeneric(allArchetypes[0], allArchetypes[1])
-
-//		for k := range test {
-//			fmt.Println(k)
-//		}
-//	}
-func chooseArchetype() (string, error) {
-	intersection := make(map[string]bool)
-
-	first := true
-	for _, dataProvider := range validationResponse.ValidDataproviders {
-		if first {
-			for _, archType := range dataProvider.ArcheTypes {
-				intersection[archType] = true
-			}
-			first = false
-		} else {
-			newIntersection := make(map[string]bool)
-			for _, archType := range dataProvider.ArcheTypes {
-				if intersection[archType] {
-					newIntersection[archType] = true
-				}
-			}
-			intersection = newIntersection
-		}
-	}
-
-	if len(intersection) == 0 {
-		return "", errors.New("no common archetypes found")
-	}
-
-	// return the first common archetype
-	for key := range intersection {
-		return key, nil
-	}
-
-	return "", errors.New("unexpected error: could not retrieve an archetype from the intersection")
-}
+var (
+	logger      = lib.InitLogger(zap.DebugLevel)
+	conn        *grpc.ClientConn
+	serviceName string = "test"
+)
 
 func main() {
+	defer logger.Sync() // flushes buffer, if any
 
-	// Create a channel that can hold a string value
-	chooseArchetype()
+	conn = lib.GetGrpcConnection("localhost:50052")
+	defer conn.Close()
+	c := lib.InitializeSidecarMessaging(conn, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 
-	// fmt.Println("Result: " + target)
+	c.SendTest(context.Background(), &pb.SqlDataRequest{Type: "something"})
 }

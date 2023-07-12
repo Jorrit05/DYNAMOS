@@ -69,6 +69,7 @@ func main() {
 	}()
 
 	<-finished
+
 	logger.Sugar().Infof("Exiting sidecar server")
 	os.Exit(0)
 }

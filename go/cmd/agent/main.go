@@ -11,7 +11,6 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
-	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
 	"github.com/gorilla/handlers"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -29,13 +28,11 @@ var (
 	mutex           = &sync.Mutex{}
 	ttpMutex        = &sync.Mutex{}
 	jobMutex        = &sync.Mutex{}
-	msChainMutex    = &sync.Mutex{}
 	waitingJobMutex = &sync.Mutex{}
 
 	responseMap   = make(map[string]*dataResponse)
 	thirdPartyMap = make(map[string]string)
 	jobCounter    = make(map[string]int)
-	msChainMap    = make(map[string][]mschain.MicroserviceMetadata)
 	waitingJobMap = make(map[string]string)
 )
 

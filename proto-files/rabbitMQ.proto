@@ -16,6 +16,8 @@ service SideCar {
   rpc SendCompositionRequest(CompositionRequest) returns  (google.protobuf.Empty) {}
   rpc SendSqlDataRequest(SqlDataRequest) returns  (google.protobuf.Empty) {}
   rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
+  rpc SendTest(SqlDataRequest) returns  (google.protobuf.Empty) {}
+
 }
 
 message ServiceRequest {
@@ -95,6 +97,7 @@ message SqlDataRequest {
   string destination_queue = 8;
   string return_address = 9;
   string correlation_id = 10;
+  string job_name = 11;
 }
 
 message SqlDataRequestResponse {

@@ -26,15 +26,16 @@ func compositionRequestHandler(compositionRequest *pb.CompositionRequest) {
 	}
 
 	if strings.EqualFold(compositionRequest.Role, "dataProvider") {
-		msChain, err := generateMicroserviceChain(compositionRequest)
+		actualJobName, err := generateChainAndDeploy(compositionRequest, &pb.SqlDataRequest{})
 		if err != nil {
-			//Maybe save failed job info in etcd...
-			logger.Sugar().Errorf("Error generating microservice chain %v", err)
+			logger.Sugar().Errorf("Error in deploying job: %v", err)
 			return
 		}
-		msChainMutex.Lock()
-		msChainMap[compositionRequest.JobName] = msChain
-		msChainMutex.Unlock()
+		logger.Sugar().Warnf("jobName: %v", compositionRequest.JobName)
+		logger.Sugar().Warnf("actualJobName: %v", actualJobName)
+		waitingJobMutex.Lock()
+		waitingJobMap[compositionRequest.JobName] = actualJobName
+		waitingJobMutex.Unlock()
 	}
 }
 
