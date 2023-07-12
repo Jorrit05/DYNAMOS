@@ -37,7 +37,7 @@ var (
 )
 
 type dataResponse struct {
-	response chan *pb.SqlDataRequestResponse
+	response chan *pb.MicroserviceCommunication
 }
 
 func main() {

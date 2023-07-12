@@ -17,4 +17,19 @@ message MicroserviceCommunication {
   google.protobuf.Struct data = 2;
   map<string, string> metadata = 3;
   google.protobuf.Any user_request = 4;
+  string correlation_id = 5;
+  string destination_queue = 6;
+  // string job_name = 7;
+  string return_address = 7;
 }
+
+
+// message SqlDataRequestResponse {
+//   string correlation_id = 1;
+//   google.protobuf.Struct data = 2;
+//   string return_address = 3;
+//   string job_name = 4;
+//   map<string, string> metadata = 5;
+//   google.protobuf.Any user_request = 6;
+//   string destination_queue = 7;
+// }

@@ -14,14 +14,14 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 	if err := data.UserRequest.UnmarshalTo(sqlDataRequest); err != nil {
 		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 	}
-	response := &pb.SqlDataRequestResponse{}
-	response.Data = data.Data
-	response.CorrelationId = sqlDataRequest.CorrelationId
-	response.Metadata = data.Metadata
-	response.UserRequest = data.UserRequest
+	// response := &pb.SqlDataRequestResponse{}
+	// response.Data = data.Data
+	// response.CorrelationId = sqlDataRequest.CorrelationId
+	// response.Metadata = data.Metadata
+	// response.UserRequest = data.UserRequest
 
 	// Marshaling google.protobuf.Struct to Proto wire format
-	body, err := proto.Marshal(response)
+	body, err := proto.Marshal(data)
 	if err != nil {
 		logger.Sugar().Errorf("Failed to marshal struct to proto wire format: %v", err)
 		return err
@@ -29,11 +29,11 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 
 	message := amqp.Publishing{
 		Body: body,
-		Type: "sqlDataRequestResponse",
+		Type: "microserviceCommunication",
 	}
-	_, err = send(message, sqlDataRequest.ReturnAddress)
+	_, err = send(message, data.ReturnAddress)
 	if err != nil {
-		logger.Sugar().Errorf("Error sending sqlDatarequest to agent: %v", err)
+		logger.Sugar().Errorf("Error sending microserviceCommunication to agent: %v", err)
 		return err
 	}
 	close(stop)

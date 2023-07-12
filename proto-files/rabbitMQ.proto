@@ -5,7 +5,8 @@ package proto;
 option go_package = "github.com/Jorrit05/DYNAMOS/pkg/proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
-import "google/protobuf/struct.proto";
+import "microserviceCommunication.proto";
+// import "google/protobuf/struct.proto";
 
 // The sidecar definition.
 service SideCar {
@@ -15,9 +16,9 @@ service SideCar {
   rpc SendValidationResponse(ValidationResponse) returns  (google.protobuf.Empty) {}
   rpc SendCompositionRequest(CompositionRequest) returns  (google.protobuf.Empty) {}
   rpc SendSqlDataRequest(SqlDataRequest) returns  (google.protobuf.Empty) {}
-  rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
+  // rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
   rpc SendTest(SqlDataRequest) returns  (google.protobuf.Empty) {}
-
+  rpc SendMicroserviceComm(MicroserviceCommunication) returns  (google.protobuf.Empty) {}
 }
 
 message ServiceRequest {
@@ -86,6 +87,13 @@ message CompositionRequest {
     string job_name =7;
 }
 
+message RequestMetada {
+  string correlation_id = 1;
+  string destination_queue = 2;
+  string job_name = 3;
+  string return_address = 4;
+}
+
 message SqlDataRequest {
   string type = 1;
   repeated string data_providers = 2;
@@ -94,18 +102,15 @@ message SqlDataRequest {
   string algorithm = 5;
   map<string, string> algorithm_columns = 6;
   User user = 7;
-  string destination_queue = 8;
-  string return_address = 9;
-  string correlation_id = 10;
-  string job_name = 11;
+  RequestMetada requestMetada = 8;
 }
 
-message SqlDataRequestResponse {
-  string correlation_id = 1;
-  google.protobuf.Struct data = 2;
-  string return_address = 3;
-  string job_name = 4;
-  map<string, string> metadata = 5;
-  google.protobuf.Any user_request = 6;
-  string destination_queue = 7;
-}
+// message SqlDataRequestResponse {
+//   string correlation_id = 1;
+//   google.protobuf.Struct data = 2;
+//   string return_address = 3;
+//   string job_name = 4;
+//   map<string, string> metadata = 5;
+//   google.protobuf.Any user_request = 6;
+//   string destination_queue = 7;
+// }

@@ -49,7 +49,12 @@ func (s *server) handleSqlDataRequest(msg amqp.Delivery, stream pb.SideCar_Consu
 	return s.handleResponse(msg, stream, &pb.SqlDataRequest{})
 }
 
-func (s *server) handleSqlDataRequestResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
-	logger.Debug("Starting handleSqlDataRequestResponse")
-	return s.handleResponse(msg, stream, &pb.SqlDataRequestResponse{})
+func (s *server) handleMicroserviceCommunication(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+	logger.Debug("Starting handleMicroserviceCommunication")
+	return s.handleResponse(msg, stream, &pb.MicroserviceCommunication{})
 }
+
+// func (s *server) handleSqlDataRequestResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+// 	logger.Debug("Starting handleSqlDataRequestResponse")
+// 	return s.handleResponse(msg, stream, &pb.SqlDataRequestResponse{})
+// }

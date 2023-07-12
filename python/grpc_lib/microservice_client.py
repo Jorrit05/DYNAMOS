@@ -6,7 +6,11 @@ from grpc_lib import SecureChannel
 
 class MsCommunication(SecureChannel):
     def __init__(self, grpc_addr):
-        self.next_service_port = str(int(os.getenv("DESIGNATED_GRPC_PORT")) + 1)
+        self.next_service_port = ""
+        if int(os.getenv("LAST")) > 0:
+            self.next_service_port = os.getenv("SIDECAR_PORT")
+        else:
+            self.next_service_port = str(int(os.getenv("DESIGNATED_GRPC_PORT")) + 1)
         super().__init__(grpc_addr, self.next_service_port)
         self.client = msServer.MicroserviceStub(self.channel)
 

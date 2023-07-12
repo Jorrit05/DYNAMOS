@@ -6,6 +6,7 @@ import (
 	"time"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func startConsumingWithRetry(c pb.SideCarClient, name string, maxRetries int, waitTime time.Duration) {
@@ -52,24 +53,24 @@ func startConsuming(c pb.SideCarClient, from string) error {
 				logger.Sugar().Errorf("Failed to unmarshal compositionRequest message: %v", err)
 			}
 			go compositionRequestHandler(compositionRequest)
-		case "sqlDataRequestResponse":
-			logger.Debug("Received sqlDataRequestResponse")
-			sqlResult := &pb.SqlDataRequestResponse{}
+		case "microserviceCommunication":
+			logger.Debug("Received microserviceCommunication")
+			msComm := &pb.MicroserviceCommunication{}
 
-			if err := grpcMsg.Body.UnmarshalTo(sqlResult); err != nil {
-				logger.Sugar().Errorf("Failed to unmarshal sqlResult message: %v", err)
+			if err := grpcMsg.Body.UnmarshalTo(msComm); err != nil {
+				logger.Sugar().Errorf("Failed to unmarshal msComm message: %v", err)
 			}
 
 			// Check if there is a job waiting for this result
 			waitingJobMutex.Lock()
-			waitingJobName, ok := waitingJobMap[sqlResult.CorrelationId]
+			waitingJobName, ok := waitingJobMap[msComm.CorrelationId]
 			waitingJobMutex.Unlock()
 
 			if ok {
 				// There was still a job waiting for this response
-				handleFurtherProcessing(waitingJobName, sqlResult)
+				handleFurtherProcessing(waitingJobName, msComm)
 				waitingJobMutex.Lock()
-				delete(waitingJobMap, sqlResult.CorrelationId)
+				delete(waitingJobMap, msComm.CorrelationId)
 				waitingJobMutex.Unlock()
 				break
 			}
@@ -77,35 +78,35 @@ func startConsuming(c pb.SideCarClient, from string) error {
 			// Check if there is a http result waiting for this
 			mutex.Lock()
 			// Look up the corresponding channel in the request map
-			requestData, ok := responseMap[sqlResult.CorrelationId]
+			requestData, ok := responseMap[msComm.CorrelationId]
 			mutex.Unlock()
 
 			if ok {
 				logger.Sugar().Info("Sending requestData to channel")
 
 				// Send a signal on the channel to indicate that the response is ready
-				requestData.response <- sqlResult
+				requestData.response <- msComm
 
 				mutex.Lock()
-				delete(responseMap, sqlResult.CorrelationId)
+				delete(responseMap, msComm.CorrelationId)
 				mutex.Unlock()
 				break
 			}
 
 			// Check if there is a third party where this goes back to
 			ttpMutex.Lock()
-			returnAddress, ok := thirdPartyMap[sqlResult.CorrelationId]
+			returnAddress, ok := thirdPartyMap[msComm.CorrelationId]
 			ttpMutex.Unlock()
 
 			if ok {
 				logger.Sugar().Infof("Sending sql response to returnAddress: %s", returnAddress)
 				// Send a signal on the channel to indicate that the response is ready
-				sqlResult.DestinationQueue = returnAddress
+				msComm.DestinationQueue = returnAddress
 
-				c.SendSqlDataRequestResponse(context.Background(), sqlResult)
+				c.SendMicroserviceComm(context.Background(), msComm)
 				break
 			}
-			logger.Sugar().Errorw("unknown requestData response", "CorrelationId", sqlResult.CorrelationId)
+			logger.Sugar().Errorw("unknown requestData response", "CorrelationId", msComm.CorrelationId)
 
 		case "sqlDataRequest":
 			// Implicitly this means I am only a dataProvider
@@ -117,21 +118,40 @@ func startConsuming(c pb.SideCarClient, from string) error {
 			}
 
 			waitingJobMutex.Lock()
-			actualJobName, ok := waitingJobMap[sqlDataRequest.JobName]
+			actualJobName, ok := waitingJobMap[sqlDataRequest.RequestMetada.JobName]
 			waitingJobMutex.Unlock()
-			logger.Sugar().Warnf("jobName: %v", sqlDataRequest.JobName)
+
+			ttpMutex.Lock()
+			thirdPartyMap[sqlDataRequest.RequestMetada.CorrelationId] = sqlDataRequest.RequestMetada.ReturnAddress
+			ttpMutex.Unlock()
+
+			logger.Sugar().Warnf("jobName: %v", sqlDataRequest.RequestMetada.JobName)
 			logger.Sugar().Warnf("actualJobName: %v", actualJobName)
 			if ok {
-				sqlDataRequest.DestinationQueue = actualJobName
-				sqlDataRequest.ReturnAddress = agentConfig.RoutingKey
-				logger.Sugar().Infof("Sending SqlRequest to: %v", sqlDataRequest.DestinationQueue)
-				c.SendSqlDataRequest(context.Background(), sqlDataRequest)
-
 				waitingJobMutex.Lock()
-				delete(waitingJobMap, sqlDataRequest.JobName)
+				delete(waitingJobMap, sqlDataRequest.RequestMetada.JobName)
 				waitingJobMutex.Unlock()
+
+				msComm := &pb.MicroserviceCommunication{}
+				msComm.Type = sqlDataRequest.Type
+				msComm.DestinationQueue = actualJobName
+				msComm.ReturnAddress = agentConfig.RoutingKey
+				msComm.CorrelationId = sqlDataRequest.RequestMetada.CorrelationId
+				// Initialize the rest?
+				any, err := anypb.New(sqlDataRequest)
+				if err != nil {
+					logger.Sugar().Error(err)
+					return err
+				}
+
+				msComm.UserRequest = any
+
+				logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", actualJobName)
+
+				go c.SendMicroserviceComm(context.Background(), msComm)
+
 			} else {
-				logger.Sugar().Warnf("No job found for: %v", sqlDataRequest.JobName)
+				logger.Sugar().Warnf("No job found for: %v", sqlDataRequest.RequestMetada.JobName)
 			}
 
 			// ttpMutex.Lock()

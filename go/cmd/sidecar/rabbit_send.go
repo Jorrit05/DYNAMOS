@@ -144,15 +144,15 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 
 	// Do other stuff
 	message := amqp.Publishing{
-		CorrelationId: in.CorrelationId,
+		CorrelationId: in.RequestMetada.CorrelationId,
 		Body:          data,
 		Type:          "sqlDataRequest",
 	}
 
-	return send(message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	return send(message, in.RequestMetada.ReturnAddress, etcd.WithMaxElapsedTime(10*time.Second))
 }
 
-func (s *server) SendSqlDataRequestResponse(ctx context.Context, in *pb.SqlDataRequestResponse) (*emptypb.Empty, error) {
+func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal requestApproval failed: %s", err)
@@ -164,51 +164,26 @@ func (s *server) SendSqlDataRequestResponse(ctx context.Context, in *pb.SqlDataR
 	message := amqp.Publishing{
 		CorrelationId: in.CorrelationId,
 		Body:          data,
-		Type:          "sqlDataRequestResponse",
+		Type:          in.Type,
 	}
 
 	return send(message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 }
 
-func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
+// func (s *server) SendSqlDataRequestResponse(ctx context.Context, in *pb.SqlDataRequestResponse) (*emptypb.Empty, error) {
+// 	data, err := proto.Marshal(in)
+// 	if err != nil {
+// 		logger.Sugar().Errorf("Marshal requestApproval failed: %s", err)
 
-	// Create a returns channel
-	// returns := make(chan amqp.Return)
-	// channel.NotifyReturn(returns)
+// 		return nil, status.Error(codes.Internal, err.Error())
+// 	}
 
-	// Do other stuff
-	message := amqp.Publishing{
-		CorrelationId: "in.CorrelationId",
-		Body:          []byte("data"),
-		Type:          "TestMessage",
-	}
-	in.DestinationQueue = "donnon"
-	return send(message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+// 	// Do other stuff
+// 	message := amqp.Publishing{
+// 		CorrelationId: in.CorrelationId,
+// 		Body:          data,
+// 		Type:          "sqlDataRequestResponse",
+// 	}
 
-	// Start a separate goroutine to handle returned messages
-	// go func() {
-	// 	for r := range returns {
-	// 		logger.Sugar().Errorf("Message returned: %v", r.ReplyText)
-	// 		if strings.EqualFold(r.ReplyText, "NO_ROUTE") {
-	// 			logger.Sugar().Info("NO_ROUTE returned: if statement")
-
-	// 		}
-	// 		// Handle the returned message (e.g. by retrying, logging an error, etc.)
-	// 	}
-	// }()
-
-	// Do other stuff
-	// message := amqp.Publishing{
-	// 	CorrelationId: "in.CorrelationId",
-	// 	Body:          []byte("data"),
-	// 	Type:          "TestMessage",
-	// }
-
-	// err := channel.PublishWithContext(context.Background(), exchangeName, "doesnotexist", true, false, message)
-	// if err != nil {
-	// 	logger.Sugar().Errorf("Publish failed: %s", err)
-	// 	return &emptypb.Empty{}, err
-	// }
-
-	return &emptypb.Empty{}, nil
-}
+// 	return send(message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+// }

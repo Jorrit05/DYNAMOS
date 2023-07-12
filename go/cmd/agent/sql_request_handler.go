@@ -14,6 +14,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func sqlDataRequestHandler() http.HandlerFunc {
@@ -27,12 +28,17 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		}
 
 		sqlDataRequest := &pb.SqlDataRequest{}
+		sqlDataRequest.RequestMetada = &pb.RequestMetada{}
 
 		err = protojson.Unmarshal(body, sqlDataRequest)
 		if err != nil {
 			logger.Sugar().Errorf("Error unmarshalling sqlDataRequest: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
+		}
+		if sqlDataRequest.RequestMetada == nil {
+			sqlDataRequest.RequestMetada = &pb.RequestMetada{}
+
 		}
 
 		// Get the jobname of this user
@@ -42,8 +48,6 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		logger.Sugar().Warnf("SQLrequest jobname:: %v", jobName)
-		sqlDataRequest.JobName = jobName
 
 		// Get the matching composition request and determine our role
 		// /agents/jobs/UVA/jorrit-3141334
@@ -54,11 +58,11 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		}
 
 		// Generate correlationID for this request
-		sqlDataRequest.CorrelationId = uuid.New().String()
+		correlationId := uuid.New().String()
 
 		// Switch on the role we have in this data request
 		if strings.EqualFold(compositionRequest.Role, "computeProvider") {
-			err = handleSqlComputeProvider(jobName, compositionRequest, sqlDataRequest)
+			err = handleSqlComputeProvider(jobName, compositionRequest, sqlDataRequest, correlationId)
 			if err != nil {
 				logger.Sugar().Errorf("Error in computeProvider role: %v", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -66,7 +70,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			}
 
 		} else if strings.EqualFold(compositionRequest.Role, "all") {
-			err = handleSqlAll(jobName, compositionRequest, sqlDataRequest)
+			err = handleSqlAll(jobName, compositionRequest, sqlDataRequest, correlationId)
 			if err != nil {
 				logger.Sugar().Errorf("Error in all role: %v", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -79,11 +83,11 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		}
 
 		// Create a channel to receive the response
-		responseChan := make(chan *pb.SqlDataRequestResponse)
+		responseChan := make(chan *pb.MicroserviceCommunication)
 
 		// Store the request information in the map
 		mutex.Lock()
-		responseMap[sqlDataRequest.CorrelationId] = &dataResponse{response: responseChan}
+		responseMap[sqlDataRequest.RequestMetada.CorrelationId] = &dataResponse{response: responseChan}
 		mutex.Unlock()
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
@@ -114,7 +118,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 	}
 }
 
-func handleSqlAll(jobName string, compositionRequest *pb.CompositionRequest, sqlDataRequest *pb.SqlDataRequest) error {
+func handleSqlAll(jobName string, compositionRequest *pb.CompositionRequest, sqlDataRequest *pb.SqlDataRequest, correlationId string) error {
 	// Create msChain and deploy job.
 
 	actualJobName, err := generateChainAndDeploy(compositionRequest, sqlDataRequest)
@@ -123,15 +127,26 @@ func handleSqlAll(jobName string, compositionRequest *pb.CompositionRequest, sql
 		return err
 	}
 
-	sqlDataRequest.DestinationQueue = actualJobName
-	sqlDataRequest.ReturnAddress = agentConfig.RoutingKey
-	logger.Sugar().Debugf("Sending sqlDataReqeuest to: %s", actualJobName)
+	msComm := &pb.MicroserviceCommunication{}
+	msComm.DestinationQueue = actualJobName
+	msComm.ReturnAddress = agentConfig.RoutingKey
 
-	go c.SendSqlDataRequest(context.Background(), sqlDataRequest)
+	any, err := anypb.New(sqlDataRequest)
+	if err != nil {
+		logger.Sugar().Error(err)
+		return err
+	}
+
+	msComm.UserRequest = any
+	msComm.CorrelationId = correlationId
+
+	logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", actualJobName)
+
+	go c.SendMicroserviceComm(context.Background(), msComm)
 	return nil
 }
 
-func handleSqlComputeProvider(jobName string, compositionRequest *pb.CompositionRequest, sqlDataRequest *pb.SqlDataRequest) error {
+func handleSqlComputeProvider(jobName string, compositionRequest *pb.CompositionRequest, sqlDataRequest *pb.SqlDataRequest, correlationId string) error {
 
 	// pack and send request to all data providers, add own routing key as return address
 	// check request and spin up own job (generate mschain, deployjob)
@@ -147,16 +162,17 @@ func handleSqlComputeProvider(jobName string, compositionRequest *pb.Composition
 			return fmt.Errorf("error getting dataProvider dns")
 		}
 
-		sqlDataRequest.DestinationQueue = agentData.RoutingKey
+		sqlDataRequest.RequestMetada.DestinationQueue = dataProviderRoutingKey
 
 		// This is a bit confusing, but it tells the other agent to go back here.
 		// The other agent, will reset the address to get the message from the job.
-		sqlDataRequest.ReturnAddress = agentConfig.RoutingKey
+		sqlDataRequest.RequestMetada.ReturnAddress = agentConfig.RoutingKey
 
-		logger.Sugar().Debugf("Sending sqlDataReqeuest to: %s", sqlDataRequest.DestinationQueue)
+		sqlDataRequest.RequestMetada.CorrelationId = correlationId
+		sqlDataRequest.RequestMetada.JobName = compositionRequest.JobName
+		logger.Sugar().Debugf("Sending sqlDataRequest to: %s", sqlDataRequest.RequestMetada.DestinationQueue)
 
 		go c.SendSqlDataRequest(context.Background(), sqlDataRequest)
-
 	}
 
 	// TODO: Parse SQL request for extra compute services
@@ -166,7 +182,7 @@ func handleSqlComputeProvider(jobName string, compositionRequest *pb.Composition
 	}
 
 	waitingJobMutex.Lock()
-	waitingJobMap[sqlDataRequest.CorrelationId] = actualJobName
+	waitingJobMap[sqlDataRequest.RequestMetada.CorrelationId] = actualJobName
 	waitingJobMutex.Unlock()
 
 	return nil

@@ -29,8 +29,9 @@ type SideCarClient interface {
 	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendCompositionRequest(ctx context.Context, in *CompositionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendSqlDataRequest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	SendSqlDataRequestResponse(ctx context.Context, in *SqlDataRequestResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
 	SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sideCarClient struct {
@@ -118,18 +119,18 @@ func (c *sideCarClient) SendSqlDataRequest(ctx context.Context, in *SqlDataReque
 	return out, nil
 }
 
-func (c *sideCarClient) SendSqlDataRequestResponse(ctx context.Context, in *SqlDataRequestResponse, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *sideCarClient) SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/proto.SideCar/SendSqlDataRequestResponse", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendTest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sideCarClient) SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *sideCarClient) SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/proto.SideCar/SendTest", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendMicroserviceComm", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +147,9 @@ type SideCarServer interface {
 	SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error)
 	SendCompositionRequest(context.Context, *CompositionRequest) (*emptypb.Empty, error)
 	SendSqlDataRequest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
-	SendSqlDataRequestResponse(context.Context, *SqlDataRequestResponse) (*emptypb.Empty, error)
+	// rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
 	SendTest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
+	SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSideCarServer()
 }
 
@@ -173,11 +175,11 @@ func (UnimplementedSideCarServer) SendCompositionRequest(context.Context, *Compo
 func (UnimplementedSideCarServer) SendSqlDataRequest(context.Context, *SqlDataRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendSqlDataRequest not implemented")
 }
-func (UnimplementedSideCarServer) SendSqlDataRequestResponse(context.Context, *SqlDataRequestResponse) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendSqlDataRequestResponse not implemented")
-}
 func (UnimplementedSideCarServer) SendTest(context.Context, *SqlDataRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendTest not implemented")
+}
+func (UnimplementedSideCarServer) SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendMicroserviceComm not implemented")
 }
 func (UnimplementedSideCarServer) mustEmbedUnimplementedSideCarServer() {}
 
@@ -303,24 +305,6 @@ func _SideCar_SendSqlDataRequest_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SideCar_SendSqlDataRequestResponse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SqlDataRequestResponse)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SideCarServer).SendSqlDataRequestResponse(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.SideCar/SendSqlDataRequestResponse",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SideCarServer).SendSqlDataRequestResponse(ctx, req.(*SqlDataRequestResponse))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SideCar_SendTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SqlDataRequest)
 	if err := dec(in); err != nil {
@@ -335,6 +319,24 @@ func _SideCar_SendTest_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SideCarServer).SendTest(ctx, req.(*SqlDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SideCar_SendMicroserviceComm_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MicroserviceCommunication)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).SendMicroserviceComm(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/SendMicroserviceComm",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).SendMicroserviceComm(ctx, req.(*MicroserviceCommunication))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -367,12 +369,12 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SideCar_SendSqlDataRequest_Handler,
 		},
 		{
-			MethodName: "SendSqlDataRequestResponse",
-			Handler:    _SideCar_SendSqlDataRequestResponse_Handler,
-		},
-		{
 			MethodName: "SendTest",
 			Handler:    _SideCar_SendTest_Handler,
+		},
+		{
+			MethodName: "SendMicroserviceComm",
+			Handler:    _SideCar_SendMicroserviceComm_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

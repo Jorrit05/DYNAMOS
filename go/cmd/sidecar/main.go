@@ -41,11 +41,10 @@ func main() {
 		pb.RegisterHealthServer(s, sharedServer)
 
 		// This env variable is only defined if this job is deployed
-		// by a distributed agent
+		// by a distributed agent as a datasharing pod
 		if os.Getenv("TEMPORARY_JOB") != "" {
 			pb.RegisterMicroserviceServer(s, sharedServer)
 			sharedServer.RegisterCallback("sqlDataRequest", handleSqlDataRequest)
-
 		}
 
 		go func() {
