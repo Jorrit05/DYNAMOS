@@ -133,7 +133,9 @@ func startConsuming(c pb.SideCarClient, from string) error {
 				waitingJobMutex.Unlock()
 
 				msComm := &pb.MicroserviceCommunication{}
-				msComm.Type = sqlDataRequest.Type
+				msComm.Type = "microserviceCommunication"
+				msComm.RequestType = sqlDataRequest.Type
+
 				msComm.DestinationQueue = actualJobName
 				msComm.ReturnAddress = agentConfig.RoutingKey
 				msComm.CorrelationId = sqlDataRequest.RequestMetada.CorrelationId

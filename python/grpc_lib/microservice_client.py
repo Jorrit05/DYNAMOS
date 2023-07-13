@@ -19,7 +19,8 @@ class MsCommunication(SecureChannel):
         communication = msServerTypes.MicroserviceCommunication()
 
         # Populate the message fields
-        communication.type = type
+        communication.type = "microserviceCommunication"
+        communication.request_type = type
         communication.data.CopyFrom(data)
 
         # Populate the metadata field

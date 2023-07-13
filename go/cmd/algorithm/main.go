@@ -76,7 +76,6 @@ func (s *Configuration) InitSidecarMessaging() {
 	}
 
 	s.SideCarClient = lib.InitializeSidecarMessaging(conn, &pb.ServiceRequest{
-
 		ServiceName:     jobName,
 		RoutingKey:      jobName,
 		QueueAutoDelete: true,
@@ -87,7 +86,7 @@ func (s *Configuration) InitSidecarMessaging() {
 	// wg.Add(1)
 
 	go func() {
-		startConsumingWithRetry(s.SideCarClient, fmt.Sprintf("%s-in", s.ServiceName), 5, 5*time.Second)
+		startConsumingWithRetry(s.SideCarClient, jobName, 5, 5*time.Second)
 		// wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()
 	// wg.Wait() // Wait for all goroutines to finish

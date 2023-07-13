@@ -7,6 +7,8 @@ from rabbit_client import RabbitClient
 from microservice_client import MsCommunication
 from google.protobuf.struct_pb2 import Struct, Value, ListValue
 import rabbitMQ_pb2 as rabbitTypes
+import microserviceCommunication_pb2 as msCommTypes
+
 from my_logger import InitLogger
 import argparse
 
@@ -90,11 +92,15 @@ def process_sql_data_request(sqlDataRequest):
 
 def handle_incoming_request(rabbitClient, response):
     logger.debug("Start handle_incoming_request")
-    if response.type == "sqlDataRequest":
-        logger.debug("response.type is sqlDataRequest")
+    logger.debug(f"response.type is:  {response.type}")
+
+    if response.type == "microserviceCommunication":
         try:
+            msComm = msCommTypes.MicroserviceCommunication()
+            response.body.Unpack(msComm)
+
             sqlDataRequest = rabbitTypes.SqlDataRequest()
-            response.body.Unpack(sqlDataRequest)
+            msComm.user_request.Unpack(sqlDataRequest)
             logger.info("Query: " + sqlDataRequest.query)
             process_sql_data_request(sqlDataRequest)
             rabbitClient.close_program()

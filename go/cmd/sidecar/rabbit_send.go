@@ -54,6 +54,7 @@ func send(message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb
 		select {
 		case err := <-errChan:
 			if err != nil {
+				logger.Sugar().Debugf("In error chan: %v", err)
 				return err
 			}
 		case r := <-returns:
@@ -65,6 +66,8 @@ func send(message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb
 				logger.Sugar().Errorf("Unknown reason message returned: %v", r)
 				return bo.Permanent(errors.New("unknown error"))
 			}
+		case <-time.After(3 * time.Second): // Timeout if no message is received in 3 seconds
+			logger.Sugar().Debugf("No message received in 3 seconds")
 		}
 
 		return nil
@@ -148,8 +151,8 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 		Body:          data,
 		Type:          "sqlDataRequest",
 	}
-
-	return send(message, in.RequestMetada.ReturnAddress, etcd.WithMaxElapsedTime(10*time.Second))
+	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetada.DestinationQueue)
+	return send(message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 }
 
 func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {

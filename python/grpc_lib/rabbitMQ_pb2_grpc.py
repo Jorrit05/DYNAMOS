@@ -3,6 +3,7 @@
 import grpc
 
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
+import microserviceCommunication_pb2 as microserviceCommunication__pb2
 import rabbitMQ_pb2 as rabbitMQ__pb2
 
 
@@ -44,6 +45,16 @@ class SideCarStub(object):
         self.SendSqlDataRequest = channel.unary_unary(
                 '/proto.SideCar/SendSqlDataRequest',
                 request_serializer=rabbitMQ__pb2.SqlDataRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
+        self.SendTest = channel.unary_unary(
+                '/proto.SideCar/SendTest',
+                request_serializer=rabbitMQ__pb2.SqlDataRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
+        self.SendMicroserviceComm = channel.unary_unary(
+                '/proto.SideCar/SendMicroserviceComm',
+                request_serializer=microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
@@ -88,6 +99,19 @@ class SideCarServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendTest(self, request, context):
+        """rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendMicroserviceComm(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SideCarServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -119,6 +143,16 @@ def add_SideCarServicer_to_server(servicer, server):
             'SendSqlDataRequest': grpc.unary_unary_rpc_method_handler(
                     servicer.SendSqlDataRequest,
                     request_deserializer=rabbitMQ__pb2.SqlDataRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'SendTest': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendTest,
+                    request_deserializer=rabbitMQ__pb2.SqlDataRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'SendMicroserviceComm': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendMicroserviceComm,
+                    request_deserializer=microserviceCommunication__pb2.MicroserviceCommunication.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -230,6 +264,40 @@ class SideCar(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/proto.SideCar/SendSqlDataRequest',
             rabbitMQ__pb2.SqlDataRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SendTest(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/proto.SideCar/SendTest',
+            rabbitMQ__pb2.SqlDataRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SendMicroserviceComm(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/proto.SideCar/SendMicroserviceComm',
+            microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -44,6 +44,7 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 	logger.Sugar().Infof("Started consuming from %s", in.QueueName)
 
 	for msg := range messages {
+		logger.Sugar().Warnw("switchin: ", "msg,Type", msg.Type, "Port:", port)
 		switch msg.Type {
 		case "validationResponse":
 			if err := s.handleValidationResponse(msg, stream); err != nil {
@@ -62,7 +63,7 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 			}
 		case "sqlDataRequest":
 			if err := s.handleSqlDataRequest(msg, stream); err != nil {
-				logger.Sugar().Errorf("Error handling sqlData response: %v", err)
+				logger.Sugar().Errorf("Error handling sqlData request: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
 		case "microserviceCommunication":

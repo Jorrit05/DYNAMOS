@@ -23,7 +23,7 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 	if err != nil {
 		return nil, err
 	}
-
+	logger.Debug("1: ")
 	compositionRequest := &pb.CompositionRequest{}
 	compositionRequest.User = &pb.User{}
 	compositionRequest.User = validationResponse.User
@@ -52,6 +52,7 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 		if err != nil {
 			return nil, err
 		}
+		logger.Debug("2: ")
 		// Send to each validData provider the role data provider
 		// Send to the thirdParty the role Compute provider
 		compositionRequest.Role = "dataProvider"
@@ -61,6 +62,7 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 			compositionRequest.DestinationQueue = authorizedProviders[key].RoutingKey
 			c.SendCompositionRequest(context.Background(), compositionRequest)
 		}
+		logger.Debug("3: ")
 		compositionRequest.DataProviders = tmpDataProvider
 		compositionRequest.Role = "computeProvider"
 		compositionRequest.DestinationQueue = ttp.RoutingKey
@@ -101,7 +103,7 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 	// }
 
 	// c.SendCompositionRequest(context.Background(), compositionRequest)
-
+	logger.Debug("4: ")
 	return userTargets, nil
 }
 

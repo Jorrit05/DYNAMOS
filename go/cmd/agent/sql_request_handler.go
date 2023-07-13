@@ -162,7 +162,7 @@ func handleSqlComputeProvider(jobName string, compositionRequest *pb.Composition
 			return fmt.Errorf("error getting dataProvider dns")
 		}
 
-		sqlDataRequest.RequestMetada.DestinationQueue = dataProviderRoutingKey
+		sqlDataRequest.RequestMetada.DestinationQueue = agentData.RoutingKey
 
 		// This is a bit confusing, but it tells the other agent to go back here.
 		// The other agent, will reset the address to get the message from the job.
@@ -172,7 +172,7 @@ func handleSqlComputeProvider(jobName string, compositionRequest *pb.Composition
 		sqlDataRequest.RequestMetada.JobName = compositionRequest.JobName
 		logger.Sugar().Debugf("Sending sqlDataRequest to: %s", sqlDataRequest.RequestMetada.DestinationQueue)
 
-		go c.SendSqlDataRequest(context.Background(), sqlDataRequest)
+		c.SendSqlDataRequest(context.Background(), sqlDataRequest)
 	}
 
 	// TODO: Parse SQL request for extra compute services

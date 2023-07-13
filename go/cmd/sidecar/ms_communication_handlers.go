@@ -28,8 +28,9 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 	}
 
 	message := amqp.Publishing{
-		Body: body,
-		Type: "microserviceCommunication",
+		CorrelationId: sqlDataRequest.RequestMetada.CorrelationId,
+		Body:          body,
+		Type:          "microserviceCommunication",
 	}
 	_, err = send(message, data.ReturnAddress)
 	if err != nil {
