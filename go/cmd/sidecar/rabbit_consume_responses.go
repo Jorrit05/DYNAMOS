@@ -25,11 +25,12 @@ func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServ
 	}
 
 	grpcMsg := &pb.RabbitMQMessage{
-		Body: any,
-		Type: msg.Type,
+		Body:  any,
+		Type:  msg.Type,
+		Trace: msg.Headers["trace"].([]byte),
 	}
-
-	return stream.SendMsg(grpcMsg)
+	err = stream.SendMsg(grpcMsg)
+	return err
 }
 
 func (s *server) handleValidationResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
@@ -37,6 +38,8 @@ func (s *server) handleValidationResponse(msg amqp.Delivery, stream pb.SideCar_C
 }
 
 func (s *server) handleRequestApprovalResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+	logger.Debug("sidecar/responses: handleRequestApprovalResponse")
+
 	return s.handleResponse(msg, stream, &pb.RequestApproval{})
 }
 
@@ -51,6 +54,7 @@ func (s *server) handleSqlDataRequest(msg amqp.Delivery, stream pb.SideCar_Consu
 
 func (s *server) handleMicroserviceCommunication(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
 	logger.Debug("Starting handleMicroserviceCommunication")
+
 	return s.handleResponse(msg, stream, &pb.MicroserviceCommunication{})
 }
 

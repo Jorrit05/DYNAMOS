@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-collector-nodeport
+  namespace: linkerd-jaeger
+spec:
+  type: NodePort
+  ports:
+    - name: grpc
+      port: 14250
+      targetPort: 14250
+      nodePort: 32000
+    - name: http
+      port: 14268
+      targetPort: 14268
+      nodePort: 32001
+    - name: collector
+      port: 55678
+      targetPort: 55678
+      nodePort: 32002
+  selector:
+    component: collector

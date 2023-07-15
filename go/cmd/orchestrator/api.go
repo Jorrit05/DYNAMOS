@@ -76,9 +76,12 @@ func agreementsHandler(etcdClient *clientv3.Client, etcdRoot string) http.Handle
 	}
 }
 
-func updateEtc(w http.ResponseWriter, r *http.Request) {
-	go registerPolicyEnforcerConfiguration()
+func updateEtc() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Your original updateEtc code here.
+		go registerPolicyEnforcerConfiguration()
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Updated all config"))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Updated all config"))
+	}
 }

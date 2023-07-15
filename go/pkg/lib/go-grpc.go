@@ -5,6 +5,7 @@ import (
 	"time"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -12,12 +13,14 @@ import (
 func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 	var conn *grpc.ClientConn
 	var err error
-	conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStatsHandler(new(ocgrpc.ClientHandler)))
 	if err != nil {
 		logger.Sugar().Fatalw("could not establish connection with grpc: %v", err)
 	}
 	h := pb.NewHealthClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
 	defer cancel()
 
 	for i := 1; i <= 7; i++ { // maximum of 7 retries

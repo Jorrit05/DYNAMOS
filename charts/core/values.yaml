@@ -1,4 +1,5 @@
 Namespace: core
+tracingEndpoint: collector.linkerd-jaeger:55678
 
 db:
   image: mysql

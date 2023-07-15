@@ -8,14 +8,18 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
 )
 
 // In this function I want to simulate checking the policy Enforcer to see whether:
 //   - I can have an agreement with each data steward
 //   - Get a result channel or endpoint
 //   - Return an access token
-func checkRequestApproval(requestApproval *pb.RequestApproval) error {
+func checkRequestApproval(ctx context.Context, requestApproval *pb.RequestApproval) error {
 	logger.Debug("Starting checkRequestApproval")
+
+	ctx, span := trace.StartSpan(ctx, serviceName+"/func: checkRequestApproval")
+	defer span.End()
 
 	var agreements []api.Agreement
 
@@ -32,14 +36,14 @@ func checkRequestApproval(requestApproval *pb.RequestApproval) error {
 	getValidAgreements(requestApproval, &agreements, protoRequest)
 	if len(agreements) == 0 || len(protoRequest.ValidDataproviders) == 0 {
 		logger.Sugar().Info("No agreements exist for this user ")
-
-		c.SendValidationResponse(context.Background(), protoRequest)
+		go c.SendValidationResponse(ctx, protoRequest)
+		return nil
 	}
 
 	protoRequest.RequestApproved = len(protoRequest.ValidDataproviders) > 0
 
 	protoRequest.Auth = generateAuthToken()
-	c.SendValidationResponse(context.Background(), protoRequest)
+	go c.SendValidationResponse(ctx, protoRequest)
 
 	return nil
 }

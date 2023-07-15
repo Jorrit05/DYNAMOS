@@ -12,12 +12,20 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
 )
 
 func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Starting requestApprovalHandler")
+		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+
+		// Start a new span with the context that has a timeout
+		ctx, span := trace.StartSpan(ctxWithTimeout, "requestApprovalHandler")
+		defer span.End()
+
 		body, err := api.GetRequestBody(w, r, serviceName)
 		if err != nil {
 			return
@@ -42,7 +50,10 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 		}
 
 		logger.Debug("Sending request approval")
-		go c.SendRequestApproval(context.Background(), protoRequest)
+
+		go func(ctx context.Context) {
+			c.SendRequestApproval(ctx, protoRequest)
+		}(ctx)
 
 		// Create a channel to receive the response
 		responseChan := make(chan *pb.ValidationResponse)
@@ -51,9 +62,7 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 		mutex.Lock()
 		validationMap[protoRequest.User.Id] = &validation{response: responseChan}
 		mutex.Unlock()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-		defer cancel()
+		logger.Sugar().Debugf("handleResponse: TraceID: %s", span.SpanContext().TraceID)
 
 		select {
 		case msg := <-responseChan:
@@ -97,7 +106,6 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 			return
 		}
 	}
-
 }
 
 func getAuthorizedProviders(validationResponse *pb.ValidationResponse) (map[string]lib.AgentDetails, error) {

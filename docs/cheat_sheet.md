@@ -135,3 +135,6 @@ linkerd check
 kubectl get -n emojivoto deploy -o yaml \
   | linkerd inject - \
   | kubectl apply -f -
+
+
+linkerd jaeger install | kubectl apply -f -

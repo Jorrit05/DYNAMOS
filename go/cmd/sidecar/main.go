@@ -8,6 +8,7 @@ import (
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/plugin/ocgrpc"
 
 	"google.golang.org/grpc"
 )
@@ -27,13 +28,21 @@ func main() {
 	flag.Parse()
 	finished := make(chan struct{}) // channel to tell us the server has finished
 
+	_, err := lib.InitTracer("sidecar")
+	if err != nil {
+		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
+	}
+
 	go func() {
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 		if err != nil {
 			logger.Sugar().Fatalw("failed to listen: %v", err)
 		}
 		logger.Sugar().Infof("Serving on %v", *port)
-		s := grpc.NewServer()
+		// s := grpc.NewServer()
+
+		s := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
+
 		serverInstance := &server{}
 		sharedServer := &lib.SharedServer{}
 		pb.RegisterSideCarServer(s, serverInstance)

@@ -7,10 +7,9 @@ import (
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
+	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
-
-	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
 var (
@@ -21,6 +20,10 @@ var (
 )
 
 func main() {
+	_, err := lib.InitTracer(serviceName)
+	if err != nil {
+		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
+	}
 
 	conn = lib.GetGrpcConnection(grpcAddr)
 	defer conn.Close()

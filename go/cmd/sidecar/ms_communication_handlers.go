@@ -14,11 +14,6 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 	if err := data.UserRequest.UnmarshalTo(sqlDataRequest); err != nil {
 		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 	}
-	// response := &pb.SqlDataRequestResponse{}
-	// response.Data = data.Data
-	// response.CorrelationId = sqlDataRequest.CorrelationId
-	// response.Metadata = data.Metadata
-	// response.UserRequest = data.UserRequest
 
 	// Marshaling google.protobuf.Struct to Proto wire format
 	body, err := proto.Marshal(data)
@@ -32,7 +27,7 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 		Body:          body,
 		Type:          "microserviceCommunication",
 	}
-	_, err = send(message, data.ReturnAddress)
+	_, err = send(ctx, message, data.ReturnAddress)
 	if err != nil {
 		logger.Sugar().Errorf("Error sending microserviceCommunication to agent: %v", err)
 		return err

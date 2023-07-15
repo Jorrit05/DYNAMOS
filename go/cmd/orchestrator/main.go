@@ -12,6 +12,7 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"github.com/gorilla/handlers"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.opencensus.io/plugin/ochttp"
 	"google.golang.org/grpc"
 )
 
@@ -30,6 +31,11 @@ type validation struct {
 func main() {
 	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
+
+	_, err := lib.InitTracer(serviceName)
+	if err != nil {
+		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
+	}
 
 	conn = lib.GetGrpcConnection(grpcAddr)
 	defer conn.Close()
@@ -53,24 +59,44 @@ func main() {
 	mux := http.NewServeMux()
 
 	apiMux := http.NewServeMux()
-	apiMux.HandleFunc("/archetypes", archetypesHandler(etcdClient, "/archetypes"))
-	apiMux.HandleFunc("/archetypes/", archetypesHandler(etcdClient, "/archetypes"))
+	// apiMux.HandleFunc("/archetypes", ochttp.Handler{Handler: http.HandlerFunc(archetypesHandler(etcdClient, "/archetypes"))})
+	// apiMux.Handle("/archetypes", ochttp.Handler{Handler: http.HandlerFunc(archetypesHandler(etcdClient, "/archetypes"))})
+	apiMux.Handle("/archetypes", &ochttp.Handler{Handler: archetypesHandler(etcdClient, "/archetypes")})
+	apiMux.Handle("/archetypes/", &ochttp.Handler{Handler: archetypesHandler(etcdClient, "/archetypes")})
 
-	apiMux.HandleFunc("/requesttypes", requestTypesHandler(etcdClient, "/requestTypes"))
-	apiMux.HandleFunc("/requestTypes", requestTypesHandler(etcdClient, "/requestTypes"))
+	apiMux.Handle("/requesttypes", &ochttp.Handler{Handler: requestTypesHandler(etcdClient, "/requestTypes")})
+	apiMux.Handle("/requestTypes", &ochttp.Handler{Handler: requestTypesHandler(etcdClient, "/requestTypes")})
 
-	apiMux.HandleFunc("/requesttypes/", requestTypesHandler(etcdClient, "/requestTypes"))
-	apiMux.HandleFunc("/requestTypes/", requestTypesHandler(etcdClient, "/requestTypes"))
+	apiMux.Handle("/requesttypes/", &ochttp.Handler{Handler: requestTypesHandler(etcdClient, "/requestTypes")})
+	apiMux.Handle("/requestTypes/", &ochttp.Handler{Handler: requestTypesHandler(etcdClient, "/requestTypes")})
 
-	apiMux.HandleFunc("/microservices", microserviceMetadataHandler(etcdClient, "/microservices"))
-	apiMux.HandleFunc("/microservices/", microserviceMetadataHandler(etcdClient, "/microservices"))
+	apiMux.Handle("/microservices", &ochttp.Handler{Handler: microserviceMetadataHandler(etcdClient, "/microservices")})
+	apiMux.Handle("/microservices/", &ochttp.Handler{Handler: microserviceMetadataHandler(etcdClient, "/microservices")})
 
-	apiMux.HandleFunc("/updateEtc", updateEtc)
+	apiMux.Handle("/updateEtc", &ochttp.Handler{Handler: updateEtc()})
 
-	apiMux.HandleFunc("/policyEnforcer", agreementsHandler(etcdClient, "/policyEnforcer"))
-	apiMux.HandleFunc("/policyEnforcer/", agreementsHandler(etcdClient, "/policyEnforcer"))
+	apiMux.Handle("/policyEnforcer", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
+	apiMux.Handle("/policyEnforcer/", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
 
-	apiMux.HandleFunc("/requestapproval", requestApprovalHandler(c))
+	apiMux.Handle("/requestapproval", &ochttp.Handler{Handler: requestApprovalHandler(c)})
+
+	// apiMux.HandleFunc("/archetypes/", archetypesHandler(etcdClient, "/archetypes"))
+
+	// apiMux.HandleFunc("/requesttypes", requestTypesHandler(etcdClient, "/requestTypes"))
+	// apiMux.HandleFunc("/requestTypes", requestTypesHandler(etcdClient, "/requestTypes"))
+
+	// apiMux.HandleFunc("/requesttypes/", requestTypesHandler(etcdClient, "/requestTypes"))
+	// apiMux.HandleFunc("/requestTypes/", requestTypesHandler(etcdClient, "/requestTypes"))
+
+	// apiMux.HandleFunc("/microservices", microserviceMetadataHandler(etcdClient, "/microservices"))
+	// apiMux.HandleFunc("/microservices/", microserviceMetadataHandler(etcdClient, "/microservices"))
+
+	// apiMux.HandleFunc("/updateEtc", updateEtc)
+
+	// apiMux.HandleFunc("/policyEnforcer", agreementsHandler(etcdClient, "/policyEnforcer"))
+	// apiMux.HandleFunc("/policyEnforcer/", agreementsHandler(etcdClient, "/policyEnforcer"))
+
+	// apiMux.HandleFunc("/requestapproval", requestApprovalHandler(c))
 	logger.Info(apiVersion) // prints /api/v1
 
 	mux.Handle(apiVersion+"/", http.StripPrefix(apiVersion, apiMux))

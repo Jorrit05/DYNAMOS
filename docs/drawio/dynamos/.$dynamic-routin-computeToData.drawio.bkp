@@ -1,0 +1,108 @@
+<mxfile host="Electron" modified="2023-07-12T07:40:41.952Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.1 Chrome/112.0.5615.204 Electron/24.6.1 Safari/537.36" etag="8W39B75-eWp6deITzean" version="21.6.1" type="device">
+  <diagram name="Page-1" id="l_U9TE8VM8Wb_cqC_3wU">
+    <mxGraphModel dx="1318" dy="959" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="3GD7TFdS083hsNr_RuVK-16" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="30" width="890" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;endArrow=none;endFill=0;strokeWidth=2;" edge="1" parent="1" source="3GD7TFdS083hsNr_RuVK-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="722" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="3GD7TFdS083hsNr_RuVK-1" target="3GD7TFdS083hsNr_RuVK-11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="585" y="560" />
+              <mxPoint x="740" y="560" />
+              <mxPoint x="740" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-1" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Orchestrator&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="525" y="590" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-5" value="CompositionRequest&lt;br&gt;&lt;ul&gt;&lt;li&gt;User&lt;/li&gt;&lt;li&gt;Archetype&lt;/li&gt;&lt;li&gt;JobName&lt;/li&gt;&lt;li&gt;(jobID)&lt;/li&gt;&lt;li&gt;RequestType (sql)&lt;/li&gt;&lt;li&gt;Role :&amp;nbsp;(all, ComputeProvider, DataProvider)&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="760" y="460" width="295" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-7" value="ComputeToData" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="730" y="615" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-10" value="&lt;b&gt;DataSteward&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="170" y="40" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-11" value="&lt;div style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;b&gt;CompositionRequest&lt;/b&gt;&lt;/div&gt;&lt;ul style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;/ul&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="320" width="250" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-12" value="Map jobName + JobID to UserName" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-11">
+          <mxGeometry y="30" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-13" value="&lt;span style=&quot;background-color: initial;&quot;&gt;Register compositionRequest under JobName&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-11">
+          <mxGeometry y="60" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-14" value="&lt;span style=&quot;background-color: initial;&quot;&gt;Wait for SQL request&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-11">
+          <mxGeometry y="90" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="3GD7TFdS083hsNr_RuVK-18" target="3GD7TFdS083hsNr_RuVK-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-18" value="Actor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="70" y="600" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-19" value="SqlDataRequest&lt;br&gt;&lt;ul&gt;&lt;li&gt;User&lt;/li&gt;&lt;li&gt;Auth&lt;/li&gt;&lt;li&gt;RequestType (sql)&lt;br&gt;&lt;/li&gt;&lt;li&gt;Sql algorithms etc...&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="130" y="505" width="295" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-20" value="&lt;div style=&quot;text-align: left; border-color: var(--border-color);&quot;&gt;&lt;b&gt;sqlDataRequest (http)&lt;/b&gt;&lt;/div&gt;&lt;ul style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;/ul&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="190" width="250" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-21" value="Get JobName + ID related to user" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-20">
+          <mxGeometry y="30" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-22" value="&lt;span style=&quot;background-color: initial;&quot;&gt;Get compositionRequest for role&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-20">
+          <mxGeometry y="60" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-25" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-20">
+          <mxGeometry y="90" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-27" value="&lt;div style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;b&gt;role=All&lt;/b&gt;&lt;/div&gt;&lt;ul style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;/ul&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="50" width="250" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-28" value="Generate msChain based on sqlRequest" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-27">
+          <mxGeometry y="30" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-30" value="Create job based on msChain" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-27">
+          <mxGeometry y="60" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="3GD7TFdS083hsNr_RuVK-22" target="3GD7TFdS083hsNr_RuVK-27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-37" value="&lt;div style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;b&gt;role=DataProvider&lt;/b&gt;&lt;/div&gt;&lt;ul style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;/ul&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="170" width="250" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-38" value="Not expecting a HTTP sqlDataRequest" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-37">
+          <mxGeometry y="30" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="3GD7TFdS083hsNr_RuVK-22" target="3GD7TFdS083hsNr_RuVK-37">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-41" value="&lt;div style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;b&gt;role=ComputeProvide&lt;/b&gt;&lt;/div&gt;&lt;ul style=&quot;border-color: var(--border-color); text-align: left;&quot;&gt;&lt;/ul&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="260" width="250" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-42" value="Forward SQL request to data providers" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-41">
+          <mxGeometry y="30" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-43" value="Generate msChain based on sqlRequest" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-41">
+          <mxGeometry y="60" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-45" value="Create job, and wait for dataProvider result" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="3GD7TFdS083hsNr_RuVK-41">
+          <mxGeometry y="90" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3GD7TFdS083hsNr_RuVK-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="3GD7TFdS083hsNr_RuVK-22" target="3GD7TFdS083hsNr_RuVK-41">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

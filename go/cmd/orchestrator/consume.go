@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io"
 	"time"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
+	"go.opencensus.io/trace/propagation"
 )
 
 func startConsumingWithRetry(c pb.SideCarClient, name string, maxRetries int, waitTime time.Duration) {
@@ -23,7 +26,9 @@ func startConsumingWithRetry(c pb.SideCarClient, name string, maxRetries int, wa
 }
 
 func startConsuming(c pb.SideCarClient, from string) error {
-	stream, err := c.Consume(context.Background(), &pb.ConsumeRequest{QueueName: from, AutoAck: true})
+	ctx := context.Background()
+
+	stream, err := c.Consume(ctx, &pb.ConsumeRequest{QueueName: from, AutoAck: true})
 	if err != nil {
 		logger.Sugar().Fatalf("Error on consume: %v", err)
 	}
@@ -40,6 +45,12 @@ func startConsuming(c pb.SideCarClient, from string) error {
 			logger.Sugar().Fatalf("Failed to receive: %v", err)
 		}
 
+		// Deserialize the span context
+		spanContext, ok := propagation.FromBinary(grpcMsg.Trace)
+		if !ok {
+			return errors.New("invalid span context")
+		}
+		_, span := trace.StartSpanWithRemoteParent(ctx, serviceName+"/consume/"+grpcMsg.Type, spanContext)
 		logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
 
 		switch grpcMsg.Type {
@@ -64,6 +75,7 @@ func startConsuming(c pb.SideCarClient, from string) error {
 		default:
 			logger.Sugar().Fatalf("Unknown message type: %s", grpcMsg.Type)
 		}
+		span.End()
 	}
 	return err
 }

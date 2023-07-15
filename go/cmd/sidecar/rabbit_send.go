@@ -9,6 +9,8 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	bo "github.com/cenkalti/backoff/v4"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.opencensus.io/trace"
+	"go.opencensus.io/trace/propagation"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,8 +25,10 @@ var (
 	routingKey string
 )
 
-func send(message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb.Empty, error) {
+func send(ctx context.Context, message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb.Empty, error) {
 	// Start with default options
+	ctx, span := trace.StartSpan(ctx, "send/"+target)
+
 	retryOpts := etcd.DefaultRetryOptions
 
 	// Apply any specified options
@@ -36,6 +40,15 @@ func send(message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb
 	returns := make(chan amqp.Return)
 	channel.NotifyReturn(returns)
 
+	sc := trace.FromContext(ctx).SpanContext()
+	binarySc := propagation.Binary(sc)
+
+	if message.Headers == nil {
+		message.Headers = amqp.Table{}
+	}
+
+	message.Headers["trace"] = binarySc
+
 	operation := func() error {
 		// Log before sending message
 		logger.Sugar().Infow("Sending message: ", "My routingKey", routingKey, "exchangeName", exchangeName, "target", target)
@@ -44,10 +57,11 @@ func send(message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb
 
 		go func() {
 			// Create a context with a timeout
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 			defer cancel()
 
-			err := channel.PublishWithContext(ctx, exchangeName, target, true, false, message)
+			// _, span := trace.StartSpan(timeoutCtx, "publish")
+			err := channel.PublishWithContext(timeoutCtx, exchangeName, target, true, false, message)
 			errChan <- err
 		}()
 
@@ -78,6 +92,8 @@ func send(message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb
 	backoff.InitialInterval = retryOpts.InitialInterval
 	backoff.MaxInterval = retryOpts.MaxInterval
 	backoff.MaxElapsedTime = retryOpts.MaxElapsedTime
+	span.End()
+
 	err := bo.Retry(operation, backoff)
 	if err != nil {
 		logger.Sugar().Errorf("Publish failed after %v seconds, err: %s", backoff.MaxElapsedTime, err)
@@ -100,7 +116,7 @@ func (s *server) SendRequestApproval(ctx context.Context, in *pb.RequestApproval
 		Type: "requestApproval",
 	}
 
-	return send(message, "policyEnforcer-in")
+	return send(ctx, message, "policyEnforcer-in")
 }
 
 func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationResponse) (*emptypb.Empty, error) {
@@ -117,7 +133,7 @@ func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationRe
 		Type: "validationResponse",
 	}
 
-	return send(message, "orchestrator-in")
+	return send(ctx, message, "orchestrator-in")
 }
 
 func (s *server) SendCompositionRequest(ctx context.Context, in *pb.CompositionRequest) (*emptypb.Empty, error) {
@@ -134,7 +150,7 @@ func (s *server) SendCompositionRequest(ctx context.Context, in *pb.CompositionR
 		Type: "compositionRequest",
 	}
 
-	return send(message, in.DestinationQueue)
+	return send(ctx, message, in.DestinationQueue)
 }
 
 func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
@@ -152,7 +168,7 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 		Type:          "sqlDataRequest",
 	}
 	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetada.DestinationQueue)
-	return send(message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	return send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 }
 
 func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
@@ -170,7 +186,7 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 		Type:          in.Type,
 	}
 
-	return send(message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	return send(ctx, message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 }
 
 // func (s *server) SendSqlDataRequestResponse(ctx context.Context, in *pb.SqlDataRequestResponse) (*emptypb.Empty, error) {
@@ -188,5 +204,5 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 // 		Type:          "sqlDataRequestResponse",
 // 	}
 
-// 	return send(message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+// 	return send(ctx, message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 // }

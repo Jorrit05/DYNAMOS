@@ -44,7 +44,7 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 	logger.Sugar().Infof("Started consuming from %s", in.QueueName)
 
 	for msg := range messages {
-		logger.Sugar().Warnw("switchin: ", "msg,Type", msg.Type, "Port:", port)
+		logger.Sugar().Debugw("switchin: ", "msg,Type", msg.Type, "Port:", port)
 		switch msg.Type {
 		case "validationResponse":
 			if err := s.handleValidationResponse(msg, stream); err != nil {

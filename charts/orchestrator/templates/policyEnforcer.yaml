@@ -18,6 +18,9 @@ spec:
       - name: policy-enforcer
         image: policy_enforcer:latest
         imagePullPolicy: IfNotPresent
+        env:
+        - name: OC_AGENT_HOST
+          value: {{ .Values.tracingEndpoint }}
         # resources:
         #   requests:
         #     memory: "128Mi"
