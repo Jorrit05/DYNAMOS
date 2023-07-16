@@ -8,22 +8,26 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
 )
 
-func startCompositionRequest(validationResponse *pb.ValidationResponse, authorizedProviders map[string]lib.AgentDetails, c pb.SideCarClient) (map[string]string, error) {
+func startCompositionRequest(ctx context.Context, validationResponse *pb.ValidationResponse, authorizedProviders map[string]lib.AgentDetails, c pb.SideCarClient) (map[string]string, context.Context, error) {
 	logger.Debug("Entering startCompositionRequest")
+	ctx, span := trace.StartSpan(ctx, "startCompositionRequest")
+	defer span.End()
+
 	archetype, err := chooseArchetype(validationResponse)
 	if err != nil {
-		return nil, err
+		return nil, ctx, err
 	}
 	logger.Debug("ARCHETYPE: " + archetype)
 
 	var archetypeConfig api.Archetype
 	_, err = etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/archetypes/%s", archetype), &archetypeConfig)
 	if err != nil {
-		return nil, err
+		return nil, ctx, err
 	}
-	logger.Debug("1: ")
+
 	compositionRequest := &pb.CompositionRequest{}
 	compositionRequest.User = &pb.User{}
 	compositionRequest.User = validationResponse.User
@@ -50,9 +54,9 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 		// Or Universities have different TTPs. That these scenarios are handled as well.
 		ttp, err := chooseThirdParty(validationResponse)
 		if err != nil {
-			return nil, err
+			return nil, ctx, err
 		}
-		logger.Debug("2: ")
+
 		// Send to each validData provider the role data provider
 		// Send to the thirdParty the role Compute provider
 		compositionRequest.Role = "dataProvider"
@@ -62,49 +66,14 @@ func startCompositionRequest(validationResponse *pb.ValidationResponse, authoriz
 			compositionRequest.DestinationQueue = authorizedProviders[key].RoutingKey
 			c.SendCompositionRequest(context.Background(), compositionRequest)
 		}
-		logger.Debug("3: ")
+
 		compositionRequest.DataProviders = tmpDataProvider
 		compositionRequest.Role = "computeProvider"
 		compositionRequest.DestinationQueue = ttp.RoutingKey
 		userTargets[ttp.Name] = ttp.Dns
 		c.SendCompositionRequest(context.Background(), compositionRequest)
 	}
-	// var request RequestType
-	// _, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/requestTypes/%s", validationResponse.RequestType), &request)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// var msMetadata []MicroserviceMetada
-	// // Returns required Microservices
-	// err = getRequiredMicroservices(&msMetadata, &request)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// msChain, err := generateChain([]string{}, msMetadata)
-	// if err != nil {
-	// 	return err
-	// }
-	// for _, ms := range msChain {
-	// 	logger.Info(ms.Name)
-	// }
-
-	// //TODO: aanpassen
-	// compositionRequest := &pb.CompositionRequest{}
-	// compositionRequest.User = &pb.User{}
-	// compositionRequest.User = validationResponse.User
-	// compositionRequest.DataProvider = ""
-	// compositionRequest.ArchetypeId = chooseArchetype(validationResponse)
-	// compositionRequest.RequestType = "sqlDataRequest"
-	// compositionRequest.Target = "UVA-in"
-	// for _, chain := range msChain {
-	// 	compositionRequest.Microservices = append(compositionRequest.Microservices, chain.Name)
-	// }
-
-	// c.SendCompositionRequest(context.Background(), compositionRequest)
-	logger.Debug("4: ")
-	return userTargets, nil
+	return userTargets, ctx, nil
 }
 
 // Just returns one of the entries that match. No logic behind it.

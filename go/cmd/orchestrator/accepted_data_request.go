@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
 )
 
-func createAcceptedDataRequest(validationResponse *pb.ValidationResponse, w http.ResponseWriter, userTargets map[string]string) {
+func createAcceptedDataRequest(ctx context.Context, validationResponse *pb.ValidationResponse, w http.ResponseWriter, userTargets map[string]string) context.Context {
 	logger.Debug("Entering createAcceptedDataRequest")
+	ctx, span := trace.StartSpan(ctx, "createAcceptedDataRequest")
+	defer span.End()
 
 	result := &pb.AcceptedDataRequest{}
 
@@ -26,11 +30,12 @@ func createAcceptedDataRequest(validationResponse *pb.ValidationResponse, w http
 	if err != nil {
 		logger.Sugar().Errorf("Error marshalling result, %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
+		return ctx
 	}
 
 	logger.Debug("Response:")
 	logger.Debug(string(jsonResponse))
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
+	return ctx
 }

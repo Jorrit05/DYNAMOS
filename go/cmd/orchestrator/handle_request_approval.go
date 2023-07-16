@@ -49,23 +49,22 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 			SyncServices:  reqApproval.SyncServices,
 		}
 
-		logger.Debug("Sending request approval")
-
 		go func(ctx context.Context) {
 			c.SendRequestApproval(ctx, protoRequest)
 		}(ctx)
 
 		// Create a channel to receive the response
-		responseChan := make(chan *pb.ValidationResponse)
+		responseChan := make(chan validation)
 
 		// Store the request information in the map
 		mutex.Lock()
-		validationMap[protoRequest.User.Id] = &validation{response: responseChan}
+		validationMap[protoRequest.User.Id] = responseChan
 		mutex.Unlock()
-		logger.Sugar().Debugf("handleResponse: TraceID: %s", span.SpanContext().TraceID)
 
 		select {
-		case msg := <-responseChan:
+		case validationStruct := <-responseChan:
+			msg := validationStruct.response
+
 			logger.Sugar().Infof("Received response, %s", msg.Type)
 			if msg.Type != "validationResponse" {
 				logger.Sugar().Errorf("Unexpected message received, type: %s", msg.Type)
@@ -91,14 +90,14 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 
 			// TODO: Might be able to improve processing by converting functions to go routines
 			// Seems a bit tricky though due to the response writer.
-			userTargets, err := startCompositionRequest(msg, authorizedProviders, c)
+			userTargets, ctx, err := startCompositionRequest(validationStruct.localContext, msg, authorizedProviders, c)
 			if err != nil {
 				logger.Sugar().Errorf("Error starting composition request: %v", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
 
-			createAcceptedDataRequest(msg, w, userTargets)
+			createAcceptedDataRequest(ctx, msg, w, userTargets)
 			return
 
 		case <-ctx.Done():

@@ -9,6 +9,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,64 +41,64 @@ func getKubeConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func generateChainAndDeploy(compositionRequest *pb.CompositionRequest, sqlDataRequest *pb.SqlDataRequest) (string, error) {
+func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.CompositionRequest, localJobName string, sqlDataRequest *pb.SqlDataRequest) error {
 	logger.Debug("Starting generateChainAndDeploy")
+
+	ctx, span := trace.StartSpan(ctx, serviceName+"/func: generateChainAndDeploy")
+	defer span.End()
 
 	// TODO: Parse SQL request for extra compute services
 
 	msChain, err := generateMicroserviceChain(compositionRequest)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
-		return "", err
+		return err
 	}
 
-	actualJobName, err := deployJob(msChain, compositionRequest.JobName)
+	err = deployJob(ctx, msChain, localJobName)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
-		return "", err
+		return err
 	}
 
-	logger.Sugar().Infow("Deployed job.", "actualJobName", actualJobName, "msChain", msChain)
-	return actualJobName, nil
+	logger.Sugar().Infow("Deployed job.", "actualJobName", localJobName, "msChain", msChain)
+	return nil
 }
 
-func deployJob(msChain []mschain.MicroserviceMetadata, jobName string) (string, error) {
+func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobName string) error {
 	logger.Debug("Starting deployJob")
-	// Create context
-	ctx := context.TODO()
 
 	config, err := getKubeConfig()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	// Create the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		logger.Sugar().Errorf("failed to create clientset: %v", err)
-		return "", err
+		return err
 	}
 
-	if serviceName == "" {
-		return "", fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
-	}
 	dataStewardName := strings.ToLower(serviceName)
-	logger.Sugar().Debugw("Pod info:", "dataStewardName: ", dataStewardName, "jobName: ", jobName)
+	if dataStewardName == "" {
+		return fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
+	}
 
-	// Get the jobname of this user
-	jobMutex.Lock()
-	jobCounter[jobName]++
-	newValue := jobCounter[jobName]
-	jobMutex.Unlock()
+	// logger.Sugar().Debugw("Pod info:", "dataStewardName: ", dataStewardName, "jobName: ", jobName)
 
-	newJobName := jobName + dataStewardName + strconv.Itoa(newValue)
+	// // Get the jobname of this user
+	// jobMutex.Lock()
+	// jobCounter[jobName]++
+	// newValue := jobCounter[jobName]
+	// jobMutex.Unlock()
 
 	// Define the job
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      newJobName,
+			Name:      jobName,
 			Namespace: dataStewardName,
-			Labels:    map[string]string{"app": dataStewardName, "jobName": newJobName},
+			Labels:    map[string]string{"app": dataStewardName, "jobName": jobName},
 		},
 		Spec: batchv1.JobSpec{
 			ActiveDeadlineSeconds:   &activeDeadlineSeconds,
@@ -138,7 +139,7 @@ func deployJob(msChain []mschain.MicroserviceMetadata, jobName string) (string, 
 				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
 				{Name: "FIRST", Value: firstService},
 				{Name: "LAST", Value: lastService},
-				{Name: "JOB_NAME", Value: newJobName},
+				{Name: "JOB_NAME", Value: jobName},
 				{Name: "SIDECAR_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 			},
 			// Add additional container configuration here as needed
@@ -152,7 +153,7 @@ func deployJob(msChain []mschain.MicroserviceMetadata, jobName string) (string, 
 	_, err = clientset.BatchV1().Jobs(dataStewardName).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		logger.Sugar().Errorf("failed to create job: %v", err)
-		return "", err
+		return err
 	}
 
 	// // /agents/jobs/UVA/activeJob/jorrit-3141334
@@ -164,7 +165,7 @@ func deployJob(msChain []mschain.MicroserviceMetadata, jobName string) (string, 
 	// 	return "", err
 	// }
 
-	return newJobName, nil
+	return nil
 }
 
 func addSidecar() v1.Container {
@@ -178,6 +179,7 @@ func addSidecar() v1.Container {
 			{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 			{Name: "TEMPORARY_JOB", Value: "true"},
 			{Name: "AMQ_USER", Value: rabbitMqUser},
+			{Name: "OC_AGENT_HOST", Value: tracingHost},
 			{Name: "AMQ_PASSWORD",
 				ValueFrom: &v1.EnvVarSource{
 					SecretKeyRef: &v1.SecretKeySelector{

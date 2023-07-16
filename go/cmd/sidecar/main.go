@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -28,11 +29,6 @@ func main() {
 	flag.Parse()
 	finished := make(chan struct{}) // channel to tell us the server has finished
 
-	_, err := lib.InitTracer("sidecar")
-	if err != nil {
-		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
-	}
-
 	go func() {
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 		if err != nil {
@@ -48,6 +44,7 @@ func main() {
 		pb.RegisterSideCarServer(s, serverInstance)
 		pb.RegisterEtcdServer(s, serverInstance)
 		pb.RegisterHealthServer(s, sharedServer)
+		pb.RegisterGenericServer(s, sharedServer)
 
 		// This env variable is only defined if this job is deployed
 		// by a distributed agent as a datasharing pod
@@ -59,8 +56,22 @@ func main() {
 		go func() {
 			<-stop
 			logger.Info("Stopping sidecar")
-			s.Stop()
-			// s.GracefulStop() // or s.Stop() if you need it to stop immediately
+			timeout := time.After(5 * time.Second)
+			done := make(chan bool)
+
+			go func() {
+				s.GracefulStop()
+				done <- true
+			}()
+
+			select {
+			case <-timeout:
+				logger.Info("Hard stop")
+				s.Stop() // forcefully stop if graceful stop did not complete within timeout
+			case <-done:
+				logger.Info("Finished graceful stop")
+			}
+
 			logger.Info("1")
 			if channel != nil {
 				logger.Info("2")

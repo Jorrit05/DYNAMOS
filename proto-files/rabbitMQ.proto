@@ -5,12 +5,13 @@ package proto;
 option go_package = "github.com/Jorrit05/DYNAMOS/pkg/proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
+import "generic.proto";
 import "microserviceCommunication.proto";
 // import "google/protobuf/struct.proto";
 
 // The sidecar definition.
 service SideCar {
-  rpc InitRabbitMq(ServiceRequest) returns (google.protobuf.Empty) {}
+  rpc InitRabbitMq(InitRequest) returns (google.protobuf.Empty) {}
   rpc Consume(ConsumeRequest) returns (stream RabbitMQMessage) {}
   rpc SendRequestApproval(RequestApproval) returns  (google.protobuf.Empty) {}
   rpc SendValidationResponse(ValidationResponse) returns  (google.protobuf.Empty) {}
@@ -19,12 +20,18 @@ service SideCar {
   // rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
   rpc SendTest(SqlDataRequest) returns  (google.protobuf.Empty) {}
   rpc SendMicroserviceComm(MicroserviceCommunication) returns  (google.protobuf.Empty) {}
+  rpc CreateQueue(QueueInfo) returns  (google.protobuf.Empty) {}
 }
 
-message ServiceRequest {
+message InitRequest {
   string service_name = 1;
   string routing_key = 2;
   bool queue_auto_delete = 3;
+}
+
+message QueueInfo {
+  string queue_name = 1;
+  bool auto_delete = 2;
 }
 
 message ConsumeRequest {
@@ -88,13 +95,6 @@ message CompositionRequest {
     string job_name =7;
 }
 
-message RequestMetada {
-  string correlation_id = 1;
-  string destination_queue = 2;
-  string job_name = 3;
-  string return_address = 4;
-}
-
 message SqlDataRequest {
   string type = 1;
   repeated string data_providers = 2;
@@ -103,7 +103,7 @@ message SqlDataRequest {
   string algorithm = 5;
   map<string, string> algorithm_columns = 6;
   User user = 7;
-  RequestMetada requestMetada = 8;
+  RequestMetada request_metada = 8;
 }
 
 // message SqlDataRequestResponse {

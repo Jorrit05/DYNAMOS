@@ -19,3 +19,4 @@ var activeDeadlineSeconds = int64(600)
 var kubeconfig = "/Users/jorrit/.kube/config"
 var rabbitMqUser = "normal_user"
 var etcdJobRootKey = "/agents/jobs"
+var tracingHost = "localhost:32002"

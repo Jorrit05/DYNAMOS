@@ -31,12 +31,6 @@ func getCompositionRequest(jobName string) (*pb.CompositionRequest, error) {
 
 func registerUserWithJob(compositionRequest *pb.CompositionRequest) error {
 	logger.Debug("Entering registerUserWithJob")
-	// var userData lib.JobUserInfo
-	// userData.ArcheType = compositionRequest.ArchetypeId
-	// userData.JobName = compositionRequest.JobName
-	// userData.Name = compositionRequest.User.UserName
-	// userData.RequestType = compositionRequest.RequestType
-	// userData.Role = compositionRequest.Role
 
 	// /agents/jobs/UVA/jorrit-3141334 ->  pb.CompositionRequest
 	jobNameKey := fmt.Sprintf("%s/%s/%s", etcdJobRootKey, agentConfig.Name, compositionRequest.JobName)

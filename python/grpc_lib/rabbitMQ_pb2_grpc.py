@@ -19,7 +19,7 @@ class SideCarStub(object):
         """
         self.InitRabbitMq = channel.unary_unary(
                 '/proto.SideCar/InitRabbitMq',
-                request_serializer=rabbitMQ__pb2.ServiceRequest.SerializeToString,
+                request_serializer=rabbitMQ__pb2.InitRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.Consume = channel.unary_stream(
@@ -55,6 +55,11 @@ class SideCarStub(object):
         self.SendMicroserviceComm = channel.unary_unary(
                 '/proto.SideCar/SendMicroserviceComm',
                 request_serializer=microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
+        self.CreateQueue = channel.unary_unary(
+                '/proto.SideCar/CreateQueue',
+                request_serializer=rabbitMQ__pb2.QueueInfo.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
@@ -112,12 +117,18 @@ class SideCarServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CreateQueue(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SideCarServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'InitRabbitMq': grpc.unary_unary_rpc_method_handler(
                     servicer.InitRabbitMq,
-                    request_deserializer=rabbitMQ__pb2.ServiceRequest.FromString,
+                    request_deserializer=rabbitMQ__pb2.InitRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'Consume': grpc.unary_stream_rpc_method_handler(
@@ -155,6 +166,11 @@ def add_SideCarServicer_to_server(servicer, server):
                     request_deserializer=microserviceCommunication__pb2.MicroserviceCommunication.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
+            'CreateQueue': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateQueue,
+                    request_deserializer=rabbitMQ__pb2.QueueInfo.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'proto.SideCar', rpc_method_handlers)
@@ -178,7 +194,7 @@ class SideCar(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/proto.SideCar/InitRabbitMq',
-            rabbitMQ__pb2.ServiceRequest.SerializeToString,
+            rabbitMQ__pb2.InitRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -298,6 +314,23 @@ class SideCar(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/proto.SideCar/SendMicroserviceComm',
             microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CreateQueue(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/proto.SideCar/CreateQueue',
+            rabbitMQ__pb2.QueueInfo.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

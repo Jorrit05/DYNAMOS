@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MicroserviceClient interface {
 	SendData(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendShutdownSignal(ctx context.Context, in *ShutDown, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type microserviceClient struct {
@@ -43,11 +44,21 @@ func (c *microserviceClient) SendData(ctx context.Context, in *MicroserviceCommu
 	return out, nil
 }
 
+func (c *microserviceClient) SendShutdownSignal(ctx context.Context, in *ShutDown, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.Microservice/SendShutdownSignal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MicroserviceServer is the server API for Microservice service.
 // All implementations must embed UnimplementedMicroserviceServer
 // for forward compatibility
 type MicroserviceServer interface {
 	SendData(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error)
+	SendShutdownSignal(context.Context, *ShutDown) (*emptypb.Empty, error)
 	mustEmbedUnimplementedMicroserviceServer()
 }
 
@@ -57,6 +68,9 @@ type UnimplementedMicroserviceServer struct {
 
 func (UnimplementedMicroserviceServer) SendData(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendData not implemented")
+}
+func (UnimplementedMicroserviceServer) SendShutdownSignal(context.Context, *ShutDown) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendShutdownSignal not implemented")
 }
 func (UnimplementedMicroserviceServer) mustEmbedUnimplementedMicroserviceServer() {}
 
@@ -89,6 +103,24 @@ func _Microservice_SendData_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Microservice_SendShutdownSignal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ShutDown)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MicroserviceServer).SendShutdownSignal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Microservice/SendShutdownSignal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MicroserviceServer).SendShutdownSignal(ctx, req.(*ShutDown))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Microservice_ServiceDesc is the grpc.ServiceDesc for Microservice service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -99,6 +131,10 @@ var Microservice_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendData",
 			Handler:    _Microservice_SendData_Handler,
+		},
+		{
+			MethodName: "SendShutdownSignal",
+			Handler:    _Microservice_SendShutdownSignal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

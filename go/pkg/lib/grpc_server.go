@@ -11,6 +11,7 @@ import (
 type SharedServer struct {
 	pb.UnimplementedMicroserviceServer
 	pb.UnimplementedHealthServer
+	pb.UnimplementedGenericServer
 	callbacks map[string]func(ctx context.Context, data *pb.MicroserviceCommunication) error
 }
 
@@ -23,8 +24,9 @@ func (s *SharedServer) RegisterCallback(msgType string, callback func(ctx contex
 
 func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
 	logger.Debug("Starting lib.SendData")
-
-	callback, ok := s.callbacks[data.Type]
+	logger.Sugar().Debugf("data.Type: %v", data.Type)
+	logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)
+	callback, ok := s.callbacks[data.RequestType]
 	if !ok {
 		logger.Warn("no callback registered for this message type")
 		return nil, fmt.Errorf("no callback registered for this message type")
@@ -40,4 +42,14 @@ func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommun
 
 func (s *SharedServer) Check(ctx context.Context, in *pb.HealthCheckRequest) (*pb.HealthCheckResponse, error) {
 	return &pb.HealthCheckResponse{Status: pb.HealthCheckResponse_SERVING}, nil
+}
+
+func (s *SharedServer) InitTracer(ctx context.Context, in *pb.ServiceName) (*emptypb.Empty, error) {
+
+	_, err := InitTracer(in.ServiceName + "/sidecar")
+	if err != nil {
+		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
+	}
+
+	return &emptypb.Empty{}, nil
 }

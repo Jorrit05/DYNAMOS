@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
+func GetGrpcConnection(grpcAddr string, serviceName string) *grpc.ClientConn {
 	var conn *grpc.ClientConn
 	var err error
 	conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -39,10 +39,14 @@ func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 			logger.Sugar().Fatalf("could not connect with gRPC after %s tries: %v", "8", err)
 		}
 	}
+
+	t := pb.NewGenericClient(conn)
+	t.InitTracer(ctx, &pb.ServiceName{ServiceName: serviceName})
+
 	return conn
 }
 
-func InitializeSidecarMessaging(conn *grpc.ClientConn, in *pb.ServiceRequest) pb.SideCarClient {
+func InitializeSidecarMessaging(conn *grpc.ClientConn, in *pb.InitRequest) pb.SideCarClient {
 	c := pb.NewSideCarClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

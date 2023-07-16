@@ -25,16 +25,16 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
-	conn = lib.GetGrpcConnection(grpcAddr)
+	conn = lib.GetGrpcConnection(grpcAddr, serviceName)
 	defer conn.Close()
-	c = lib.InitializeSidecarMessaging(conn, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+	c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 
 	// Define a WaitGroup
 	var wg sync.WaitGroup
 	wg.Add(1)
 	logger.Debug("In main, starting startConsumingWithRetry")
 	go func() {
-		startConsumingWithRetry(c, fmt.Sprintf("%s-in", serviceName), 5, 5*time.Second)
+		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second)
 
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()

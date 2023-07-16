@@ -11,7 +11,7 @@ class RabbitClient(SecureChannel):
     def __init__(self, grpc_addr, service_name, routing_key, auto_delete_queue, callback=None):
         super().__init__(grpc_addr, os.getenv("SIDECAR_PORT"))
         self.client = rabbit.SideCarStub(self.channel)
-        service_request = rabbitTypes.ServiceRequest()
+        service_request = rabbitTypes.InitRequest()
         service_request.service_name = service_name
         service_request.routing_key = routing_key
         service_request.queue_auto_delete = auto_delete_queue

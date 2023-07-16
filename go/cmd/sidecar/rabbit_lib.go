@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *server) InitRabbitMq(ctx context.Context, in *pb.ServiceRequest) (*emptypb.Empty, error) {
+func (s *server) InitRabbitMq(ctx context.Context, in *pb.InitRequest) (*emptypb.Empty, error) {
 	logger.Debug("Starting InitRabbitMq")
 	logger.Sugar().Infow("Received:", "Servicename", in.ServiceName, "RoutingKey", in.RoutingKey)
 
@@ -22,6 +22,25 @@ func (s *server) InitRabbitMq(ctx context.Context, in *pb.ServiceRequest) (*empt
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	return &emptypb.Empty{}, nil
+}
+
+func (s *server) CreateQueue(ctx context.Context, in *pb.QueueInfo) (*emptypb.Empty, error) {
+	queue, err := declareQueue(in.QueueName, channel, true)
+	if err != nil {
+		logger.Sugar().Fatalw("Failed to declare queue: %v", err)
+		return nil, err
+	}
+	if err := channel.QueueBind(
+		queue.Name,       // name
+		in.QueueName,     // key
+		"topic_exchange", // exchange
+		false,            // noWait
+		nil,              // args
+	); err != nil {
+		logger.Sugar().Fatalw("Queue Bind: %s", err)
+		return nil, err
+	}
 	return &emptypb.Empty{}, nil
 }
 
@@ -68,7 +87,7 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 			}
 		case "microserviceCommunication":
 			if err := s.handleMicroserviceCommunication(msg, stream); err != nil {
-				logger.Sugar().Errorf("Error handling SqlDataRequestResponse response: %v", err)
+				logger.Sugar().Errorf("Error handling microserviceCommunication: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
 		// case "sqlDataRequestResponse":
@@ -84,7 +103,7 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 		}
 	}
 
-	return status.Error(codes.Internal, err.Error())
+	return nil
 }
 
 // func send(message amqp.Publishing, target string) (*emptypb.Empty, error) {

@@ -28,7 +28,7 @@ var (
 func send(ctx context.Context, message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb.Empty, error) {
 	// Start with default options
 	ctx, span := trace.StartSpan(ctx, "send/"+target)
-
+	defer span.End()
 	retryOpts := etcd.DefaultRetryOptions
 
 	// Apply any specified options
@@ -53,24 +53,21 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 		// Log before sending message
 		logger.Sugar().Infow("Sending message: ", "My routingKey", routingKey, "exchangeName", exchangeName, "target", target)
 
-		errChan := make(chan error)
+		// Create a context with a timeout
+		timeoutCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
+		defer cancel()
 
-		go func() {
-			// Create a context with a timeout
-			timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-			defer cancel()
-
-			// _, span := trace.StartSpan(timeoutCtx, "publish")
-			err := channel.PublishWithContext(timeoutCtx, exchangeName, target, true, false, message)
-			errChan <- err
-		}()
+		logger.Sugar().Debugf("publis: %v", time.Now())
+		// _, span := trace.StartSpan(timeoutCtx, "publish")
+		err := channel.PublishWithContext(timeoutCtx, exchangeName, target, true, false, message)
+		if err != nil {
+			logger.Sugar().Debugf("In error chan: %v", err)
+			return err
+		}
+		span.End()
+		logger.Sugar().Debugf("publish: 1")
 
 		select {
-		case err := <-errChan:
-			if err != nil {
-				logger.Sugar().Debugf("In error chan: %v", err)
-				return err
-			}
 		case r := <-returns:
 			if r.ReplyText == "NO_ROUTE" {
 				logger.Sugar().Infof("No route to job yet: %v", target)
@@ -80,8 +77,9 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 				logger.Sugar().Errorf("Unknown reason message returned: %v", r)
 				return bo.Permanent(errors.New("unknown error"))
 			}
-		case <-time.After(3 * time.Second): // Timeout if no message is received in 3 seconds
-			logger.Sugar().Debugf("No message received in 3 seconds")
+		case <-time.After(8 * time.Second): // Timeout if no message is received in 3 seconds
+			logger.Sugar().Debugf("8 seconds have passed for target: %v", target)
+
 		}
 
 		return nil
@@ -92,7 +90,6 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 	backoff.InitialInterval = retryOpts.InitialInterval
 	backoff.MaxInterval = retryOpts.MaxInterval
 	backoff.MaxElapsedTime = retryOpts.MaxElapsedTime
-	span.End()
 
 	err := bo.Retry(operation, backoff)
 	if err != nil {
@@ -116,7 +113,9 @@ func (s *server) SendRequestApproval(ctx context.Context, in *pb.RequestApproval
 		Type: "requestApproval",
 	}
 
-	return send(ctx, message, "policyEnforcer-in")
+	go send(ctx, message, "policyEnforcer-in")
+	return &emptypb.Empty{}, nil
+
 }
 
 func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationResponse) (*emptypb.Empty, error) {
@@ -133,7 +132,9 @@ func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationRe
 		Type: "validationResponse",
 	}
 
-	return send(ctx, message, "orchestrator-in")
+	go send(ctx, message, "orchestrator-in")
+	return &emptypb.Empty{}, nil
+
 }
 
 func (s *server) SendCompositionRequest(ctx context.Context, in *pb.CompositionRequest) (*emptypb.Empty, error) {
@@ -150,7 +151,9 @@ func (s *server) SendCompositionRequest(ctx context.Context, in *pb.CompositionR
 		Type: "compositionRequest",
 	}
 
-	return send(ctx, message, in.DestinationQueue)
+	go send(ctx, message, in.DestinationQueue)
+	return &emptypb.Empty{}, nil
+
 }
 
 func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
@@ -168,25 +171,46 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 		Type:          "sqlDataRequest",
 	}
 	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetada.DestinationQueue)
-	return send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	return &emptypb.Empty{}, nil
+
 }
 
 func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
-		logger.Sugar().Errorf("Marshal requestApproval failed: %s", err)
+		logger.Sugar().Errorf("Marshal SendMicroserviceComm failed: %s", err)
 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	// Do other stuff
 	message := amqp.Publishing{
-		CorrelationId: in.CorrelationId,
+		CorrelationId: in.RequestMetada.CorrelationId,
 		Body:          data,
 		Type:          in.Type,
 	}
+	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	return &emptypb.Empty{}, nil
 
-	return send(ctx, message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+}
+
+func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal SendMicroserviceComm failed: %s", err)
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Do other stuff
+	message := amqp.Publishing{
+		CorrelationId: "in.RequestMetada.CorrelationId",
+		Body:          data,
+		Type:          "testSet",
+	}
+	go send(ctx, message, "no existss", etcd.WithMaxElapsedTime(10*time.Second))
+	return &emptypb.Empty{}, nil
 }
 
 // func (s *server) SendSqlDataRequestResponse(ctx context.Context, in *pb.SqlDataRequestResponse) (*emptypb.Empty, error) {

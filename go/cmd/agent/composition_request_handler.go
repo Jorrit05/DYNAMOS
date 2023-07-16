@@ -1,23 +1,42 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
 )
 
-func compositionRequestHandler(compositionRequest *pb.CompositionRequest) {
+func generateJobName(jobName string) (string, error) {
+	if serviceName == "" {
+		return "", fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
+	}
+
+	dataStewardName := strings.ToLower(serviceName)
+	logger.Sugar().Debugw("Pod info:", "dataStewardName: ", dataStewardName, "jobName: ", jobName)
+
+	// Get the jobname of this user
+	jobMutex.Lock()
+	jobCounter[jobName]++
+	newValue := jobCounter[jobName]
+	jobMutex.Unlock()
+
+	return jobName + dataStewardName + strconv.Itoa(newValue), nil
+}
+
+func compositionRequestHandler(ctx context.Context, compositionRequest *pb.CompositionRequest) {
 	// get local requiredServices
 	// Generate microservice chain
 	// Spin up pod
 	// Save session information in etcd
-	//
-	logger.Debug("-----")
-	logger.Sugar().Debugf("%v", compositionRequest)
-	logger.Debug("-----")
+
+	ctx, span := trace.StartSpan(ctx, serviceName+"/func: startCompositionRequest")
+	defer span.End()
 
 	err := registerUserWithJob(compositionRequest)
 	if err != nil {
@@ -25,17 +44,32 @@ func compositionRequestHandler(compositionRequest *pb.CompositionRequest) {
 		return
 	}
 
+	localJobname, err := generateJobName(compositionRequest.JobName)
+	if err != nil {
+		logger.Sugar().Errorf("generateJobName err: %v", err)
+	}
+
+	queueInfo := &pb.QueueInfo{}
+	queueInfo.AutoDelete = true
+	queueInfo.QueueName = localJobname
+
+	c.CreateQueue(ctx, queueInfo)
+
 	if strings.EqualFold(compositionRequest.Role, "dataProvider") {
-		actualJobName, err := generateChainAndDeploy(compositionRequest, &pb.SqlDataRequest{})
+		err := generateChainAndDeploy(ctx, compositionRequest, localJobname, &pb.SqlDataRequest{})
 		if err != nil {
 			logger.Sugar().Errorf("Error in deploying job: %v", err)
 			return
 		}
 		logger.Sugar().Warnf("jobName: %v", compositionRequest.JobName)
-		logger.Sugar().Warnf("actualJobName: %v", actualJobName)
+		logger.Sugar().Warnf("actualJobName: %v", localJobname)
 		waitingJobMutex.Lock()
-		waitingJobMap[compositionRequest.JobName] = actualJobName
+		waitingJobMap[compositionRequest.JobName] = localJobname
 		waitingJobMutex.Unlock()
+	} else {
+		actualJobMutex.Lock()
+		actualJobMap[compositionRequest.JobName] = localJobname
+		actualJobMutex.Unlock()
 	}
 }
 

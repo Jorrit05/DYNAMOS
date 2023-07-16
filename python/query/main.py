@@ -2,6 +2,7 @@ import pandas as pd
 from pandasql import sqldf
 import re
 import time
+import sys
 import os
 from rabbit_client import RabbitClient
 from microservice_client import MsCommunication
@@ -74,7 +75,7 @@ def dataframe_to_protobuf(df):
     return data_struct, metadata
 
 
-def process_sql_data_request(sqlDataRequest):
+def process_sql_data_request(sqlDataRequest, msComm):
     logger.debug("Start process_sql_data_request")
     try:
         print(config.dataset_filepath)
@@ -82,33 +83,52 @@ def process_sql_data_request(sqlDataRequest):
         logger.debug("Got result")
         logger.debug(result)
         data, metadata = dataframe_to_protobuf(result)
+
         microserviceCommunicator = MsCommunication(config.grpc_addr)
-        microserviceCommunicator.SendData("sqlDataRequest", data, metadata, sqlDataRequest)
+        microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
     except FileNotFoundError:
         logger.error(f"File not found at path {config.dataset_filepath}")
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
 
 
-def handle_incoming_request(rabbitClient, response):
-    logger.debug("Start handle_incoming_request")
-    logger.debug(f"response.type is:  {response.type}")
+def handleMsCommunication(rabbitClient, msComm):
+    logger.warn(type(msComm))
 
-    if response.type == "microserviceCommunication":
+    logger.warn(f"response.request_type: {msComm.request_type}")
+
+    if msComm.request_type == "sqlDataRequest":
+
+        sqlDataRequest = rabbitTypes.SqlDataRequest()
+        msComm.original_request.Unpack(sqlDataRequest)
+
+        logger.info("Query: " + sqlDataRequest.query)
+        process_sql_data_request(sqlDataRequest, msComm)
+        return True
+
+    else:
+        logger.error(f"An unexpected msCommunication: {msComm.request_type}")
+        return False
+
+def handle_incoming_request(rabbitClient, msg):
+    logger.debug("Start handle_incoming_request")
+    logger.debug(f"msg.type is:  {msg.type}")
+
+    if msg.type == "microserviceCommunication":
         try:
             msComm = msCommTypes.MicroserviceCommunication()
-            response.body.Unpack(msComm)
-
-            sqlDataRequest = rabbitTypes.SqlDataRequest()
-            msComm.user_request.Unpack(sqlDataRequest)
-            logger.info("Query: " + sqlDataRequest.query)
-            process_sql_data_request(sqlDataRequest)
+            msg.body.Unpack(msComm)
+            handleMsCommunication(rabbitClient, msComm)
+            logger.debug("Returning True")
             rabbitClient.close_program()
             return True
         except Exception as e:
             logger.error(f"Failed to unmarshal message: {e}")
         except:
             logger.error("An unexpected error occurred.")
+    else:
+        logger.error(f"An unexpected message arrived occurred: {msg.type}")
+        return False
 
 def test_single_query():
     # Define your SQL query
@@ -147,6 +167,7 @@ def main():
         exit(1)
 
     logger.debug("Exiting query service")
+    sys.exit(0)
 
 
 if __name__ == "__main__":

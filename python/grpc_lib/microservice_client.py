@@ -14,23 +14,16 @@ class MsCommunication(SecureChannel):
         super().__init__(grpc_addr, self.next_service_port)
         self.client = msServer.MicroserviceStub(self.channel)
 
-    def SendData(self, type, data, metadata, sqlDataRequest):
-        # Instantiate your protobuf message
-        communication = msServerTypes.MicroserviceCommunication()
-
+    def SendData(self, type, data, metadata, msComm):
         # Populate the message fields
-        communication.type = "microserviceCommunication"
-        communication.request_type = type
-        communication.data.CopyFrom(data)
-
+        msComm.data.CopyFrom(data)
         # Populate the metadata field
         for key, value in metadata.items():
-            communication.metadata[key] = value
+            msComm.metadata[key] = value
 
-        communication.user_request.Pack(sqlDataRequest)
 
         self.logger.debug(f"Sending message to {self.next_service_port}")
-        self.client.SendData(communication)
+        self.client.SendData(msComm)
 
     def pack_any(msg) -> Any:
         any_msg = Any()

@@ -20,8 +20,8 @@ spec:
         - containerPort: 5672
         - containerPort: 15672
         env:
-        - name: OC_AGENT_HOST
-          value: {{ .Values.tracingEndpoint }}
+        # - name: OC_AGENT_HOST
+        #   value: {{ .Values.tracingEndpoint }}
         - name: RABBITMQ_ERLANG_COOKIE
           value: "{{ .Values.rabbitmq.env.RABBITMQ_ERLANG_COOKIE }}"
         - name: RABBITMQ_DEFAULT_USER

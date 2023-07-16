@@ -2,53 +2,88 @@ package main
 
 import (
 	"context"
-	"io"
+	"fmt"
+	"strconv"
 	"time"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
-func startConsumingWithRetry(c pb.SideCarClient, name string, maxRetries int, waitTime time.Duration) {
-	for i := 0; i < maxRetries; i++ {
-		err := startConsuming(c, name)
-		if err == nil {
-			return
-		}
+func createCallbackHandler(config *Configuration) func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
+	return func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
+		// You can now use config inside this function
+		//         if config.GrpcConnection == nil {
+		//             logger.Error("config.GrpcConnection IS NUL MANNEN")
+		//         }
+		//         // rest of the code...
+		//     }
+		// }
 
-		logger.Sugar().Errorf("Failed to start consuming (attempt %d/%d): %v", i+1, maxRetries, err)
+		// func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 
-		// Wait for some time before retrying
-		time.Sleep(waitTime)
-	}
-}
-
-func startConsuming(c pb.SideCarClient, from string) error {
-	stream, err := c.Consume(context.Background(), &pb.ConsumeRequest{QueueName: from, AutoAck: true})
-	if err != nil {
-		logger.Sugar().Fatalf("Error on consume: %v", err)
-	}
-
-	for {
-		grpcMsg, err := stream.Recv()
-		if err == io.EOF {
-			// The stream has ended.
-			logger.Sugar().Warnw("Stream has ended", "error:", err)
-			break
-		}
-
-		if err != nil {
-			logger.Sugar().Fatalf("Failed to receive: %v", err)
-		}
+		// ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleSidecarMessages", grpcMsg.Trace)
+		// if err != nil {
+		// 	logger.Sugar().Errorf("Error starting span: %v", err)
+		// 	return err
+		// }
+		// defer span.End()
 
 		logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
 
 		switch grpcMsg.Type {
-		case "microserviceCommunication":
-			logger.Info("Received microserviceCommunication from rabbit")
 
+		case "microserviceCommunication":
+
+			logger.Sugar().Info("switching on microserviceCommunication")
+			msComm := &pb.MicroserviceCommunication{}
+			msComm.RequestMetada = &pb.RequestMetada{}
+
+			if err := grpcMsg.Body.UnmarshalTo(msComm); err != nil {
+				logger.Sugar().Errorf("Failed to unmarshal msComm message: %v", err)
+			} // Unpack the metadata
+
+			metadata := msComm.Metadata
+
+			// Print each metadata field
+			logger.Sugar().Debugf("Length metadata: %s", strconv.Itoa(len(metadata)))
+			for key, value := range metadata {
+				fmt.Printf("Key: %s, Value: %+v\n", key, value)
+			}
+
+			// Unpack the data
+			// dataStruct := data.Data
+			sqlDataRequest := &pb.SqlDataRequest{}
+			if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
+				logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
+			}
+
+			if config.GrpcConnection == nil {
+				logger.Error("config.GrpcConnection IS NUL MANNEN")
+
+			}
+			// connec := config.GetConnection()
+
+			// if connec == nil {
+			// 	logger.Error("connec IS NOG STEEDS NUL MANNEN")
+
+			// }
+			c := pb.NewMicroserviceClient(config.GrpcConnection)
+			logger.Sugar().Debugf("desitnation queue: %v", msComm.RequestMetada.DestinationQueue)
+			logger.Sugar().Debugf("ReturnAddress queue: %v", msComm.RequestMetada.ReturnAddress)
+
+			if c == nil {
+				logger.Error("C IS NUL MANNEN")
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			// Just pass on the data for now...
+			c.SendData(ctx, msComm)
+			close(stop)
 		default:
-			logger.Sugar().Fatalf("Unknown message type: %s", grpcMsg.Type)
+			logger.Sugar().Errorf("Unknown message type: %v", grpcMsg.Type)
+			return fmt.Errorf("unknown message type: %s", grpcMsg.Type)
 		}
+
+		return nil
 	}
-	return err
 }

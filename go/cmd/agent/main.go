@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/gorilla/handlers"
+	"go.opencensus.io/plugin/ochttp"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
@@ -29,15 +31,18 @@ var (
 	ttpMutex        = &sync.Mutex{}
 	jobMutex        = &sync.Mutex{}
 	waitingJobMutex = &sync.Mutex{}
+	actualJobMutex  = &sync.Mutex{}
 
-	responseMap   = make(map[string]*dataResponse)
+	responseMap   = make(map[string]chan dataResponse)
 	thirdPartyMap = make(map[string]string)
 	jobCounter    = make(map[string]int)
 	waitingJobMap = make(map[string]string)
+	actualJobMap  = make(map[string]string)
 )
 
 type dataResponse struct {
-	response chan *pb.MicroserviceCommunication
+	response     *pb.MicroserviceCommunication
+	localContext context.Context
 }
 
 func main() {
@@ -46,11 +51,15 @@ func main() {
 	if local && serviceName == "SURF" {
 		port = ":8083"
 	}
-	// }
 
-	conn = lib.GetGrpcConnection(grpcAddr)
+	_, err := lib.InitTracer(serviceName)
+	if err != nil {
+		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
+	}
+
+	conn = lib.GetGrpcConnection(grpcAddr, serviceName)
 	defer conn.Close()
-	c = lib.InitializeSidecarMessaging(conn, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+	c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 
 	registerAgent()
 
@@ -59,7 +68,7 @@ func main() {
 	wg.Add(1)
 
 	go func() {
-		startConsumingWithRetry(c, fmt.Sprintf("%s-in", serviceName), 5, 5*time.Second)
+		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second)
 
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()
@@ -69,7 +78,9 @@ func main() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	agentMux := http.NewServeMux()
-	agentMux.HandleFunc(fmt.Sprintf("/agent/v1/sqlDataRequest/%s", strings.ToLower(serviceName)), sqlDataRequestHandler())
+	agentMux.Handle(fmt.Sprintf("/agent/v1/sqlDataRequest/%s", strings.ToLower(serviceName)), &ochttp.Handler{Handler: sqlDataRequestHandler()})
+
+	// apiMux.Handle("/archetypes/", &ochttp.Handler{Handler: archetypesHandler(etcdClient, "/archetypes")})
 
 	wrappedAgentMux := authMiddleware(agentMux)
 

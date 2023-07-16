@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SideCarClient interface {
-	InitRabbitMq(ctx context.Context, in *ServiceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	InitRabbitMq(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Consume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ConsumeClient, error)
 	SendRequestApproval(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -32,6 +32,7 @@ type SideCarClient interface {
 	// rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
 	SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sideCarClient struct {
@@ -42,7 +43,7 @@ func NewSideCarClient(cc grpc.ClientConnInterface) SideCarClient {
 	return &sideCarClient{cc}
 }
 
-func (c *sideCarClient) InitRabbitMq(ctx context.Context, in *ServiceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *sideCarClient) InitRabbitMq(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.SideCar/InitRabbitMq", in, out, opts...)
 	if err != nil {
@@ -137,11 +138,20 @@ func (c *sideCarClient) SendMicroserviceComm(ctx context.Context, in *Microservi
 	return out, nil
 }
 
+func (c *sideCarClient) CreateQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/CreateQueue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SideCarServer is the server API for SideCar service.
 // All implementations must embed UnimplementedSideCarServer
 // for forward compatibility
 type SideCarServer interface {
-	InitRabbitMq(context.Context, *ServiceRequest) (*emptypb.Empty, error)
+	InitRabbitMq(context.Context, *InitRequest) (*emptypb.Empty, error)
 	Consume(*ConsumeRequest, SideCar_ConsumeServer) error
 	SendRequestApproval(context.Context, *RequestApproval) (*emptypb.Empty, error)
 	SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error)
@@ -150,6 +160,7 @@ type SideCarServer interface {
 	// rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
 	SendTest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
 	SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error)
+	CreateQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSideCarServer()
 }
 
@@ -157,7 +168,7 @@ type SideCarServer interface {
 type UnimplementedSideCarServer struct {
 }
 
-func (UnimplementedSideCarServer) InitRabbitMq(context.Context, *ServiceRequest) (*emptypb.Empty, error) {
+func (UnimplementedSideCarServer) InitRabbitMq(context.Context, *InitRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitRabbitMq not implemented")
 }
 func (UnimplementedSideCarServer) Consume(*ConsumeRequest, SideCar_ConsumeServer) error {
@@ -181,6 +192,9 @@ func (UnimplementedSideCarServer) SendTest(context.Context, *SqlDataRequest) (*e
 func (UnimplementedSideCarServer) SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMicroserviceComm not implemented")
 }
+func (UnimplementedSideCarServer) CreateQueue(context.Context, *QueueInfo) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateQueue not implemented")
+}
 func (UnimplementedSideCarServer) mustEmbedUnimplementedSideCarServer() {}
 
 // UnsafeSideCarServer may be embedded to opt out of forward compatibility for this service.
@@ -195,7 +209,7 @@ func RegisterSideCarServer(s grpc.ServiceRegistrar, srv SideCarServer) {
 }
 
 func _SideCar_InitRabbitMq_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ServiceRequest)
+	in := new(InitRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -207,7 +221,7 @@ func _SideCar_InitRabbitMq_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/proto.SideCar/InitRabbitMq",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SideCarServer).InitRabbitMq(ctx, req.(*ServiceRequest))
+		return srv.(SideCarServer).InitRabbitMq(ctx, req.(*InitRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -341,6 +355,24 @@ func _SideCar_SendMicroserviceComm_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SideCar_CreateQueue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueueInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).CreateQueue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/CreateQueue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).CreateQueue(ctx, req.(*QueueInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SideCar_ServiceDesc is the grpc.ServiceDesc for SideCar service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -375,6 +407,10 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendMicroserviceComm",
 			Handler:    _SideCar_SendMicroserviceComm_Handler,
+		},
+		{
+			MethodName: "CreateQueue",
+			Handler:    _SideCar_CreateQueue_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
