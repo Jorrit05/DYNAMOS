@@ -21,6 +21,8 @@ spec:
         env:
         - name: DATA_STEWARD_NAME
           value: UVA
+        - name: OC_AGENT_HOST
+          value: {{ .Values.tracingEndpoint }}
         # resources:
         #   requests:
         #     memory: "128Mi"

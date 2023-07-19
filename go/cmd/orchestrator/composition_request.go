@@ -13,6 +13,7 @@ import (
 
 func startCompositionRequest(ctx context.Context, validationResponse *pb.ValidationResponse, authorizedProviders map[string]lib.AgentDetails, c pb.SideCarClient) (map[string]string, context.Context, error) {
 	logger.Debug("Entering startCompositionRequest")
+
 	ctx, span := trace.StartSpan(ctx, "startCompositionRequest")
 	defer span.End()
 
@@ -44,7 +45,7 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 		compositionRequest.Role = "all"
 		for key := range authorizedProviders {
 			compositionRequest.DestinationQueue = authorizedProviders[key].RoutingKey
-			c.SendCompositionRequest(context.Background(), compositionRequest)
+			c.SendCompositionRequest(ctx, compositionRequest)
 			userTargets[key] = authorizedProviders[key].Dns
 		}
 	} else {
@@ -64,14 +65,14 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 		for key := range authorizedProviders {
 			tmpDataProvider = append(tmpDataProvider, key)
 			compositionRequest.DestinationQueue = authorizedProviders[key].RoutingKey
-			c.SendCompositionRequest(context.Background(), compositionRequest)
+			c.SendCompositionRequest(ctx, compositionRequest)
 		}
 
 		compositionRequest.DataProviders = tmpDataProvider
 		compositionRequest.Role = "computeProvider"
 		compositionRequest.DestinationQueue = ttp.RoutingKey
 		userTargets[ttp.Name] = ttp.Dns
-		c.SendCompositionRequest(context.Background(), compositionRequest)
+		c.SendCompositionRequest(ctx, compositionRequest)
 	}
 	return userTargets, ctx, nil
 }

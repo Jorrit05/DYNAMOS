@@ -2,13 +2,10 @@ package lib
 
 import (
 	"context"
-	"errors"
 	"io"
 	"time"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-	"go.opencensus.io/trace"
-	"go.opencensus.io/trace/propagation"
 )
 
 type MessageHandlerFunc func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error
@@ -47,19 +44,19 @@ func startConsuming(serviceName string, c pb.SideCarClient, from string, handler
 		}
 
 		// Deserialize the span context
-		spanContext, ok := propagation.FromBinary(grpcMsg.Trace)
-		if !ok {
-			return errors.New("invalid span context")
-		}
-		_, span := trace.StartSpanWithRemoteParent(ctx, serviceName+"/consume/"+grpcMsg.Type, spanContext)
-		logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
+		// spanContext, ok := propagation.FromBinary(grpcMsg.Trace)
+		// if !ok {
+		// 	return errors.New("invalid span context")
+		// }
+		// _, span := trace.StartSpanWithRemoteParent(ctx, serviceName+"/consume/"+grpcMsg.Type, spanContext)
+		// logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
 
 		err = handler(ctx, grpcMsg)
 		if err != nil {
 			logger.Sugar().Fatalf("Failed to handle message: %v", err)
 		}
 
-		span.End()
+		// span.End()
 	}
 	return err
 }

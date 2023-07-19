@@ -27,8 +27,8 @@ var (
 
 func send(ctx context.Context, message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb.Empty, error) {
 	// Start with default options
-	ctx, span := trace.StartSpan(ctx, "send/"+target)
-	defer span.End()
+	// ctx, span := trace.StartSpan(ctx, "send/"+target)
+	// defer span.End()
 	retryOpts := etcd.DefaultRetryOptions
 
 	// Apply any specified options
@@ -57,15 +57,15 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 		timeoutCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
 		defer cancel()
 
-		logger.Sugar().Debugf("publis: %v", time.Now())
+		// logger.Sugar().Debugf("publis: %v", time.Now())
 		// _, span := trace.StartSpan(timeoutCtx, "publish")
 		err := channel.PublishWithContext(timeoutCtx, exchangeName, target, true, false, message)
 		if err != nil {
 			logger.Sugar().Debugf("In error chan: %v", err)
 			return err
 		}
-		span.End()
-		logger.Sugar().Debugf("publish: 1")
+		// span.End()
+		// logger.Sugar().Debugf("publish: 1")
 
 		select {
 		case r := <-returns:
@@ -78,7 +78,7 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 				return bo.Permanent(errors.New("unknown error"))
 			}
 		case <-time.After(8 * time.Second): // Timeout if no message is received in 3 seconds
-			logger.Sugar().Debugf("8 seconds have passed for target: %v", target)
+			// logger.Sugar().Debugf("8 seconds have passed for target: %v", target)
 
 		}
 
@@ -170,6 +170,7 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 		Body:          data,
 		Type:          "sqlDataRequest",
 	}
+	logger.Sugar().Infof("JOrrit hier in send erna, wordt wat overschreven?: %v", trace.FromContext(ctx).SpanContext().TraceID)
 	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetada.DestinationQueue)
 	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
@@ -184,6 +185,8 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	logger.Sugar().Infof("JOrrit hier microserviceComm: %v", trace.FromContext(ctx).SpanContext().TraceID)
+
 	// Do other stuff
 	message := amqp.Publishing{
 		CorrelationId: in.RequestMetada.CorrelationId,
@@ -192,7 +195,6 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 	}
 	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
-
 }
 
 func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {

@@ -7,9 +7,12 @@ import health_pb2 as healthTypes
 import grpc
 import time
 from my_logger import InitLogger
+from grpc_opentracing.grpcext import intercept_channel
+from tracer import Tracer
+
 
 class SecureChannel:
-    def __init__(self, grpc_addr, grpc_port):
+    def __init__(self, grpc_addr, grpc_port, tracer : Tracer):
         self.logger = InitLogger()
         if grpc_port == "":
             self.logger.fatal("Grpc port is undefined")
@@ -17,10 +20,16 @@ class SecureChannel:
         self.channel = None
         self.grpc_addr = grpc_addr
         self.grpc_port = grpc_port
-        self.connect()
 
-    def connect(self):
+        self.connect(tracer)
+
+    def connect(self, tracer):
+        tracer_interceptor = tracer.get_interceptor()
+        # intercept the channel
         self.channel = grpc.insecure_channel(self.grpc_addr + self.grpc_port)
+        self.channel = intercept_channel(self.channel, tracer_interceptor)
+
+
         health_stub = healthServer.HealthStub(self.channel)
         self.logger.debug(f"Try connecting to: {self.grpc_addr + self.grpc_port}")
         for i in range(1, 8):  # maximum of 7 retries

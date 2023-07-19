@@ -29,6 +29,11 @@ func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServ
 		Type:  msg.Type,
 		Trace: msg.Headers["trace"].([]byte),
 	}
+
+	// logger.Info("Jorrit check:: ")
+	// spanContext, _ := propagation.FromBinary(grpcMsg.Trace)
+	// lib.PrettyPrintSpanContext(spanContext)
+
 	err = stream.SendMsg(grpcMsg)
 	return err
 }
@@ -55,10 +60,8 @@ func (s *server) handleSqlDataRequest(msg amqp.Delivery, stream pb.SideCar_Consu
 func (s *server) handleMicroserviceCommunication(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
 	logger.Debug("Starting handleMicroserviceCommunication")
 
+	// if msg.Headers["trace"].([]byte) == nil && msg.Trace != nil {
+	// 	msg.Headers["trace"] = msg.Trace
+	// }
 	return s.handleResponse(msg, stream, &pb.MicroserviceCommunication{RequestMetada: &pb.RequestMetada{}})
 }
-
-// func (s *server) handleSqlDataRequestResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
-// 	logger.Debug("Starting handleSqlDataRequestResponse")
-// 	return s.handleResponse(msg, stream, &pb.SqlDataRequestResponse{})
-// }

@@ -8,8 +8,8 @@ from grpc_lib import SecureChannel
 
 
 class RabbitClient(SecureChannel):
-    def __init__(self, grpc_addr, service_name, routing_key, auto_delete_queue, callback=None):
-        super().__init__(grpc_addr, os.getenv("SIDECAR_PORT"))
+    def __init__(self, grpc_addr, service_name, routing_key, auto_delete_queue, tracer, callback=None):
+        super().__init__(grpc_addr, os.getenv("SIDECAR_PORT"), tracer)
         self.client = rabbit.SideCarStub(self.channel)
         service_request = rabbitTypes.InitRequest()
         service_request.service_name = service_name

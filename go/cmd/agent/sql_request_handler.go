@@ -167,7 +167,7 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 
 	logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", jobName)
 
-	go c.SendMicroserviceComm(context.Background(), msComm)
+	go c.SendMicroserviceComm(ctx, msComm)
 	return ctx, nil
 }
 
@@ -199,7 +199,7 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 		sqlDataRequest.RequestMetada.JobName = compositionRequest.JobName
 		logger.Sugar().Debugf("Sending sqlDataRequest to: %s", sqlDataRequest.RequestMetada.DestinationQueue)
 
-		c.SendSqlDataRequest(context.Background(), sqlDataRequest)
+		c.SendSqlDataRequest(ctx, sqlDataRequest)
 	}
 
 	// TODO: Parse SQL request for extra compute services

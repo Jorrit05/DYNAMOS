@@ -21,6 +21,8 @@ spec:
         env:
         - name: DATA_STEWARD_NAME
           value: VU
+        - name: OC_AGENT_HOST
+          value: {{ .Values.tracingEndpoint }}
       - name: sidecar
         image: sidecar:latest
         imagePullPolicy: IfNotPresent

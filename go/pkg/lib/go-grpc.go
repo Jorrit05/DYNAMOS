@@ -15,6 +15,7 @@ func GetGrpcConnection(grpcAddr string, serviceName string) *grpc.ClientConn {
 	var err error
 	conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(new(ocgrpc.ClientHandler)))
+	// conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Sugar().Fatalw("could not establish connection with grpc: %v", err)
 	}
@@ -40,8 +41,8 @@ func GetGrpcConnection(grpcAddr string, serviceName string) *grpc.ClientConn {
 		}
 	}
 
-	t := pb.NewGenericClient(conn)
-	t.InitTracer(ctx, &pb.ServiceName{ServiceName: serviceName})
+	// t := pb.NewGenericClient(conn)
+	// t.InitTracer(ctx, &pb.ServiceName{ServiceName: serviceName})
 
 	return conn
 }

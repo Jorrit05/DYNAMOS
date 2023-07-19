@@ -21,6 +21,12 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) er
 
 	switch grpcMsg.Type {
 	case "requestApproval":
+
+		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: checkRequestApproval", grpcMsg.Trace)
+		if err != nil {
+			logger.Sugar().Errorf("error starting trace: %v", err)
+		}
+		defer span.End()
 		logger.Debug("sidecar/Consume: Received a requestApproval")
 		var requestApproval pb.RequestApproval
 		if err := grpcMsg.Body.UnmarshalTo(&requestApproval); err != nil {
@@ -29,6 +35,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) er
 
 		logger.Sugar().Infof("User name: %s", requestApproval.User.UserName)
 		checkRequestApproval(ctx, &requestApproval)
+
 	default:
 		logger.Sugar().Errorf("Unknown message type: %s", grpcMsg.Type)
 		return fmt.Errorf("unknown message type: %s", grpcMsg.Type)

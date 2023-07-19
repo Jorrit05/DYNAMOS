@@ -1,0 +1,113 @@
+package main
+
+import (
+	"context"
+	"fmt"
+
+	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
+)
+
+func isJobWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, correlationId string) bool {
+	logger.Debug("Enter isJobWaiting")
+
+	ctx, span := trace.StartSpan(ctx, "isJobWaiting")
+	defer span.End()
+
+	// Check if there is a job waiting for this result
+	waitingJobMutex.Lock()
+	waitingJobName, ok := waitingJobMap[correlationId]
+	waitingJobMutex.Unlock()
+
+	if ok {
+		// There was still a job waiting for this response
+		handleFurtherProcessing(ctx, waitingJobName, msComm)
+		waitingJobMutex.Lock()
+		delete(waitingJobMap, correlationId)
+		waitingJobMutex.Unlock()
+		return true
+	}
+
+	return false
+}
+
+func isHttpWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, correlationId string) bool {
+	logger.Debug("Enter isHttpWaiting")
+
+	ctx, span := trace.StartSpan(ctx, "isHttpWaiting")
+	defer span.End()
+	// Check if there is a http result waiting for this
+	mutex.Lock()
+	// Look up the corresponding channel in the request map
+	dataResponseChan, ok := responseMap[correlationId]
+	mutex.Unlock()
+
+	if ok {
+		logger.Sugar().Info("Sending requestData to channel")
+
+		// Send a signal on the channel to indicate that the response is ready
+		dataResponseChan <- dataResponse{response: msComm, localContext: ctx}
+
+		mutex.Lock()
+		delete(responseMap, correlationId)
+		mutex.Unlock()
+
+		logger.Warn("returning from responding......")
+		return true
+	}
+
+	return false
+}
+
+func isThirdPartyWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, correlationId string) bool {
+	logger.Debug("Enter isThirdPartyWaiting")
+
+	ctx, span := trace.StartSpan(ctx, "isThirdPartyWaiting")
+	defer span.End()
+
+	// Check if there is a third party where this goes back to
+	ttpMutex.Lock()
+	returnAddress, ok := thirdPartyMap[correlationId]
+	ttpMutex.Unlock()
+
+	if ok {
+		logger.Sugar().Infof("Sending sql response to returnAddress: %s", returnAddress)
+		// Send a signal on the channel to indicate that the response is ready
+		msComm.RequestMetada.DestinationQueue = returnAddress
+
+		c.SendMicroserviceComm(ctx, msComm)
+
+		logger.Warn("returning from forwarding to 3rd party......")
+		return true
+	}
+
+	return false
+}
+
+func handleMicroserviceCommunication(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
+
+	logger.Debug("Received microserviceCommunication")
+
+	msComm := &pb.MicroserviceCommunication{}
+	msComm.RequestMetada = &pb.RequestMetada{}
+
+	if err := grpcMsg.Body.UnmarshalTo(msComm); err != nil {
+		logger.Sugar().Errorf("Failed to unmarshal msComm message: %v", err)
+	}
+
+	correlationId := msComm.RequestMetada.CorrelationId
+
+	if isJobWaiting(ctx, msComm, correlationId) {
+		return nil
+	}
+
+	if isHttpWaiting(ctx, msComm, correlationId) {
+		return nil
+	}
+	if isThirdPartyWaiting(ctx, msComm, correlationId) {
+		return nil
+	}
+
+	logger.Sugar().Errorw("unknown requestData response", "CorrelationId", correlationId)
+	return fmt.Errorf("unknown requestData response")
+}

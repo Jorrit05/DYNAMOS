@@ -1,9 +1,11 @@
+from opentracing import Format
 import pandas as pd
 from pandasql import sqldf
 import re
 import time
 import sys
 import os
+from tracer import Tracer
 from rabbit_client import RabbitClient
 from microservice_client import MsCommunication
 from google.protobuf.struct_pb2 import Struct, Value, ListValue
@@ -12,6 +14,8 @@ import microserviceCommunication_pb2 as msCommTypes
 
 from my_logger import InitLogger
 import argparse
+from jaeger_client import Config
+from opentracing.propagation import Format
 
 if os.getenv('ENV') == 'PROD':
     import config_prod as config
@@ -23,6 +27,7 @@ else:
 logger = InitLogger()
 rabbitClient = None
 microserviceCommunicator = None
+tracer_class = Tracer(config.service_name)
 
 # Go into local test code with flag '-t'
 parser = argparse.ArgumentParser()
@@ -83,9 +88,12 @@ def process_sql_data_request(sqlDataRequest, msComm):
         logger.debug("Got result")
         logger.debug(result)
         data, metadata = dataframe_to_protobuf(result)
+        logger.debug("Got 1")
 
-        microserviceCommunicator = MsCommunication(config.grpc_addr)
+        microserviceCommunicator = MsCommunication(config.grpc_addr, tracer_class)
+        logger.debug("Got 2")
         microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
+        logger.debug("Got 3")
     except FileNotFoundError:
         logger.error(f"File not found at path {config.dataset_filepath}")
     except Exception as e:
@@ -114,13 +122,28 @@ def handle_incoming_request(rabbitClient, msg):
     logger.debug("Start handle_incoming_request")
     logger.debug(f"msg.type is:  {msg.type}")
 
+    print(f"TYPE if trace: {type(msg.trace)}")
+    if msg.trace:
+        logger.info(f"Incoming trace: has data")
+        # # tracer_class.printSpan(msg.trace)
+    else:
+        print("NO TRACE")
+
     if msg.type == "microserviceCommunication":
         try:
+
             msComm = msCommTypes.MicroserviceCommunication()
             msg.body.Unpack(msComm)
+            msComm.trace = msg.trace
+
+            # extract trace context from msComm
+            # carrier = {"trace": msComm.trace}  # replace with actual trace field name
+            # span_context = rabbitClient.tracer.extract(Format.TEXT_MAP, carrier)
+            # with rabbitClient.tracer.start_active_span("handle_incoming_request", child_of=span_context) as scope:
             handleMsCommunication(rabbitClient, msComm)
             logger.debug("Returning True")
             rabbitClient.close_program()
+            tracer_class.close_tracer()
             return True
         except Exception as e:
             logger.error(f"Failed to unmarshal message: {e}")
@@ -157,7 +180,7 @@ def main():
     if int(os.getenv("FIRST")) > 0:
         logger.debug("First service")
         job_name = os.getenv("JOB_NAME")
-        rabbitClient = RabbitClient(config.grpc_addr, job_name, job_name, True, handle_incoming_request)
+        rabbitClient = RabbitClient(config.grpc_addr, job_name, job_name, True, tracer_class, handle_incoming_request)
         rabbitClient.start_consuming(job_name, 10, 2)
     else:
         #TODO: Setup listener service for Python

@@ -8,7 +8,6 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-	"go.opencensus.io/trace"
 )
 
 // In this function I want to simulate checking the policy Enforcer to see whether:
@@ -18,8 +17,7 @@ import (
 func checkRequestApproval(ctx context.Context, requestApproval *pb.RequestApproval) error {
 	logger.Debug("Starting checkRequestApproval")
 
-	ctx, span := trace.StartSpan(ctx, serviceName+"/func: checkRequestApproval")
-	defer span.End()
+	// ctx, span := trace.StartSpan(ctx, serviceName+"/func: checkRequestApproval")
 
 	var agreements []api.Agreement
 

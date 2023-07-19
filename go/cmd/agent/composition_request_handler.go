@@ -49,6 +49,14 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 		logger.Sugar().Errorf("generateJobName err: %v", err)
 	}
 
+	actualJobMutex.Lock()
+	actualJobMap[compositionRequest.JobName] = localJobname
+	actualJobMutex.Unlock()
+	// Create queue for this job
+	// I think the actualJobname should be stored in etcd as well on a timer.
+	// think on this in combination with the actualJobMap.. The user should be able to send multiple
+	// sqlDAtaReqeuest, so the initial queue should not be autoDeleted, but deleted when the timer on
+	// this active job expires
 	queueInfo := &pb.QueueInfo{}
 	queueInfo.AutoDelete = true
 	queueInfo.QueueName = localJobname
@@ -66,10 +74,6 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 		waitingJobMutex.Lock()
 		waitingJobMap[compositionRequest.JobName] = localJobname
 		waitingJobMutex.Unlock()
-	} else {
-		actualJobMutex.Lock()
-		actualJobMap[compositionRequest.JobName] = localJobname
-		actualJobMutex.Unlock()
 	}
 }
 

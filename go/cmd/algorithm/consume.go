@@ -6,29 +6,21 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
 func createCallbackHandler(config *Configuration) func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 	return func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
-		// You can now use config inside this function
-		//         if config.GrpcConnection == nil {
-		//             logger.Error("config.GrpcConnection IS NUL MANNEN")
-		//         }
-		//         // rest of the code...
-		//     }
-		// }
 
-		// func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
-
-		// ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleSidecarMessages", grpcMsg.Trace)
-		// if err != nil {
-		// 	logger.Sugar().Errorf("Error starting span: %v", err)
-		// 	return err
-		// }
-		// defer span.End()
-
-		logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
+		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: createCallbackHandler", grpcMsg.Trace)
+		if err != nil {
+			logger.Sugar().Errorf("Error starting span: %v", err)
+			return err
+		}
+		defer span.End()
+		// lib.PrettyPrintSpanContext(span.SpanContext())
+		// logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
 
 		switch grpcMsg.Type {
 
@@ -50,23 +42,16 @@ func createCallbackHandler(config *Configuration) func(ctx context.Context, grpc
 				fmt.Printf("Key: %s, Value: %+v\n", key, value)
 			}
 
-			// Unpack the data
-			// dataStruct := data.Data
 			sqlDataRequest := &pb.SqlDataRequest{}
 			if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
 				logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 			}
 
-			if config.GrpcConnection == nil {
-				logger.Error("config.GrpcConnection IS NUL MANNEN")
+			logger.Debug("---------msComm.Trace------------")
 
-			}
-			// connec := config.GetConnection()
+			logger.Debug(string(msComm.Trace))
+			logger.Debug("---------------------")
 
-			// if connec == nil {
-			// 	logger.Error("connec IS NOG STEEDS NUL MANNEN")
-
-			// }
 			c := pb.NewMicroserviceClient(config.GrpcConnection)
 			logger.Sugar().Debugf("desitnation queue: %v", msComm.RequestMetada.DestinationQueue)
 			logger.Sugar().Debugf("ReturnAddress queue: %v", msComm.RequestMetada.ReturnAddress)
@@ -74,7 +59,7 @@ func createCallbackHandler(config *Configuration) func(ctx context.Context, grpc
 			if c == nil {
 				logger.Error("C IS NUL MANNEN")
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 			defer cancel()
 			// Just pass on the data for now...
 			c.SendData(ctx, msComm)

@@ -41,3 +41,9 @@ func StartRemoteParentSpan(ctx context.Context, name string, parentTrace []byte)
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, name, spanContext)
 	return ctx, span, nil
 }
+
+func PrettyPrintSpanContext(ctx trace.SpanContext) {
+	fmt.Printf("Trace ID: %s\n", ctx.TraceID.String())
+	fmt.Printf("Span ID: %s\n", ctx.SpanID.String())
+	fmt.Printf("Trace options: %v\n", ctx.TraceOptions)
+}

@@ -6,20 +6,25 @@ import (
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
+	"go.opencensus.io/trace/propagation"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 
-	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleSidecarMessages", grpcMsg.Trace)
+	// logger.Sugar().Infof("Jorrit check: servicename: %s ", serviceName)
+	// spanContext, _ := propagation.FromBinary(grpcMsg.Trace)
+	// lib.PrettyPrintSpanContext(spanContext)
+
+	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleIncomingMessages/"+grpcMsg.Type, grpcMsg.Trace)
 	if err != nil {
 		logger.Sugar().Errorf("Error starting span: %v", err)
-		return err
 	}
 	defer span.End()
 
-	logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
-
+	// logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
+	// lib.PrettyPrintSpanContext(span.SpanContext())
 	switch grpcMsg.Type {
 	case "compositionRequest":
 		logger.Debug("Received compositionRequest")
@@ -31,71 +36,11 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) er
 		}
 		go compositionRequestHandler(ctx, compositionRequest)
 	case "microserviceCommunication":
-		logger.Debug("Received microserviceCommunication")
-		msComm := &pb.MicroserviceCommunication{}
-		msComm.RequestMetada = &pb.RequestMetada{}
-
-		if err := grpcMsg.Body.UnmarshalTo(msComm); err != nil {
-			logger.Sugar().Errorf("Failed to unmarshal msComm message: %v", err)
-		}
-
-		correlationId := msComm.RequestMetada.CorrelationId
-		// Check if there is a job waiting for this result
-		waitingJobMutex.Lock()
-		waitingJobName, ok := waitingJobMap[correlationId]
-		waitingJobMutex.Unlock()
-
-		if ok {
-
-			// There was still a job waiting for this response
-			handleFurtherProcessing(ctx, waitingJobName, msComm)
-			waitingJobMutex.Lock()
-			delete(waitingJobMap, correlationId)
-			waitingJobMutex.Unlock()
-			return nil
-		}
-
-		// Check if there is a http result waiting for this
-		mutex.Lock()
-		// Look up the corresponding channel in the request map
-		dataResponseChan, ok := responseMap[correlationId]
-		mutex.Unlock()
-		logger.Sugar().Info("Passed waitingJobName ")
-
-		if ok {
-			logger.Sugar().Info("Sending requestData to channel")
-
-			// Send a signal on the channel to indicate that the response is ready
-			dataResponseChan <- dataResponse{response: msComm, localContext: ctx}
-
-			mutex.Lock()
-			delete(responseMap, correlationId)
-			mutex.Unlock()
-
-			logger.Warn("returning from responding......")
-			return nil
-		}
-
-		// Check if there is a third party where this goes back to
-		ttpMutex.Lock()
-		returnAddress, ok := thirdPartyMap[correlationId]
-		ttpMutex.Unlock()
-
-		if ok {
-			logger.Sugar().Infof("Sending sql response to returnAddress: %s", returnAddress)
-			// Send a signal on the channel to indicate that the response is ready
-			msComm.RequestMetada.DestinationQueue = returnAddress
-
-			c.SendMicroserviceComm(context.Background(), msComm)
-
-			logger.Warn("returning from forwarding to 3rd party......")
-			return nil
-		}
-		logger.Sugar().Errorw("unknown requestData response", "CorrelationId", correlationId)
-
+		handleMicroserviceCommunication(ctx, grpcMsg)
 	case "sqlDataRequest":
 		// Implicitly this means I am only a dataProvider
 		logger.Debug("Received sqlDataRequest from Rabbit (third party)")
+
 		sqlDataRequest := &pb.SqlDataRequest{}
 
 		if err := grpcMsg.Body.UnmarshalTo(sqlDataRequest); err != nil {
@@ -123,8 +68,13 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) er
 			msComm.Type = "microserviceCommunication"
 			msComm.RequestType = sqlDataRequest.Type
 			msComm.RequestMetada.DestinationQueue = actualJobName
-			msComm.RequestMetada.ReturnAddress = sqlDataRequest.RequestMetada.ReturnAddress
+			msComm.RequestMetada.ReturnAddress = agentConfig.RoutingKey
 			msComm.RequestMetada.CorrelationId = sqlDataRequest.RequestMetada.CorrelationId
+
+			sc := trace.FromContext(ctx).SpanContext()
+			binarySc := propagation.Binary(sc)
+			msComm.Trace = binarySc
+
 			// Initialize the rest?
 			any, err := anypb.New(sqlDataRequest)
 			if err != nil {
@@ -136,7 +86,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) er
 
 			logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", actualJobName)
 
-			go c.SendMicroserviceComm(context.Background(), msComm)
+			go c.SendMicroserviceComm(ctx, msComm)
 
 		} else {
 			logger.Sugar().Warnf("No job found for: %v", sqlDataRequest.RequestMetada.JobName)

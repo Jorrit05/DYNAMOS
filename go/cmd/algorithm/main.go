@@ -251,8 +251,8 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 
 		c := pb.NewMicroserviceClient(conn)
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+		// ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		// defer cancel()
 		// Just pass on the data for now...
 		c.SendData(ctx, data)
 		close(stop)

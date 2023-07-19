@@ -10,7 +10,7 @@ import (
 
 func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 
-	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleSidecarMessages", grpcMsg.Trace)
+	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleIncomingMessages", grpcMsg.Trace)
 	if err != nil {
 		logger.Sugar().Errorf("Error starting span: %v", err)
 		return err

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"time"
@@ -125,6 +126,13 @@ func exchange(channel *amqp.Channel) error {
 func close_channel(channel *amqp.Channel) {
 	channel.Close()
 	conn.Close()
+}
+
+func getAMQConnectionString() (string, error) {
+	user := os.Getenv("AMQ_USER")
+	pw := os.Getenv("AMQ_PASSWORD")
+
+	return fmt.Sprintf("amqp://%s:%s@%s:%s/", user, pw, rabbitDNS, rabbitPort), nil
 }
 
 // ------------------------------------------------------------------------------------------------
