@@ -43,6 +43,7 @@ message RabbitMQMessage {
   string type = 1;
   google.protobuf.Any body = 2;
   bytes trace = 3;// Binary representation of span context
+  bytes trace_two = 4;// Binary representation of span context
 }
 
 message Auth {

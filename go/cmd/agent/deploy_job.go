@@ -141,6 +141,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 				{Name: "LAST", Value: lastService},
 				{Name: "JOB_NAME", Value: jobName},
 				{Name: "SIDECAR_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
+				{Name: "OC_AGENT_HOST", Value: tracingHost},
 			},
 			// Add additional container configuration here as needed
 		}

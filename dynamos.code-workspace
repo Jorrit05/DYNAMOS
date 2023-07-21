@@ -7,13 +7,13 @@
 			"path": "go/cmd/archetype_playground"
 		},
 		{
+			"path": "go/cmd/agent"
+		},
+		{
 			"path": "go/cmd/sidecar"
 		},
 		{
 			"path": "go/cmd/policy_enforcer"
-		},
-		{
-			"path": "go/cmd/agent"
 		},
 		{
 			"path": "go/pkg"

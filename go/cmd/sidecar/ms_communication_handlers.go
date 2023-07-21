@@ -10,6 +10,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+// TODO: Maybe I can remove this in favor of generic send functoin? I think I already added everything in
+// the MicroserviceCommunication metadata./
 func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunication) error {
 	logger.Debug("Start msCommunication handleSqlDataRequest")
 
@@ -41,7 +43,7 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 
 	if data.Trace != nil {
 		logger.Debug("handleSqlDataRequest: adding trace data to request")
-		msg.Headers["trace"] = data.Trace
+		msg.Headers["trace"] = data.TraceTwo
 		// spanContext, _ := propagation.FromBinary(data.Trace)
 		// lib.PrettyPrintSpanContext(spanContext)
 	}

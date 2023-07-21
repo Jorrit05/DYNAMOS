@@ -7,27 +7,37 @@ import health_pb2 as healthTypes
 import grpc
 import time
 from my_logger import InitLogger
-from grpc_opentracing.grpcext import intercept_channel
-from tracer import Tracer
-
 
 class SecureChannel:
-    def __init__(self, grpc_addr, grpc_port, tracer : Tracer):
+    def __init__(self, config, grpc_port):
         self.logger = InitLogger()
         if grpc_port == "":
             self.logger.fatal("Grpc port is undefined")
 
         self.channel = None
-        self.grpc_addr = grpc_addr
+        self.grpc_addr = config.grpc_addr
         self.grpc_port = grpc_port
 
-        self.connect(tracer)
+        self.connect()
 
-    def connect(self, tracer):
-        tracer_interceptor = tracer.get_interceptor()
+    def connect(self):
+
+        # tracer = context_tracer.ContextTracer()
+        # execution_context.set_opencensus_tracer(tracer)
+
+        # tracer_interceptor = client_interceptor.OpenCensusClientInterceptor(
+        #     tracer,
+        #     host_port='collector.linkerd-jaeger:55678'
+        # )
         # intercept the channel
         self.channel = grpc.insecure_channel(self.grpc_addr + self.grpc_port)
-        self.channel = intercept_channel(self.channel, tracer_interceptor)
+        # self.channel = grpc.intercept_channel(self.channel, tracer_interceptor)
+
+        # intercept
+        # tracer_interceptor = tracer.get_interceptor()
+        # # intercept the channel
+        # self.channel = grpc.insecure_channel(self.grpc_addr + self.grpc_port)
+        # self.channel = intercept_channel(self.channel, tracer_interceptor)
 
 
         health_stub = healthServer.HealthStub(self.channel)

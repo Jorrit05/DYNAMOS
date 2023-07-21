@@ -49,4 +49,4 @@ metadata:
   annotations:
     "helm.sh/resource-policy": keep
     "app.kubernetes.io/managed-by": "Helm"
-
+    # "linkerd.io/inject" : enabled

@@ -18,5 +18,9 @@ spec:
       port: 55678
       targetPort: 55678
       nodePort: 32002
+    - name: collector2
+      port: 4317
+      targetPort: 4317
+      nodePort: 32003
   selector:
     component: collector

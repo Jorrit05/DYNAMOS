@@ -111,7 +111,12 @@ func (s *Configuration) GetConnection() *grpc.ClientConn {
 // Main function
 func main() {
 	logger.Debug("Starting algorithm service")
-	var err error
+
+	_, err := lib.InitTracer(serviceName)
+	if err != nil {
+		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
+	}
+
 	config, err = NewConfiguration()
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
@@ -129,6 +134,7 @@ func main() {
 	}
 
 	<-stopped
+	// time.Sleep(5 * time.Second)
 	logger.Sugar().Infof("Exiting algorithm service")
 	os.Exit(0)
 }

@@ -30,6 +30,11 @@ func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServ
 		Trace: msg.Headers["trace"].([]byte),
 	}
 
+	value, ok := msg.Headers["original"]
+	if ok {
+		grpcMsg.TraceTwo = value.([]byte)
+	}
+
 	// logger.Info("Jorrit check:: ")
 	// spanContext, _ := propagation.FromBinary(grpcMsg.Trace)
 	// lib.PrettyPrintSpanContext(spanContext)

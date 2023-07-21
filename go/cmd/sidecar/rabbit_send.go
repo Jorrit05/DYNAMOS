@@ -193,7 +193,23 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 		Body:          data,
 		Type:          in.Type,
 	}
-	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	if message.Headers == nil {
+		message.Headers = amqp.Table{}
+	}
+
+	message.Headers["trace"] = in.Trace
+
+	if in.TraceTwo != nil {
+		message.Headers["original"] = in.TraceTwo
+	}
+
+	logger.Sugar().Warnf("Trace: %v", message.Headers["trace"])
+	err = channel.PublishWithContext(ctx, exchangeName, in.RequestMetada.DestinationQueue, true, false, message)
+	if err != nil {
+		logger.Sugar().Debugf("In error chan: %v", err)
+		return &emptypb.Empty{}, err
+	}
+	// go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
 }
 

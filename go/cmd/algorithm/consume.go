@@ -13,15 +13,17 @@ import (
 func createCallbackHandler(config *Configuration) func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 	return func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 
-		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: createCallbackHandler", grpcMsg.Trace)
+		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: callbackHandler, procces MS", grpcMsg.Trace)
 		if err != nil {
 			logger.Sugar().Errorf("Error starting span: %v", err)
 			return err
 		}
 		defer span.End()
-		// lib.PrettyPrintSpanContext(span.SpanContext())
-		// logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
 
+		// logger.Debug("algorhithm span: ----------------")
+		// lib.PrettyPrintSpanContext(span.SpanContext())
+		// // logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
+		// logger.Debug("----------------")
 		switch grpcMsg.Type {
 
 		case "microserviceCommunication":
@@ -61,6 +63,7 @@ func createCallbackHandler(config *Configuration) func(ctx context.Context, grpc
 			}
 			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 			defer cancel()
+			// span.End()
 			// Just pass on the data for now...
 			c.SendData(ctx, msComm)
 			close(stop)

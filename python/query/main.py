@@ -1,21 +1,25 @@
-from opentracing import Format
 import pandas as pd
 from pandasql import sqldf
 import re
 import time
 import sys
 import os
-from tracer import Tracer
 from rabbit_client import RabbitClient
 from microservice_client import MsCommunication
 from google.protobuf.struct_pb2 import Struct, Value, ListValue
 import rabbitMQ_pb2 as rabbitTypes
 import microserviceCommunication_pb2 as msCommTypes
-
+import json
 from my_logger import InitLogger
 import argparse
-from jaeger_client import Config
-from opentracing.propagation import Format
+from opentelemetry import trace, context
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.propagate import extract
+from opentelemetry.trace.span import TraceFlags, TraceState
+from opentelemetry.trace.propagation import set_span_in_context
 
 if os.getenv('ENV') == 'PROD':
     import config_prod as config
@@ -27,7 +31,18 @@ else:
 logger = InitLogger()
 rabbitClient = None
 microserviceCommunicator = None
-tracer_class = Tracer(config.service_name)
+
+# Service name is required for most backends
+resource = Resource(attributes={
+    SERVICE_NAME: config.service_name
+})
+
+provider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=config.tracingHost, insecure=True))
+provider.add_span_processor(processor)
+trace.set_tracer_provider(provider)
+
+tracer = trace.get_tracer("query.tracer")
 
 # Go into local test code with flag '-t'
 parser = argparse.ArgumentParser()
@@ -35,6 +50,7 @@ parser.add_argument("-t", "--test", action='store_true')
 args = parser.parse_args()
 test = args.test
 
+@tracer.start_as_current_span("load_and_query_csv")
 def load_and_query_csv(file_path_prefix, query):
     # Extract table names from the query
     table_names = re.findall(r'FROM (\w+)', query) + re.findall(r'JOIN (\w+)', query)
@@ -54,7 +70,7 @@ def load_and_query_csv(file_path_prefix, query):
     return result_df
 
 
-
+@tracer.start_as_current_span("dataframe_to_protobuf")
 def dataframe_to_protobuf(df):
     # Convert the DataFrame to a dictionary of lists (one for each column)
     data_dict = df.to_dict(orient='list')
@@ -79,18 +95,17 @@ def dataframe_to_protobuf(df):
 
     return data_struct, metadata
 
-
+@tracer.start_as_current_span("process_sql_data_request")
 def process_sql_data_request(sqlDataRequest, msComm):
     logger.debug("Start process_sql_data_request")
+
     try:
         print(config.dataset_filepath)
         result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
-        logger.debug("Got result")
-        logger.debug(result)
         data, metadata = dataframe_to_protobuf(result)
         logger.debug("Got 1")
 
-        microserviceCommunicator = MsCommunication(config.grpc_addr, tracer_class)
+        microserviceCommunicator = MsCommunication(config)
         logger.debug("Got 2")
         microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
         logger.debug("Got 3")
@@ -99,7 +114,7 @@ def process_sql_data_request(sqlDataRequest, msComm):
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
 
-
+@tracer.start_as_current_span("handleMsCommunication")
 def handleMsCommunication(rabbitClient, msComm):
     logger.warn(type(msComm))
 
@@ -118,10 +133,11 @@ def handleMsCommunication(rabbitClient, msComm):
         logger.error(f"An unexpected msCommunication: {msComm.request_type}")
         return False
 
-def handle_incoming_request(rabbitClient, msg):
-    logger.debug("Start handle_incoming_request")
-    logger.debug(f"msg.type is:  {msg.type}")
+@tracer.start_as_current_span("testsome")
+def testsome():
+    logger.info("HELO")
 
+def handle_incoming_request(rabbitClient, msg):
     print(f"TYPE if trace: {type(msg.trace)}")
     if msg.trace:
         logger.info(f"Incoming trace: has data")
@@ -129,31 +145,100 @@ def handle_incoming_request(rabbitClient, msg):
     else:
         print("NO TRACE")
 
+    # trace_header = msg.headers.get("trace")
+
+
+    # Parse the trace header back into a dictionary
+    scMap = json.loads(msg.trace)
+    logger.warning(scMap)
+    state = TraceState([("sampled", "1")])
+    sc = trace.SpanContext(
+        trace_id=int(scMap['TraceID'], 16),
+        span_id=int(scMap['SpanID'], 16),
+        is_remote=True,
+        trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        trace_state=state
+    )
+
+    logger.warning(f"sc.trace_id: {sc.trace_id}")
+
+    # ctx = set_span_in_context(sc)
+    # create a non-recording span with the SpanContext and set it in a Context
+    span = trace.NonRecordingSpan(sc)
+    ctx = set_span_in_context(span)
+
+
+    # _, span = tracer_class.create_parent_span("handle_incoming", msg.trace)
     if msg.type == "microserviceCommunication":
         try:
 
             msComm = msCommTypes.MicroserviceCommunication()
             msg.body.Unpack(msComm)
-            msComm.trace = msg.trace
+            msComm.trace = msg.trace_two
 
             # extract trace context from msComm
             # carrier = {"trace": msComm.trace}  # replace with actual trace field name
             # span_context = rabbitClient.tracer.extract(Format.TEXT_MAP, carrier)
             # with rabbitClient.tracer.start_active_span("handle_incoming_request", child_of=span_context) as scope:
-            handleMsCommunication(rabbitClient, msComm)
+            logger.warning("1")
+            # with trace.use_span(trace.NonRecordingSpan(sc)) as span:
+
+            with tracer.start_as_current_span("newqueryTracer.", context=ctx) as span1:
+                trace_id_hex = "{:032x}".format(span1.get_span_context().trace_id)
+                print(f"Trace ID: {trace_id_hex}")
+                handleMsCommunication(rabbitClient, msComm)
+            logger.warning("2")
             logger.debug("Returning True")
             rabbitClient.close_program()
-            tracer_class.close_tracer()
+            # tracer_class.close_tracer()
             return True
         except Exception as e:
             logger.error(f"Failed to unmarshal message: {e}")
+            # span.finish()
+            return False
         except:
             logger.error("An unexpected error occurred.")
+            # span.finish()
+            return False
     else:
         logger.error(f"An unexpected message arrived occurred: {msg.type}")
+        # span.finish()
         return False
 
-def test_single_query():
+# @tracer.start_as_current_span("test_single_query")
+def test_single_query(rabbitClient, msg):
+
+    # Parse the trace header back into a dictionary
+    scMap = json.loads(msg.trace)
+    logger.warning(scMap)
+    state = TraceState([("sampled", "1")])
+
+    sc = trace.SpanContext(
+        trace_id=int(scMap['TraceID'], 16),
+        span_id=int(scMap['SpanID'], 16),
+        is_remote=True,
+        trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        trace_state=state
+    )
+
+    logger.warning(f"sc.trace_id: {sc.trace_id}")
+
+    # ctx = set_span_in_context(sc)
+    # create a non-recording span with the SpanContext and set it in a Context
+    span = trace.NonRecordingSpan(sc)
+    ctx = set_span_in_context(span)
+
+    with tracer.start_as_current_span("newqueryTracer.", context=ctx) as span1:
+        trace_id_hex = "{:032x}".format(span1.get_span_context().trace_id)
+        span_id_hex = "{:016x}".format(span1.get_span_context().span_id)
+
+        print(f"Trace ID: {trace_id_hex}")
+        print(f"Span ID: {span_id_hex}")
+
+
+        testsome()
+        rabbitClient.close_program()
+
     # Define your SQL query
     query = """SELECT DISTINCT p.Unieknr, p.Geslacht, p.Gebdat, s.Aanst_22, s.Functcat, s.Salschal as Salary
                FROM Personen p
@@ -172,7 +257,20 @@ def test_single_query():
 
 def main():
     if test:
-        test_single_query()
+        job_name="Test"
+
+
+        # with tracer.start_as_current_span("do_roll") as rollspan:
+        rabbitClient = RabbitClient(config, job_name, job_name, True, test_single_query)
+
+        rabbitClient.start_consuming(job_name, 10, 2)
+
+        # test_single_query()
+
+        # rollspan.finish()
+        # tracer.finish()
+        # print("Stat sleep")
+        # time.sleep(5)
         exit(0)
 
     logger.debug("Starting Query service")
@@ -180,7 +278,7 @@ def main():
     if int(os.getenv("FIRST")) > 0:
         logger.debug("First service")
         job_name = os.getenv("JOB_NAME")
-        rabbitClient = RabbitClient(config.grpc_addr, job_name, job_name, True, tracer_class, handle_incoming_request)
+        rabbitClient = RabbitClient(config, job_name, job_name, True, handle_incoming_request)
         rabbitClient.start_consuming(job_name, 10, 2)
     else:
         #TODO: Setup listener service for Python
@@ -188,6 +286,13 @@ def main():
         # microserviceCommunicator.
         logger.debug("Not the first service")
         exit(1)
+
+
+    # for thread in threading.enumerate():
+    #     if isinstance(thread, PeriodicMetricTask):
+    #         logger.debug("closing thread before closing..")
+    #         thread.close()
+    #         thread.join(timeout=60)
 
     logger.debug("Exiting query service")
     sys.exit(0)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
@@ -71,11 +72,27 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) er
 			msComm.RequestMetada.ReturnAddress = agentConfig.RoutingKey
 			msComm.RequestMetada.CorrelationId = sqlDataRequest.RequestMetada.CorrelationId
 
-			sc := trace.FromContext(ctx).SpanContext()
-			binarySc := propagation.Binary(sc)
-			msComm.Trace = binarySc
+			// sc := trace.FromContext(ctx).SpanContext()
+			// binarySc := propagation.Binary(sc)
+			// msComm.Trace = binarySc
 
-			// Initialize the rest?
+			// Retrieve the SpanContext from the current context
+			sc := trace.FromContext(ctx).SpanContext()
+
+			// Create a map to hold the span context values
+			scMap := map[string]string{
+				"TraceID": sc.TraceID.String(),
+				"SpanID":  sc.SpanID.String(),
+				// "TraceOptions": fmt.Sprintf("%02x", sc.TraceOptions.IsSampled()),
+			}
+
+			// Serialize the map to a JSON string
+			scJson, err := json.Marshal(scMap)
+			if err != nil {
+				logger.Debug("ERRROR scJson MAP")
+			}
+			msComm.Trace = scJson
+			msComm.TraceTwo = propagation.Binary(sc)
 			any, err := anypb.New(sqlDataRequest)
 			if err != nil {
 				logger.Sugar().Error(err)
@@ -97,4 +114,27 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) er
 	}
 
 	return nil
+}
+
+// MapCarrier is a type that can carry context in a map and
+// it implements propagation.TextMapCarrier
+type MapCarrier map[string]string
+
+// Get returns the value associated with the passed key.
+func (c MapCarrier) Get(key string) string {
+	return c[key]
+}
+
+// Set stores the key-value pair.
+func (c MapCarrier) Set(key string, value string) {
+	c[key] = value
+}
+
+// Keys lists the keys stored in this carrier.
+func (c MapCarrier) Keys() []string {
+	keys := make([]string, 0, len(c))
+	for k := range c {
+		keys = append(keys, k)
+	}
+	return keys
 }
