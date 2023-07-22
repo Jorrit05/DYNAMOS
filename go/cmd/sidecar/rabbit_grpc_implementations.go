@@ -104,15 +104,3 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 
 	return nil
 }
-
-// func send(message amqp.Publishing, target string) (*emptypb.Empty, error) {
-// 	logger.Sugar().Infow("Sending message: ", "My routingKey", routingKey, "exchangeName", exchangeName, "target", target)
-
-// 	err := channel.PublishWithContext(context.Background(), exchangeName, target, false, false, message)
-// 	if err != nil {
-// 		logger.Sugar().Errorf("Publish failed: %s", err)
-// 		return nil, status.Error(codes.Internal, err.Error())
-// 	}
-
-// 	return &emptypb.Empty{}, nil
-// }

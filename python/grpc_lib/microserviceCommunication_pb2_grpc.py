@@ -21,11 +21,6 @@ class MicroserviceStub(object):
                 request_serializer=microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
-        self.SendShutdownSignal = channel.unary_unary(
-                '/proto.Microservice/SendShutdownSignal',
-                request_serializer=microserviceCommunication__pb2.ShutDown.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                )
 
 
 class MicroserviceServicer(object):
@@ -38,23 +33,12 @@ class MicroserviceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SendShutdownSignal(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_MicroserviceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendData': grpc.unary_unary_rpc_method_handler(
                     servicer.SendData,
                     request_deserializer=microserviceCommunication__pb2.MicroserviceCommunication.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'SendShutdownSignal': grpc.unary_unary_rpc_method_handler(
-                    servicer.SendShutdownSignal,
-                    request_deserializer=microserviceCommunication__pb2.ShutDown.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -81,23 +65,6 @@ class Microservice(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/proto.Microservice/SendData',
             microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
-            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def SendShutdownSignal(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/proto.Microservice/SendShutdownSignal',
-            microserviceCommunication__pb2.ShutDown.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -17,7 +17,7 @@ from google.protobuf import any_pb2 as google_dot_protobuf_dot_any__pb2
 import generic_pb2 as generic__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fmicroserviceCommunication.proto\x12\x05proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x19google/protobuf/any.proto\x1a\rgeneric.proto\"\xa4\x03\n\x19MicroserviceCommunication\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x14\n\x0crequest_type\x18\x02 \x01(\t\x12%\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x17.google.protobuf.Struct\x12@\n\x08metadata\x18\x04 \x03(\x0b\x32..proto.MicroserviceCommunication.MetadataEntry\x12.\n\x10original_request\x18\x05 \x01(\x0b\x32\x14.google.protobuf.Any\x12,\n\x0erequest_metada\x18\x06 \x01(\x0b\x32\x14.proto.RequestMetada\x12<\n\x06traces\x18\x07 \x03(\x0b\x32,.proto.MicroserviceCommunication.TracesEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a-\n\x0bTracesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x0c:\x02\x38\x01\"\x18\n\x08ShutDown\x12\x0c\n\x04name\x18\x01 \x01(\t2\x97\x01\n\x0cMicroservice\x12\x46\n\x08SendData\x12 .proto.MicroserviceCommunication\x1a\x16.google.protobuf.Empty\"\x00\x12?\n\x12SendShutdownSignal\x12\x0f.proto.ShutDown\x1a\x16.google.protobuf.Empty\"\x00\x42\'Z%github.com/Jorrit05/DYNAMOS/pkg/protob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fmicroserviceCommunication.proto\x12\x05proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x19google/protobuf/any.proto\x1a\rgeneric.proto\"\xa4\x03\n\x19MicroserviceCommunication\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x14\n\x0crequest_type\x18\x02 \x01(\t\x12%\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x17.google.protobuf.Struct\x12@\n\x08metadata\x18\x04 \x03(\x0b\x32..proto.MicroserviceCommunication.MetadataEntry\x12.\n\x10original_request\x18\x05 \x01(\x0b\x32\x14.google.protobuf.Any\x12,\n\x0erequest_metada\x18\x06 \x01(\x0b\x32\x14.proto.RequestMetada\x12<\n\x06traces\x18\x07 \x03(\x0b\x32,.proto.MicroserviceCommunication.TracesEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a-\n\x0bTracesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x0c:\x02\x38\x01\x32V\n\x0cMicroservice\x12\x46\n\x08SendData\x12 .proto.MicroserviceCommunication\x1a\x16.google.protobuf.Empty\"\x00\x42\'Z%github.com/Jorrit05/DYNAMOS/pkg/protob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,8 +36,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_MICROSERVICECOMMUNICATION_METADATAENTRY']._serialized_end=517
   _globals['_MICROSERVICECOMMUNICATION_TRACESENTRY']._serialized_start=519
   _globals['_MICROSERVICECOMMUNICATION_TRACESENTRY']._serialized_end=564
-  _globals['_SHUTDOWN']._serialized_start=566
-  _globals['_SHUTDOWN']._serialized_end=590
-  _globals['_MICROSERVICE']._serialized_start=593
-  _globals['_MICROSERVICE']._serialized_end=744
+  _globals['_MICROSERVICE']._serialized_start=566
+  _globals['_MICROSERVICE']._serialized_end=652
 # @@protoc_insertion_point(module_scope)

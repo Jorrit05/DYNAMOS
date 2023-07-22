@@ -15,7 +15,7 @@ import (
 
 var (
 	logger = lib.InitLogger(logLevel)
-	conn   *grpc.ClientConn
+	// conn   *grpc.ClientConn
 	config *Configuration
 	stop   = make(chan struct{}) // channel to tell the server to stop
 
@@ -63,13 +63,6 @@ func (s *Configuration) ConnectNextService() {
 }
 
 func (s *Configuration) InitSidecarMessaging() {
-	// var conn *grpc.ClientConn
-	// if !s.LastService {
-	// 	conn = lib.GetGrpcConnection(grpcAddr+os.Getenv("SIDECAR_PORT"), serviceName)
-	// } else {
-	// 	conn = s.GrpcConnection
-	// }
-
 	jobName := os.Getenv("JOB_NAME")
 	if jobName == "" {
 		logger.Sugar().Fatalf("Jobname not defined.")
@@ -155,8 +148,6 @@ func StartGrpcMicroserviceServer(port int) <-chan struct{} {
 		pb.RegisterMicroserviceServer(s, serverInstance)
 		pb.RegisterHealthServer(s, serverInstance)
 
-		serverInstance.RegisterCallback("sqlDataRequest", handleSqlDataRequest)
-
 		go func() {
 			<-stop
 			logger.Info("Stopping StartGrpcMicroserviceServer")
@@ -188,50 +179,6 @@ func StartGrpcMicroserviceServer(port int) <-chan struct{} {
 // // 	fmt.Println(s.GetFields())
 // // }
 
-// func main() {
-// 	logger.Debug("Starting algorithm service")
-
-// 	port, err := strconv.ParseInt(os.Getenv("DESIGNATED_GRPC_PORT"), 10, 32)
-// 	firstServiceInt, err1 := strconv.Atoi(os.Getenv("FIRST"))
-// 	lastServiceInt, err2 := strconv.Atoi(os.Getenv("LAST"))
-// 	if err != nil || err1 != nil || err2 != nil {
-// 		logger.Sugar().Fatalf("Error determining port number: %v", err)
-// 	}
-
-// 	if lastServiceInt > 0 {
-// 		// We are the last service, connect to the sidecar
-// 		conn = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-// 	} else {
-// 		// Connect to following service
-// 		conn = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(int(port+1)))
-// 	}
-// 	defer conn.Close()
-
-// 	var c pb.SideCarClient
-// 	if firstServiceInt > 0 {
-// 		c = lib.InitializeSidecarMessaging(conn, &pb.ServiceRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
-
-// 		// Define a WaitGroup
-// 		var wg sync.WaitGroup
-// 		wg.Add(1)
-
-// 		go func() {
-// 			startConsumingWithRetry(c, fmt.Sprintf("%s-in", serviceName), 5, 5*time.Second)
-
-// 			wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
-// 		}()
-
-// 	}
-
-// 	stopped := StartGrpcMicroserviceServer(port)
-// 	logger.Info("started GRPC server")
-
-// 	// Wait for GRPC server to shutdown gracefully before quiting
-// 	<-stopped
-// 	logger.Sugar().Infof("Exiting algorithm service")
-// 	os.Exit(0)
-// }
-
 // This is the function being called by the last microservice
 func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunication) error {
 	// START TRACE FROM Data (msCommunication) (rest hier klopt nog niet trouwens)
@@ -256,12 +203,13 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 			logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 		}
 
-		c := pb.NewMicroserviceClient(conn)
+		// var conn *grppc.
+		// c := pb.NewMicroserviceClient(conn)
 
-		// ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		// defer cancel()
-		// Just pass on the data for now...
-		c.SendData(ctx, data)
+		// // ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		// // defer cancel()
+		// // Just pass on the data for now...
+		// c.SendData(ctx, data)
 		close(stop)
 	default:
 		logger.Sugar().Errorf("Unknown message type: %v", data.Type)

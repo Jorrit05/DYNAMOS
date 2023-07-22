@@ -11,7 +11,6 @@ import "generic.proto";
 // The sidecar definition.
 service Microservice {
   rpc SendData(MicroserviceCommunication) returns (google.protobuf.Empty) {}
-  rpc SendShutdownSignal(ShutDown) returns (google.protobuf.Empty) {}
 }
 
 message MicroserviceCommunication {
@@ -22,8 +21,4 @@ message MicroserviceCommunication {
   google.protobuf.Any original_request = 5;
   RequestMetada request_metada = 6;
   map<string, bytes> traces = 7;// Binary or textual representation of span context
-}
-
-message ShutDown {
-  string name = 1;
 }
