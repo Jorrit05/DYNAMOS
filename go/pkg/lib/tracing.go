@@ -30,7 +30,13 @@ func InitTracer(serviceName string) (*ocagent.Exporter, error) {
 	return oce, err
 }
 
-func StartRemoteParentSpan(ctx context.Context, name string, parentTrace []byte) (context.Context, *trace.Span, error) {
+func StartRemoteParentSpan(ctx context.Context, name string, parentTraceMap map[string][]byte) (context.Context, *trace.Span, error) {
+	parentTrace, ok := parentTraceMap["binaryTrace"]
+	if !ok {
+		logger.Warn("no binaryTrace in map")
+		ctx, span := trace.StartSpan(ctx, name)
+		return ctx, span, nil
+	}
 
 	// Deserialize the span context
 	spanContext, ok := propagation.FromBinary(parentTrace)

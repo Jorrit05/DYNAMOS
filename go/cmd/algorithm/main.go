@@ -234,6 +234,7 @@ func StartGrpcMicroserviceServer(port int) <-chan struct{} {
 
 // This is the function being called by the last microservice
 func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunication) error {
+	// START TRACE FROM Data (msCommunication) (rest hier klopt nog niet trouwens)
 	logger.Info("Start handleSqlDataRequest")
 	switch data.Type {
 	case "sqlDataRequest":

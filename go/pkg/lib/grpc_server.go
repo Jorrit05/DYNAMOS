@@ -2,7 +2,6 @@ package lib
 
 import (
 	"context"
-	"fmt"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -22,23 +21,40 @@ func (s *SharedServer) RegisterCallback(msgType string, callback func(ctx contex
 	s.callbacks[msgType] = callback
 }
 
-func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
-	logger.Debug("Starting lib.SendData")
-	logger.Sugar().Debugf("data.Type: %v", data.Type)
-	logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)
-	callback, ok := s.callbacks[data.RequestType]
-	if !ok {
-		logger.Warn("no callback registered for this message type")
-		return nil, fmt.Errorf("no callback registered for this message type")
-	}
+// func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
+// 	logger.Debug("Starting lib.SendData")
+// 	logger.Sugar().Debugf("data.Type: %v", data.Type)
+// 	logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)
 
-	if err := callback(ctx, data); err != nil {
-		logger.Sugar().Errorf("Callback Error: %v", err)
-		return nil, err
-	}
+// 	// Marshaling google.protobuf.Struct to Proto wire format
+// 	body, err := proto.Marshal(data)
+// 	if err != nil {
+// 		logger.Sugar().Errorf("Failed to marshal struct to proto wire format: %v", err)
+// 		return &emptypb.Empty{}, nil
+// 	}
 
-	return &emptypb.Empty{}, nil
-}
+// 	msg := amqp.Publishing{
+// 		CorrelationId: data.RequestMetada.CorrelationId,
+// 		Body:          body,
+// 		Type:          "microserviceCommunication",
+// 		Headers:       amqp.Table{},
+// 	}
+
+// 	send()
+
+// 	// callback, ok := s.callbacks[data.RequestType]
+// 	// if !ok {
+// 	// 	logger.Warn("no callback registered for this message type")
+// 	// 	return nil, fmt.Errorf("no callback registered for this message type")
+// 	// }
+
+// 	// if err := callback(ctx, data); err != nil {
+// 	// 	logger.Sugar().Errorf("Callback Error: %v", err)
+// 	// 	return nil, err
+// 	// }
+
+// 	return &emptypb.Empty{}, nil
+// }
 
 func (s *SharedServer) Check(ctx context.Context, in *pb.HealthCheckRequest) (*pb.HealthCheckResponse, error) {
 	return &pb.HealthCheckResponse{Status: pb.HealthCheckResponse_SERVING}, nil

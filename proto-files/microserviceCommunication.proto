@@ -21,8 +21,7 @@ message MicroserviceCommunication {
   map<string, string> metadata = 4;
   google.protobuf.Any original_request = 5;
   RequestMetada request_metada = 6;
-  bytes trace = 7;// Binary representation of span context
-  bytes trace_two = 8;
+  map<string, bytes> traces = 7;// Binary or textual representation of span context
 }
 
 message ShutDown {

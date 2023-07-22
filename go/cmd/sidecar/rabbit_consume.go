@@ -25,19 +25,26 @@ func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServ
 	}
 
 	grpcMsg := &pb.RabbitMQMessage{
-		Body:  any,
-		Type:  msg.Type,
-		Trace: msg.Headers["trace"].([]byte),
+		Body: any,
+		Type: msg.Type,
 	}
+	logger.Debug("stream to main container")
+	if msg.Headers != nil {
+		logger.Debug("msg.Headers != nil")
 
-	value, ok := msg.Headers["original"]
-	if ok {
-		grpcMsg.TraceTwo = value.([]byte)
+		grpcMsg.Traces = make(map[string][]byte)
+		value, ok := msg.Headers["jsonTrace"]
+		if ok {
+			logger.Debug("Adding jsonTraces")
+
+			grpcMsg.Traces["jsonTrace"] = value.([]byte)
+		}
+		value, ok = msg.Headers["binaryTrace"]
+		if ok {
+			logger.Debug("Adding binaryTrace")
+			grpcMsg.Traces["binaryTrace"] = value.([]byte)
+		}
 	}
-
-	// logger.Info("Jorrit check:: ")
-	// spanContext, _ := propagation.FromBinary(grpcMsg.Trace)
-	// lib.PrettyPrintSpanContext(spanContext)
 
 	err = stream.SendMsg(grpcMsg)
 	return err
@@ -65,8 +72,5 @@ func (s *server) handleSqlDataRequest(msg amqp.Delivery, stream pb.SideCar_Consu
 func (s *server) handleMicroserviceCommunication(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
 	logger.Debug("Starting handleMicroserviceCommunication")
 
-	// if msg.Headers["trace"].([]byte) == nil && msg.Trace != nil {
-	// 	msg.Headers["trace"] = msg.Trace
-	// }
 	return s.handleResponse(msg, stream, &pb.MicroserviceCommunication{RequestMetada: &pb.RequestMetada{}})
 }

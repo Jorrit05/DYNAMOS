@@ -13,19 +13,13 @@ import (
 func createCallbackHandler(config *Configuration) func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 	return func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 
-		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: callbackHandler, procces MS", grpcMsg.Trace)
+		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: callbackHandler, process MS", grpcMsg.Traces)
 		if err != nil {
-			logger.Sugar().Errorf("Error starting span: %v", err)
-			return err
+			logger.Sugar().Warnf("Error starting span: %v", err)
 		}
 		defer span.End()
 
-		// logger.Debug("algorhithm span: ----------------")
-		// lib.PrettyPrintSpanContext(span.SpanContext())
-		// // logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
-		// logger.Debug("----------------")
 		switch grpcMsg.Type {
-
 		case "microserviceCommunication":
 
 			logger.Sugar().Info("switching on microserviceCommunication")
@@ -51,7 +45,7 @@ func createCallbackHandler(config *Configuration) func(ctx context.Context, grpc
 
 			logger.Debug("---------msComm.Trace------------")
 
-			logger.Debug(string(msComm.Trace))
+			logger.Debug(string(msComm.Traces["binaryTrace"]))
 			logger.Debug("---------------------")
 
 			c := pb.NewMicroserviceClient(config.GrpcConnection)

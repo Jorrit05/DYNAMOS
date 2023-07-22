@@ -2,25 +2,18 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-	"go.opencensus.io/trace"
-	"go.opencensus.io/trace/propagation"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 
-	// logger.Sugar().Infof("Jorrit check: servicename: %s ", serviceName)
-	// spanContext, _ := propagation.FromBinary(grpcMsg.Trace)
-	// lib.PrettyPrintSpanContext(spanContext)
-
-	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleIncomingMessages/"+grpcMsg.Type, grpcMsg.Trace)
+	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleIncomingMessages/"+grpcMsg.Type, grpcMsg.Traces)
 	if err != nil {
-		logger.Sugar().Errorf("Error starting span: %v", err)
+		logger.Sugar().Warnf("Error starting span: %v", err)
 	}
 	defer span.End()
 
@@ -72,27 +65,6 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) er
 			msComm.RequestMetada.ReturnAddress = agentConfig.RoutingKey
 			msComm.RequestMetada.CorrelationId = sqlDataRequest.RequestMetada.CorrelationId
 
-			// sc := trace.FromContext(ctx).SpanContext()
-			// binarySc := propagation.Binary(sc)
-			// msComm.Trace = binarySc
-
-			// Retrieve the SpanContext from the current context
-			sc := trace.FromContext(ctx).SpanContext()
-
-			// Create a map to hold the span context values
-			scMap := map[string]string{
-				"TraceID": sc.TraceID.String(),
-				"SpanID":  sc.SpanID.String(),
-				// "TraceOptions": fmt.Sprintf("%02x", sc.TraceOptions.IsSampled()),
-			}
-
-			// Serialize the map to a JSON string
-			scJson, err := json.Marshal(scMap)
-			if err != nil {
-				logger.Debug("ERRROR scJson MAP")
-			}
-			msComm.Trace = scJson
-			msComm.TraceTwo = propagation.Binary(sc)
 			any, err := anypb.New(sqlDataRequest)
 			if err != nil {
 				logger.Sugar().Error(err)

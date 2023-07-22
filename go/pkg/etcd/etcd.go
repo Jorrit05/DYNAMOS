@@ -12,6 +12,7 @@ type RetryOptions struct {
 	InitialInterval time.Duration
 	MaxInterval     time.Duration
 	MaxElapsedTime  time.Duration
+	AddJsonTrace    bool
 }
 
 // DefaultRetryOptions provides a RetryOptions with default values.
@@ -19,10 +20,19 @@ var DefaultRetryOptions = RetryOptions{
 	InitialInterval: time.Second * 1,
 	MaxInterval:     time.Second * 3,
 	MaxElapsedTime:  time.Second * 30, // Max retry time
+	//Todo, shouldb't be part of retry options, rename to generic options..
+	AddJsonTrace: false,
 }
 
 // Option is a function that applies a configuration option to RetryOptions.
 type Option func(*RetryOptions)
+
+// WithInitialInterval sets the initial interval for retries.
+func WithJsonTrace() Option {
+	return func(opts *RetryOptions) {
+		opts.AddJsonTrace = true
+	}
+}
 
 // WithInitialInterval sets the initial interval for retries.
 func WithInitialInterval(d time.Duration) Option {

@@ -23,6 +23,7 @@ var (
 type server struct {
 	pb.UnimplementedSideCarServer
 	pb.UnimplementedEtcdServer
+	pb.UnimplementedMicroserviceServer
 }
 
 func main() {
@@ -49,8 +50,8 @@ func main() {
 		// This env variable is only defined if this job is deployed
 		// by a distributed agent as a datasharing pod
 		if os.Getenv("TEMPORARY_JOB") != "" {
-			pb.RegisterMicroserviceServer(s, sharedServer)
-			sharedServer.RegisterCallback("sqlDataRequest", handleSqlDataRequest)
+			pb.RegisterMicroserviceServer(s, serverInstance)
+			// sharedServer.RegisterCallback("sqlDataRequest", handleSqlDataRequest)
 		}
 
 		go func() {

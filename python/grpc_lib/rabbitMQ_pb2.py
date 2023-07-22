@@ -17,7 +17,7 @@ import generic_pb2 as generic__pb2
 import microserviceCommunication_pb2 as microserviceCommunication__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0erabbitMQ.proto\x12\x05proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x19google/protobuf/any.proto\x1a\rgeneric.proto\x1a\x1fmicroserviceCommunication.proto\"S\n\x0bInitRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\x12\x13\n\x0brouting_key\x18\x02 \x01(\t\x12\x19\n\x11queue_auto_delete\x18\x03 \x01(\x08\"4\n\tQueueInfo\x12\x12\n\nqueue_name\x18\x01 \x01(\t\x12\x13\n\x0b\x61uto_delete\x18\x02 \x01(\x08\"6\n\x0e\x43onsumeRequest\x12\x12\n\nqueue_name\x18\x01 \x01(\t\x12\x10\n\x08\x61uto_ack\x18\x02 \x01(\x08\"e\n\x0fRabbitMQMessage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\"\n\x04\x62ody\x18\x02 \x01(\x0b\x32\x14.google.protobuf.Any\x12\r\n\x05trace\x18\x03 \x01(\x0c\x12\x11\n\ttrace_two\x18\x04 \x01(\x0c\"3\n\x04\x41uth\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\x12\x15\n\rrefresh_token\x18\x02 \x01(\t\"=\n\x0c\x44\x61taProvider\x12\x12\n\narchetypes\x18\x01 \x03(\t\x12\x19\n\x11\x63ompute_providers\x18\x02 \x03(\t\"\xc7\x02\n\x12ValidationResponse\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x14\n\x0crequest_type\x18\x02 \x01(\t\x12N\n\x13valid_dataproviders\x18\x03 \x03(\x0b\x32\x31.proto.ValidationResponse.ValidDataprovidersEntry\x12\x1d\n\x15invalid_dataproviders\x18\x04 \x03(\t\x12\x19\n\x04\x61uth\x18\x05 \x01(\x0b\x32\x0b.proto.Auth\x12\x19\n\x04user\x18\x06 \x01(\x0b\x32\x0b.proto.User\x12\x18\n\x10request_approved\x18\x07 \x01(\x08\x1aN\n\x17ValidDataprovidersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\"\n\x05value\x18\x02 \x01(\x0b\x32\x13.proto.DataProvider:\x02\x38\x01\"%\n\x04User\x12\n\n\x02id\x18\x01 \x01(\t\x12\x11\n\tuser_name\x18\x02 \x01(\t\"i\n\x0fRequestApproval\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x19\n\x04user\x18\x02 \x01(\x0b\x32\x0b.proto.User\x12\x16\n\x0e\x64\x61ta_providers\x18\x03 \x03(\t\x12\x15\n\rsync_services\x18\x04 \x01(\x08\"\x80\x02\n\x13\x41\x63\x63\x65ptedDataRequest\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x19\n\x04user\x18\x02 \x01(\x0b\x32\x0b.proto.User\x12\x19\n\x04\x61uth\x18\x03 \x01(\x0b\x32\x0b.proto.Auth\x12Q\n\x14\x61uthorized_providers\x18\x04 \x03(\x0b\x32\x33.proto.AcceptedDataRequest.AuthorizedProvidersEntry\x12\x16\n\x0eresult_channel\x18\x05 \x01(\t\x1a:\n\x18\x41uthorizedProvidersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xae\x01\n\x12\x43ompositionRequest\x12\x14\n\x0c\x61rchetype_id\x18\x01 \x01(\t\x12\x14\n\x0crequest_type\x18\x02 \x01(\t\x12\x0c\n\x04role\x18\x03 \x01(\t\x12\x19\n\x04user\x18\x04 \x01(\x0b\x32\x0b.proto.User\x12\x16\n\x0e\x64\x61ta_providers\x18\x05 \x03(\t\x12\x19\n\x11\x64\x65stination_queue\x18\x06 \x01(\t\x12\x10\n\x08job_name\x18\x07 \x01(\t\"\xb1\x02\n\x0eSqlDataRequest\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x16\n\x0e\x64\x61ta_providers\x18\x02 \x03(\t\x12\r\n\x05query\x18\x03 \x01(\t\x12\r\n\x05graph\x18\x04 \x01(\x08\x12\x11\n\talgorithm\x18\x05 \x01(\t\x12\x46\n\x11\x61lgorithm_columns\x18\x06 \x03(\x0b\x32+.proto.SqlDataRequest.AlgorithmColumnsEntry\x12\x19\n\x04user\x18\x07 \x01(\x0b\x32\x0b.proto.User\x12,\n\x0erequest_metada\x18\x08 \x01(\x0b\x32\x14.proto.RequestMetada\x1a\x37\n\x15\x41lgorithmColumnsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x32\xff\x04\n\x07SideCar\x12<\n\x0cInitRabbitMq\x12\x12.proto.InitRequest\x1a\x16.google.protobuf.Empty\"\x00\x12<\n\x07\x43onsume\x12\x15.proto.ConsumeRequest\x1a\x16.proto.RabbitMQMessage\"\x00\x30\x01\x12G\n\x13SendRequestApproval\x12\x16.proto.RequestApproval\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\x16SendValidationResponse\x12\x19.proto.ValidationResponse\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\x16SendCompositionRequest\x12\x19.proto.CompositionRequest\x1a\x16.google.protobuf.Empty\"\x00\x12\x45\n\x12SendSqlDataRequest\x12\x15.proto.SqlDataRequest\x1a\x16.google.protobuf.Empty\"\x00\x12;\n\x08SendTest\x12\x15.proto.SqlDataRequest\x1a\x16.google.protobuf.Empty\"\x00\x12R\n\x14SendMicroserviceComm\x12 .proto.MicroserviceCommunication\x1a\x16.google.protobuf.Empty\"\x00\x12\x39\n\x0b\x43reateQueue\x12\x10.proto.QueueInfo\x1a\x16.google.protobuf.Empty\"\x00\x42\'Z%github.com/Jorrit05/DYNAMOS/pkg/protob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0erabbitMQ.proto\x12\x05proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x19google/protobuf/any.proto\x1a\rgeneric.proto\x1a\x1fmicroserviceCommunication.proto\"S\n\x0bInitRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\x12\x13\n\x0brouting_key\x18\x02 \x01(\t\x12\x19\n\x11queue_auto_delete\x18\x03 \x01(\x08\"4\n\tQueueInfo\x12\x12\n\nqueue_name\x18\x01 \x01(\t\x12\x13\n\x0b\x61uto_delete\x18\x02 \x01(\x08\"6\n\x0e\x43onsumeRequest\x12\x12\n\nqueue_name\x18\x01 \x01(\t\x12\x10\n\x08\x61uto_ack\x18\x02 \x01(\x08\"\xa6\x01\n\x0fRabbitMQMessage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\"\n\x04\x62ody\x18\x02 \x01(\x0b\x32\x14.google.protobuf.Any\x12\x32\n\x06traces\x18\x03 \x03(\x0b\x32\".proto.RabbitMQMessage.TracesEntry\x1a-\n\x0bTracesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x0c:\x02\x38\x01\"3\n\x04\x41uth\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\x12\x15\n\rrefresh_token\x18\x02 \x01(\t\"=\n\x0c\x44\x61taProvider\x12\x12\n\narchetypes\x18\x01 \x03(\t\x12\x19\n\x11\x63ompute_providers\x18\x02 \x03(\t\"\xc7\x02\n\x12ValidationResponse\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x14\n\x0crequest_type\x18\x02 \x01(\t\x12N\n\x13valid_dataproviders\x18\x03 \x03(\x0b\x32\x31.proto.ValidationResponse.ValidDataprovidersEntry\x12\x1d\n\x15invalid_dataproviders\x18\x04 \x03(\t\x12\x19\n\x04\x61uth\x18\x05 \x01(\x0b\x32\x0b.proto.Auth\x12\x19\n\x04user\x18\x06 \x01(\x0b\x32\x0b.proto.User\x12\x18\n\x10request_approved\x18\x07 \x01(\x08\x1aN\n\x17ValidDataprovidersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\"\n\x05value\x18\x02 \x01(\x0b\x32\x13.proto.DataProvider:\x02\x38\x01\"%\n\x04User\x12\n\n\x02id\x18\x01 \x01(\t\x12\x11\n\tuser_name\x18\x02 \x01(\t\"i\n\x0fRequestApproval\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x19\n\x04user\x18\x02 \x01(\x0b\x32\x0b.proto.User\x12\x16\n\x0e\x64\x61ta_providers\x18\x03 \x03(\t\x12\x15\n\rsync_services\x18\x04 \x01(\x08\"\x80\x02\n\x13\x41\x63\x63\x65ptedDataRequest\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x19\n\x04user\x18\x02 \x01(\x0b\x32\x0b.proto.User\x12\x19\n\x04\x61uth\x18\x03 \x01(\x0b\x32\x0b.proto.Auth\x12Q\n\x14\x61uthorized_providers\x18\x04 \x03(\x0b\x32\x33.proto.AcceptedDataRequest.AuthorizedProvidersEntry\x12\x16\n\x0eresult_channel\x18\x05 \x01(\t\x1a:\n\x18\x41uthorizedProvidersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xae\x01\n\x12\x43ompositionRequest\x12\x14\n\x0c\x61rchetype_id\x18\x01 \x01(\t\x12\x14\n\x0crequest_type\x18\x02 \x01(\t\x12\x0c\n\x04role\x18\x03 \x01(\t\x12\x19\n\x04user\x18\x04 \x01(\x0b\x32\x0b.proto.User\x12\x16\n\x0e\x64\x61ta_providers\x18\x05 \x03(\t\x12\x19\n\x11\x64\x65stination_queue\x18\x06 \x01(\t\x12\x10\n\x08job_name\x18\x07 \x01(\t\"\xb1\x02\n\x0eSqlDataRequest\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x16\n\x0e\x64\x61ta_providers\x18\x02 \x03(\t\x12\r\n\x05query\x18\x03 \x01(\t\x12\r\n\x05graph\x18\x04 \x01(\x08\x12\x11\n\talgorithm\x18\x05 \x01(\t\x12\x46\n\x11\x61lgorithm_columns\x18\x06 \x03(\x0b\x32+.proto.SqlDataRequest.AlgorithmColumnsEntry\x12\x19\n\x04user\x18\x07 \x01(\x0b\x32\x0b.proto.User\x12,\n\x0erequest_metada\x18\x08 \x01(\x0b\x32\x14.proto.RequestMetada\x1a\x37\n\x15\x41lgorithmColumnsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x32\xff\x04\n\x07SideCar\x12<\n\x0cInitRabbitMq\x12\x12.proto.InitRequest\x1a\x16.google.protobuf.Empty\"\x00\x12<\n\x07\x43onsume\x12\x15.proto.ConsumeRequest\x1a\x16.proto.RabbitMQMessage\"\x00\x30\x01\x12G\n\x13SendRequestApproval\x12\x16.proto.RequestApproval\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\x16SendValidationResponse\x12\x19.proto.ValidationResponse\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\x16SendCompositionRequest\x12\x19.proto.CompositionRequest\x1a\x16.google.protobuf.Empty\"\x00\x12\x45\n\x12SendSqlDataRequest\x12\x15.proto.SqlDataRequest\x1a\x16.google.protobuf.Empty\"\x00\x12;\n\x08SendTest\x12\x15.proto.SqlDataRequest\x1a\x16.google.protobuf.Empty\"\x00\x12R\n\x14SendMicroserviceComm\x12 .proto.MicroserviceCommunication\x1a\x16.google.protobuf.Empty\"\x00\x12\x39\n\x0b\x43reateQueue\x12\x10.proto.QueueInfo\x1a\x16.google.protobuf.Empty\"\x00\x42\'Z%github.com/Jorrit05/DYNAMOS/pkg/protob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -26,6 +26,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z%github.com/Jorrit05/DYNAMOS/pkg/proto'
+  _RABBITMQMESSAGE_TRACESENTRY._options = None
+  _RABBITMQMESSAGE_TRACESENTRY._serialized_options = b'8\001'
   _VALIDATIONRESPONSE_VALIDDATAPROVIDERSENTRY._options = None
   _VALIDATIONRESPONSE_VALIDDATAPROVIDERSENTRY._serialized_options = b'8\001'
   _ACCEPTEDDATAREQUEST_AUTHORIZEDPROVIDERSENTRY._options = None
@@ -38,30 +40,32 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_QUEUEINFO']._serialized_end=266
   _globals['_CONSUMEREQUEST']._serialized_start=268
   _globals['_CONSUMEREQUEST']._serialized_end=322
-  _globals['_RABBITMQMESSAGE']._serialized_start=324
-  _globals['_RABBITMQMESSAGE']._serialized_end=425
-  _globals['_AUTH']._serialized_start=427
-  _globals['_AUTH']._serialized_end=478
-  _globals['_DATAPROVIDER']._serialized_start=480
-  _globals['_DATAPROVIDER']._serialized_end=541
-  _globals['_VALIDATIONRESPONSE']._serialized_start=544
-  _globals['_VALIDATIONRESPONSE']._serialized_end=871
-  _globals['_VALIDATIONRESPONSE_VALIDDATAPROVIDERSENTRY']._serialized_start=793
-  _globals['_VALIDATIONRESPONSE_VALIDDATAPROVIDERSENTRY']._serialized_end=871
-  _globals['_USER']._serialized_start=873
-  _globals['_USER']._serialized_end=910
-  _globals['_REQUESTAPPROVAL']._serialized_start=912
-  _globals['_REQUESTAPPROVAL']._serialized_end=1017
-  _globals['_ACCEPTEDDATAREQUEST']._serialized_start=1020
-  _globals['_ACCEPTEDDATAREQUEST']._serialized_end=1276
-  _globals['_ACCEPTEDDATAREQUEST_AUTHORIZEDPROVIDERSENTRY']._serialized_start=1218
-  _globals['_ACCEPTEDDATAREQUEST_AUTHORIZEDPROVIDERSENTRY']._serialized_end=1276
-  _globals['_COMPOSITIONREQUEST']._serialized_start=1279
-  _globals['_COMPOSITIONREQUEST']._serialized_end=1453
-  _globals['_SQLDATAREQUEST']._serialized_start=1456
-  _globals['_SQLDATAREQUEST']._serialized_end=1761
-  _globals['_SQLDATAREQUEST_ALGORITHMCOLUMNSENTRY']._serialized_start=1706
-  _globals['_SQLDATAREQUEST_ALGORITHMCOLUMNSENTRY']._serialized_end=1761
-  _globals['_SIDECAR']._serialized_start=1764
-  _globals['_SIDECAR']._serialized_end=2403
+  _globals['_RABBITMQMESSAGE']._serialized_start=325
+  _globals['_RABBITMQMESSAGE']._serialized_end=491
+  _globals['_RABBITMQMESSAGE_TRACESENTRY']._serialized_start=446
+  _globals['_RABBITMQMESSAGE_TRACESENTRY']._serialized_end=491
+  _globals['_AUTH']._serialized_start=493
+  _globals['_AUTH']._serialized_end=544
+  _globals['_DATAPROVIDER']._serialized_start=546
+  _globals['_DATAPROVIDER']._serialized_end=607
+  _globals['_VALIDATIONRESPONSE']._serialized_start=610
+  _globals['_VALIDATIONRESPONSE']._serialized_end=937
+  _globals['_VALIDATIONRESPONSE_VALIDDATAPROVIDERSENTRY']._serialized_start=859
+  _globals['_VALIDATIONRESPONSE_VALIDDATAPROVIDERSENTRY']._serialized_end=937
+  _globals['_USER']._serialized_start=939
+  _globals['_USER']._serialized_end=976
+  _globals['_REQUESTAPPROVAL']._serialized_start=978
+  _globals['_REQUESTAPPROVAL']._serialized_end=1083
+  _globals['_ACCEPTEDDATAREQUEST']._serialized_start=1086
+  _globals['_ACCEPTEDDATAREQUEST']._serialized_end=1342
+  _globals['_ACCEPTEDDATAREQUEST_AUTHORIZEDPROVIDERSENTRY']._serialized_start=1284
+  _globals['_ACCEPTEDDATAREQUEST_AUTHORIZEDPROVIDERSENTRY']._serialized_end=1342
+  _globals['_COMPOSITIONREQUEST']._serialized_start=1345
+  _globals['_COMPOSITIONREQUEST']._serialized_end=1519
+  _globals['_SQLDATAREQUEST']._serialized_start=1522
+  _globals['_SQLDATAREQUEST']._serialized_end=1827
+  _globals['_SQLDATAREQUEST_ALGORITHMCOLUMNSENTRY']._serialized_start=1772
+  _globals['_SQLDATAREQUEST_ALGORITHMCOLUMNSENTRY']._serialized_end=1827
+  _globals['_SIDECAR']._serialized_start=1830
+  _globals['_SIDECAR']._serialized_end=2469
 # @@protoc_insertion_point(module_scope)

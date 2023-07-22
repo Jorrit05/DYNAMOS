@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -27,8 +28,6 @@ var (
 
 func send(ctx context.Context, message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb.Empty, error) {
 	// Start with default options
-	// ctx, span := trace.StartSpan(ctx, "send/"+target)
-	// defer span.End()
 	retryOpts := etcd.DefaultRetryOptions
 
 	// Apply any specified options
@@ -40,14 +39,29 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 	returns := make(chan amqp.Return)
 	channel.NotifyReturn(returns)
 
-	sc := trace.FromContext(ctx).SpanContext()
-	binarySc := propagation.Binary(sc)
-
 	if message.Headers == nil {
 		message.Headers = amqp.Table{}
 	}
 
-	message.Headers["trace"] = binarySc
+	sc := trace.FromContext(ctx).SpanContext()
+	binarySc := propagation.Binary(sc)
+
+	if retryOpts.AddJsonTrace {
+		// Create a map to hold the span context values
+		scMap := map[string]string{
+			"TraceID": sc.TraceID.String(),
+			"SpanID":  sc.SpanID.String(),
+			// "TraceOptions": fmt.Sprintf("%02x", sc.TraceOptions.IsSampled()),
+		}
+		// Serialize the map to a JSON string
+		scJson, err := json.Marshal(scMap)
+		if err != nil {
+			logger.Debug("ERRROR scJson MAP")
+		}
+		message.Headers["jsonTrace"] = scJson
+	}
+
+	message.Headers["binaryTrace"] = binarySc
 
 	operation := func() error {
 		// Log before sending message
@@ -57,16 +71,11 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 		timeoutCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
 		defer cancel()
 
-		// logger.Sugar().Debugf("publis: %v", time.Now())
-		// _, span := trace.StartSpan(timeoutCtx, "publish")
 		err := channel.PublishWithContext(timeoutCtx, exchangeName, target, true, false, message)
 		if err != nil {
 			logger.Sugar().Debugf("In error chan: %v", err)
 			return err
 		}
-		// span.End()
-		// logger.Sugar().Debugf("publish: 1")
-
 		select {
 		case r := <-returns:
 			if r.ReplyText == "NO_ROUTE" {
@@ -170,7 +179,7 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 		Body:          data,
 		Type:          "sqlDataRequest",
 	}
-	logger.Sugar().Infof("JOrrit hier in send erna, wordt wat overschreven?: %v", trace.FromContext(ctx).SpanContext().TraceID)
+
 	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetada.DestinationQueue)
 	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
@@ -181,7 +190,6 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal SendMicroserviceComm failed: %s", err)
-
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -193,23 +201,8 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 		Body:          data,
 		Type:          in.Type,
 	}
-	if message.Headers == nil {
-		message.Headers = amqp.Table{}
-	}
 
-	message.Headers["trace"] = in.Trace
-
-	if in.TraceTwo != nil {
-		message.Headers["original"] = in.TraceTwo
-	}
-
-	logger.Sugar().Warnf("Trace: %v", message.Headers["trace"])
-	err = channel.PublishWithContext(ctx, exchangeName, in.RequestMetada.DestinationQueue, true, false, message)
-	if err != nil {
-		logger.Sugar().Debugf("In error chan: %v", err)
-		return &emptypb.Empty{}, err
-	}
-	// go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
 	return &emptypb.Empty{}, nil
 }
 
@@ -230,21 +223,3 @@ func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.
 	go send(ctx, message, "no existss", etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
 }
-
-// func (s *server) SendSqlDataRequestResponse(ctx context.Context, in *pb.SqlDataRequestResponse) (*emptypb.Empty, error) {
-// 	data, err := proto.Marshal(in)
-// 	if err != nil {
-// 		logger.Sugar().Errorf("Marshal requestApproval failed: %s", err)
-
-// 		return nil, status.Error(codes.Internal, err.Error())
-// 	}
-
-// 	// Do other stuff
-// 	message := amqp.Publishing{
-// 		CorrelationId: in.CorrelationId,
-// 		Body:          data,
-// 		Type:          "sqlDataRequestResponse",
-// 	}
-
-// 	return send(ctx, message, in.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
-// }

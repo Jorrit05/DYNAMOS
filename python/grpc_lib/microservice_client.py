@@ -22,7 +22,7 @@ class MsCommunication(SecureChannel):
         for key, value in metadata.items():
             msComm.metadata[key] = value
 
-        if msComm.trace == None:
+        if msComm.traces == None:
             self.logger.warning(" msComm.Trace == None")
 
         self.logger.debug(f"Sending message to {self.next_service_port}")

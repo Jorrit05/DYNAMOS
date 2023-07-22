@@ -138,18 +138,11 @@ def testsome():
     logger.info("HELO")
 
 def handle_incoming_request(rabbitClient, msg):
-    print(f"TYPE if trace: {type(msg.trace)}")
-    if msg.trace:
-        logger.info(f"Incoming trace: has data")
-        # # tracer_class.printSpan(msg.trace)
-    else:
-        print("NO TRACE")
+    print(f"TYPE if trace: {type(msg.traces)}")
 
-    # trace_header = msg.headers.get("trace")
-
-
+    logger.info(len(msg.traces))
     # Parse the trace header back into a dictionary
-    scMap = json.loads(msg.trace)
+    scMap = json.loads(msg.traces["jsonTrace"])
     logger.warning(scMap)
     state = TraceState([("sampled", "1")])
     sc = trace.SpanContext(
@@ -174,7 +167,9 @@ def handle_incoming_request(rabbitClient, msg):
 
             msComm = msCommTypes.MicroserviceCommunication()
             msg.body.Unpack(msComm)
-            msComm.trace = msg.trace_two
+            for k, v in msg.traces.items():
+                msComm.traces[k] = v
+
 
             # extract trace context from msComm
             # carrier = {"trace": msComm.trace}  # replace with actual trace field name
@@ -190,19 +185,15 @@ def handle_incoming_request(rabbitClient, msg):
             logger.warning("2")
             logger.debug("Returning True")
             rabbitClient.close_program()
-            # tracer_class.close_tracer()
             return True
         except Exception as e:
             logger.error(f"Failed to unmarshal message: {e}")
-            # span.finish()
             return False
         except:
             logger.error("An unexpected error occurred.")
-            # span.finish()
             return False
     else:
         logger.error(f"An unexpected message arrived occurred: {msg.type}")
-        # span.finish()
         return False
 
 # @tracer.start_as_current_span("test_single_query")

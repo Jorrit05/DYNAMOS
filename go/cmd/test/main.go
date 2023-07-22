@@ -1,13 +1,9 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
-	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -20,36 +16,59 @@ var (
 	grpcAddr           = "localhost:50052"
 )
 
+func doSomething() {
+	var span *trace.Span
+	span = nil
+	defer span.End()
+	fmt.Println("Before if statement")
+	if true {
+		defer fmt.Println("Deferred inside if statement")
+		fmt.Println("Inside if statement")
+	}
+	fmt.Println("After if statement")
+}
+
 func main() {
 	defer logger.Sync() // flushes buffer, if any
 	lib.InitTracer("test")
-	//
-	ctx, span := trace.StartSpan(context.Background(), "test span")
-	defer span.End()
-	sc := trace.FromContext(ctx).SpanContext()
-	lib.PrettyPrintSpanContext(sc)
-	conn = lib.GetGrpcConnection(grpcAddr, serviceName)
-	defer conn.Close()
-	c := lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+	// var x map[string]string
+	x := make(map[string]string)
+	y := make(map[string]string)
 
-	msComm := &pb.MicroserviceCommunication{}
-	msComm.RequestMetada = &pb.RequestMetada{}
-	msComm.RequestMetada.DestinationQueue = "Test"
-	msComm.Type = "microserviceCommunication"
-	// Create a map to hold the span context values
-	scMap := map[string]string{
-		"TraceID": sc.TraceID.String(),
-		"SpanID":  sc.SpanID.String(),
-		// "TraceOptions": fmt.Sprintf("%02x", sc.TraceOptions.IsSampled()),
-	}
-	scJson, err := json.Marshal(scMap)
-	if err != nil {
-		logger.Debug("ERRROR scJson MAP")
-	}
-	msComm.Trace = scJson
-	c.SendMicroserviceComm(ctx, msComm)
-	time.Sleep(8 * time.Second)
-	logger.Info("exit test")
+	y["1"] = "2"
+
+	x = y
+
+	fmt.Println(x["1"])
+
+	//
+	// doSomething()
+	// ctx, span := trace.StartSpan(context.Background(), "test span")
+	// defer span.End()
+	// sc := trace.FromContext(ctx).SpanContext()
+	// lib.PrettyPrintSpanContext(sc)
+	// conn = lib.GetGrpcConnection(grpcAddr, serviceName)
+	// defer conn.Close()
+	// c := lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+
+	// msComm := &pb.MicroserviceCommunication{}
+	// msComm.RequestMetada = &pb.RequestMetada{}
+	// msComm.RequestMetada.DestinationQueue = "Test"
+	// msComm.Type = "microserviceCommunication"
+	// // Create a map to hold the span context values
+	// scMap := map[string]string{
+	// 	"TraceID": sc.TraceID.String(),
+	// 	"SpanID":  sc.SpanID.String(),
+	// 	// "TraceOptions": fmt.Sprintf("%02x", sc.TraceOptions.IsSampled()),
+	// }
+	// scJson, err := json.Marshal(scMap)
+	// if err != nil {
+	// 	logger.Debug("ERRROR scJson MAP")
+	// }
+	// msComm.Trace = scJson
+	// c.SendMicroserviceComm(ctx, msComm)
+	// time.Sleep(8 * time.Second)
+	// logger.Info("exit test")
 }
 
 // MapCarrier is a type that can carry context in a map and
