@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *server) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
+func SendDataThroughAMQ(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
 	logger.Debug("Starting lib.SendData")
 	logger.Sugar().Debugf("data.Type: %v", data.Type)
 	logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)

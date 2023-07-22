@@ -3,17 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
+	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func createCallbackHandler(config *Configuration) func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
+func sideCarMessageHandler(config *msinit.Configuration) func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 	return func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
 
-		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: callbackHandler, process MS", grpcMsg.Traces)
+		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: messageHandler, process MS", grpcMsg.Traces)
 		if err != nil {
 			logger.Sugar().Warnf("Error starting span: %v", err)
 		}
@@ -28,39 +28,16 @@ func createCallbackHandler(config *Configuration) func(ctx context.Context, grpc
 
 			if err := grpcMsg.Body.UnmarshalTo(msComm); err != nil {
 				logger.Sugar().Errorf("Failed to unmarshal msComm message: %v", err)
-			} // Unpack the metadata
-
-			metadata := msComm.Metadata
-
-			// Print each metadata field
-			logger.Sugar().Debugf("Length metadata: %s", strconv.Itoa(len(metadata)))
-			for key, value := range metadata {
-				fmt.Printf("Key: %s, Value: %+v\n", key, value)
 			}
 
-			sqlDataRequest := &pb.SqlDataRequest{}
-			if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
-				logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
+			switch msComm.RequestType {
+			case "sqlDataRequest":
+				handleSqlDataRequest(ctx, msComm)
+			default:
+				logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
+				return fmt.Errorf("unknown RequestType type: %s", msComm.RequestType)
 			}
 
-			logger.Debug("---------msComm.Trace------------")
-
-			logger.Debug(string(msComm.Traces["binaryTrace"]))
-			logger.Debug("---------------------")
-
-			c := pb.NewMicroserviceClient(config.GrpcConnection)
-			logger.Sugar().Debugf("desitnation queue: %v", msComm.RequestMetada.DestinationQueue)
-			logger.Sugar().Debugf("ReturnAddress queue: %v", msComm.RequestMetada.ReturnAddress)
-
-			if c == nil {
-				logger.Error("C IS NUL MANNEN")
-			}
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-			defer cancel()
-			// span.End()
-			// Just pass on the data for now...
-			c.SendData(ctx, msComm)
-			close(stop)
 		default:
 			logger.Sugar().Errorf("Unknown message type: %v", grpcMsg.Type)
 			return fmt.Errorf("unknown message type: %s", grpcMsg.Type)
@@ -68,4 +45,23 @@ func createCallbackHandler(config *Configuration) func(ctx context.Context, grpc
 
 		return nil
 	}
+}
+
+func sendDataHandler(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
+
+	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: sendDataHandler, process grpc MS", data.Traces)
+	if err != nil {
+		logger.Sugar().Warnf("Error starting span: %v", err)
+	}
+	defer span.End()
+
+	switch data.RequestType {
+	case "sqlDataRequest":
+		handleSqlDataRequest(ctx, data)
+	default:
+		logger.Sugar().Errorf("Unknown RequestType type: %v", data.RequestType)
+		return nil, fmt.Errorf("unknown RequestType type: %s", data.RequestType)
+	}
+
+	return &emptypb.Empty{}, nil
 }

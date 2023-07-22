@@ -108,7 +108,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 
 		// Store the request information in the map
 		mutex.Lock()
-		responseMap[sqlDataRequest.RequestMetada.CorrelationId] = responseChan
+		responseMap[correlationId] = responseChan
 		mutex.Unlock()
 
 		select {
@@ -152,9 +152,10 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 
 	msComm := &pb.MicroserviceCommunication{}
 	msComm.RequestMetada = &pb.RequestMetada{}
-
+	msComm.Type = "microserviceCommunication"
 	msComm.RequestMetada.DestinationQueue = jobName
 	msComm.RequestMetada.ReturnAddress = agentConfig.RoutingKey
+	msComm.RequestType = compositionRequest.RequestType
 
 	any, err := anypb.New(sqlDataRequest)
 	if err != nil {

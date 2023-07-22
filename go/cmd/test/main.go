@@ -47,7 +47,7 @@ func main() {
 	// defer span.End()
 	// sc := trace.FromContext(ctx).SpanContext()
 	// lib.PrettyPrintSpanContext(sc)
-	// conn = lib.GetGrpcConnection(grpcAddr, serviceName)
+	// conn = lib.GetGrpcConnection(grpcAddr)
 	// defer conn.Close()
 	// c := lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 

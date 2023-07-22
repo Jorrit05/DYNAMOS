@@ -116,9 +116,9 @@ def process_sql_data_request(sqlDataRequest, msComm):
 
 @tracer.start_as_current_span("handleMsCommunication")
 def handleMsCommunication(rabbitClient, msComm):
-    logger.warn(type(msComm))
+    logger.info(type(msComm))
 
-    logger.warn(f"response.request_type: {msComm.request_type}")
+    logger.info(f"response.request_type: {msComm.request_type}")
 
     if msComm.request_type == "sqlDataRequest":
 

@@ -10,12 +10,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func GetGrpcConnection(grpcAddr string, serviceName string) *grpc.ClientConn {
+func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 	var conn *grpc.ClientConn
 	var err error
 	conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(new(ocgrpc.ClientHandler)))
-	// conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
 	if err != nil {
 		logger.Sugar().Fatalw("could not establish connection with grpc: %v", err)
 	}
@@ -40,9 +40,6 @@ func GetGrpcConnection(grpcAddr string, serviceName string) *grpc.ClientConn {
 			logger.Sugar().Fatalf("could not connect with gRPC after %s tries: %v", "8", err)
 		}
 	}
-
-	// t := pb.NewGenericClient(conn)
-	// t.InitTracer(ctx, &pb.ServiceName{ServiceName: serviceName})
 
 	return conn
 }

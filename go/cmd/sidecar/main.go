@@ -50,8 +50,8 @@ func main() {
 		// This env variable is only defined if this job is deployed
 		// by a distributed agent as a datasharing pod
 		if os.Getenv("TEMPORARY_JOB") != "" {
-			pb.RegisterMicroserviceServer(s, serverInstance)
-			// sharedServer.RegisterCallback("sqlDataRequest", handleSqlDataRequest)
+			pb.RegisterMicroserviceServer(s, sharedServer)
+			sharedServer.RegisterCallback("microserviceCommunication", SendDataThroughAMQ)
 		}
 
 		go func() {
