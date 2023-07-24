@@ -23,7 +23,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		logger.Debug("Entering sqlDataRequestHandler")
 		// Start a new span with the context that has a timeout
 
-		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
 
 		ctx, span := trace.StartSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler")

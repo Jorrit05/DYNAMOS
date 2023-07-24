@@ -132,9 +132,14 @@ linkerd install --crds | kubectl apply -f -
 linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
 linkerd check
 
+
+linkerd jaeger install | kubectl apply -f -
+linkerd viz install | kubectl apply -f -
+
 kubectl get -n emojivoto deploy -o yaml \
   | linkerd inject - \
   | kubectl apply -f -
 
 
-linkerd jaeger install | kubectl apply -f -
+
+linkerd jaeger dashboard

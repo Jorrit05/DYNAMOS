@@ -12,6 +12,8 @@ spec:
     metadata:
       labels:
         app: uva
+      annotations:
+        "linkerd.io/inject" : enabled
     spec:
       serviceAccountName: job-creator-uva
       containers:

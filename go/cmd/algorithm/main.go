@@ -10,6 +10,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"go.opencensus.io/trace"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 var (
@@ -61,6 +62,31 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 	logger.Info("Start handleSqlDataRequest")
 	// Unpack the metadata
 	metadata := data.Metadata
+	// fields := make(map[string]*structpb.Value)
+	dataField := data.GetData()
+	// Get the "Functcat" field from the struct
+	functcatValue := dataField.Fields["HOOPgeb"]
+
+	// Check if it's a ListValue
+	if functcatValue != nil {
+		if listValue, ok := functcatValue.Kind.(*structpb.Value_ListValue); ok {
+			// Iterate over the Values in the ListValue
+			for _, item := range listValue.ListValue.GetValues() {
+				// item is a *structpb.Value, so we need to get the actual value using one of its getter methods
+				switch v := item.Kind.(type) {
+				case *structpb.Value_StringValue:
+					fmt.Printf("String value: %s\n", v.StringValue)
+				case *structpb.Value_NumberValue:
+					fmt.Printf("Number value: %f\n", v.NumberValue)
+				case *structpb.Value_BoolValue:
+					fmt.Printf("Bool value: %v\n", v.BoolValue)
+				// etc. for other possible types
+				default:
+					fmt.Printf("Other value: %v\n", v)
+				}
+			}
+		}
+	}
 
 	// Print each metadata field
 	logger.Sugar().Debugf("Length metadata: %s", strconv.Itoa(len(metadata)))

@@ -1,0 +1,102 @@
+{
+    "rabbit_version": "3.11.7",
+    "rabbitmq_version": "3.11.7",
+    "product_name": "RabbitMQ",
+    "product_version": "3.11.7",
+    "users": [
+        {
+            "name": "normal_user",
+            "password_hash": "<YOUR PASSWORD HASH>",
+            "hashing_algorithm": "rabbit_password_hashing_sha256",
+            "tags": [],
+            "limits": {}
+        },
+        {
+            "name": "guest",
+            "password_hash": "HByc/azuDkuK/Eq+aFJa1CeirrEFNmOjkH9ESNIQ7D/3H6BU",
+            "hashing_algorithm": "rabbit_password_hashing_sha256",
+            "tags": [
+                "administrator"
+            ],
+            "limits": {}
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "/"
+        }
+    ],
+    "permissions": [
+        {
+            "user": "normal_user",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        },
+        {
+            "user": "guest",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "topic_permissions": [
+        {
+            "user": "normal_user",
+            "vhost": "/",
+            "exchange": "topic_exchange",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "parameters": [],
+    "global_parameters": [
+        {
+            "name": "internal_cluster_id",
+            "value": "rabbitmq-cluster-id-quvhnwUhALwWFWv1MzwSvA"
+        }
+    ],
+    "policies": [],
+    "queues": [
+        {
+            "name": "dead_letter",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-dead-letter-exchange": "dead-letter-exchange"
+            }
+        }
+    ],
+    "exchanges": [
+        {
+            "name": "dead-letter-exchange",
+            "vhost": "/",
+            "type": "fanout",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false
+        },
+        {
+            "name": "topic_exchange",
+            "vhost": "/",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        }
+    ],
+    "bindings": [
+        {
+            "source": "dead-letter-exchange",
+            "vhost": "/",
+            "destination": "dead_letter",
+            "destination_type": "queue",
+            "routing_key": "",
+            "arguments": {}
+        }
+    ]
+}

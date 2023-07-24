@@ -1,22 +1,6 @@
 Namespace: core
 tracingEndpoint: collector.linkerd-jaeger:55678
 
-db:
-  image: mysql
-  resources:
-    reservations:
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-  env:
-    MYSQL_USER: jorrit
-    MYSQL_DATABASE: mydb
-
-adminer:
-  image: adminer
-  ports:
-    - 8085:8080
-
 rabbitmq:
   image: rabbitmq:3-management
   ports:
@@ -29,18 +13,11 @@ rabbitmq:
     RABBITMQ_LOGS: "-"
 
 volumes:
-  data:
-    hostPath: "/Users/jorrit/.docker-conf/rabbitmq/data/"
-  log:
-    hostPath: "/Users/jorrit/.docker-conf/rabbitmq/log/"
   config:
     hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
   definitions:
     hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/definitions.json"
-  docker:
-    hostPath: "/var/run/docker.sock"
-  mysql:
-    hostPath: "/Users/jorrit/Documents/mysql"
+
 
 etcd:
   nodeName: 0
@@ -64,21 +41,3 @@ grafana:
   image: grafana/grafana:latest
   ports:
     - 3000:3000
-
-networks:
-  core_network:
-    external: true
-  unl_1:
-    external: true
-  unl_2:
-    external: true
-  third_party:
-    external: true
-
-secrets:
-  db_root_password:
-    external: true
-  db_dba_password:
-    external: true
-  rabbitmq_user:
-    external: true

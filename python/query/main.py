@@ -205,7 +205,7 @@ def test_single_query():
     # Define your SQL query
     query = """SELECT *
                FROM Personen p
-               JOIN Aanstellingen s LIMIT 10000"""
+               JOIN Aanstellingen s LIMIT 30000"""
 
     # Load the CSV file and execute the query
     result_df = load_and_query_csv(config.dataset_filepath, query)
