@@ -10,6 +10,7 @@
 log.txt
 # Test binary, built with `go test -c`
 *.test
+__pycache__
 # TEMP
 definitions.json
 
