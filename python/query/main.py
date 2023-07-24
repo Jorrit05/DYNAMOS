@@ -133,9 +133,6 @@ def handleMsCommunication(rabbitClient, msComm):
         logger.error(f"An unexpected msCommunication: {msComm.request_type}")
         return False
 
-@tracer.start_as_current_span("testsome")
-def testsome():
-    logger.info("HELO")
 
 def handle_incoming_request(rabbitClient, msg):
     print(f"TYPE if trace: {type(msg.traces)}")
@@ -197,66 +194,43 @@ def handle_incoming_request(rabbitClient, msg):
         return False
 
 # @tracer.start_as_current_span("test_single_query")
-def test_single_query(rabbitClient, msg):
+def test_single_query():
 
-    # Parse the trace header back into a dictionary
-    scMap = json.loads(msg.trace)
-    logger.warning(scMap)
-    state = TraceState([("sampled", "1")])
-
-    sc = trace.SpanContext(
-        trace_id=int(scMap['TraceID'], 16),
-        span_id=int(scMap['SpanID'], 16),
-        is_remote=True,
-        trace_flags=TraceFlags(TraceFlags.SAMPLED),
-        trace_state=state
-    )
-
-    logger.warning(f"sc.trace_id: {sc.trace_id}")
-
-    # ctx = set_span_in_context(sc)
-    # create a non-recording span with the SpanContext and set it in a Context
-    span = trace.NonRecordingSpan(sc)
-    ctx = set_span_in_context(span)
-
-    with tracer.start_as_current_span("newqueryTracer.", context=ctx) as span1:
-        trace_id_hex = "{:032x}".format(span1.get_span_context().trace_id)
-        span_id_hex = "{:016x}".format(span1.get_span_context().span_id)
-
-        print(f"Trace ID: {trace_id_hex}")
-        print(f"Span ID: {span_id_hex}")
-
-
-        testsome()
-        rabbitClient.close_program()
+    # # Define your SQL query
+    # query = """SELECT DISTINCT p.Unieknr, p.Geslacht, p.Gebdat, s.Aanst_22, s.Functcat, s.Salschal as Salary
+    #            FROM Personen p
+    #            JOIN Aanstellingen s
+    #            ON p.Unieknr = s.Unieknr LIMIT 4"""
 
     # Define your SQL query
-    query = """SELECT DISTINCT p.Unieknr, p.Geslacht, p.Gebdat, s.Aanst_22, s.Functcat, s.Salschal as Salary
+    query = """SELECT *
                FROM Personen p
-               JOIN Aanstellingen s
-               ON p.Unieknr = s.Unieknr LIMIT 4"""
+               JOIN Aanstellingen s LIMIT 10000"""
 
     # Load the CSV file and execute the query
     result_df = load_and_query_csv(config.dataset_filepath, query)
-    data, metadata = dataframe_to_protobuf(result_df)
+    # data, metadata = dataframe_to_protobuf(result_df)
 
-    print("--------------\ndata:")
-    print(data)
-    print("--------------\nmetadata:")
-    print(metadata)
+    # print("--------------\ndata:")
+    # print(data)
+    # print("--------------\nmetadata:")
+    # print(metadata)
 
+    # with open("output.json", "w") as file1:
+        # Writing data to a file
+    start = time.time()
+    result_df.to_csv('output.txt', sep='\t', index=False)
+    end = time.time()
+    print(f'Time elapsed for file write: {end - start} seconds')
+
+        # file1.write(df.to_csv('output.txt', sep='\t', index=False))
+        # file1.writelines(L)
 
 def main():
     if test:
         job_name="Test"
 
-
-        # with tracer.start_as_current_span("do_roll") as rollspan:
-        rabbitClient = RabbitClient(config, job_name, job_name, True, test_single_query)
-
-        rabbitClient.start_consuming(job_name, 10, 2)
-
-        # test_single_query()
+        test_single_query()
 
         # rollspan.finish()
         # tracer.finish()
