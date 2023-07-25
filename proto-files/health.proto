@@ -5,23 +5,22 @@ package proto;
 option go_package = "github.com/Jorrit05/DYNAMOS/pkg/proto";
 
 
+service Health {
+  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);
+}
 
 message HealthCheckRequest {
-    string service = 1;
-  }
+  string service = 1;
+}
 
-  message HealthCheckResponse {
-    enum ServingStatus {
+message HealthCheckResponse {
+  enum ServingStatus {
       UNKNOWN = 0;
       SERVING = 1;
       NOT_SERVING = 2;
       SERVICE_UNKNOWN = 3;  // Used only by the Watch method.
-    }
-    ServingStatus status = 1;
   }
 
-  service Health {
-    rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
-
-    rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);
-  }
+  ServingStatus status = 1;
+}

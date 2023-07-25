@@ -29,7 +29,6 @@ type SideCarClient interface {
 	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendCompositionRequest(ctx context.Context, in *CompositionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendSqlDataRequest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
 	SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -68,7 +67,7 @@ func (c *sideCarClient) Consume(ctx context.Context, in *ConsumeRequest, opts ..
 }
 
 type SideCar_ConsumeClient interface {
-	Recv() (*RabbitMQMessage, error)
+	Recv() (*SideCarMessage, error)
 	grpc.ClientStream
 }
 
@@ -76,8 +75,8 @@ type sideCarConsumeClient struct {
 	grpc.ClientStream
 }
 
-func (x *sideCarConsumeClient) Recv() (*RabbitMQMessage, error) {
-	m := new(RabbitMQMessage)
+func (x *sideCarConsumeClient) Recv() (*SideCarMessage, error) {
+	m := new(SideCarMessage)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -157,7 +156,6 @@ type SideCarServer interface {
 	SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error)
 	SendCompositionRequest(context.Context, *CompositionRequest) (*emptypb.Empty, error)
 	SendSqlDataRequest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
-	// rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
 	SendTest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
 	SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error)
 	CreateQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
@@ -235,7 +233,7 @@ func _SideCar_Consume_Handler(srv interface{}, stream grpc.ServerStream) error {
 }
 
 type SideCar_ConsumeServer interface {
-	Send(*RabbitMQMessage) error
+	Send(*SideCarMessage) error
 	grpc.ServerStream
 }
 
@@ -243,7 +241,7 @@ type sideCarConsumeServer struct {
 	grpc.ServerStream
 }
 
-func (x *sideCarConsumeServer) Send(m *RabbitMQMessage) error {
+func (x *sideCarConsumeServer) Send(m *SideCarMessage) error {
 	return x.ServerStream.SendMsg(m)
 }
 

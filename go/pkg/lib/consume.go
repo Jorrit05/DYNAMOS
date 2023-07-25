@@ -8,7 +8,7 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
-type MessageHandlerFunc func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error
+type MessageHandlerFunc func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
 
 func StartConsumingWithRetry(serviceName string, c pb.SideCarClient, queueName string, handler MessageHandlerFunc, maxRetries int, waitTime time.Duration) {
 	for i := 0; i < maxRetries; i++ {

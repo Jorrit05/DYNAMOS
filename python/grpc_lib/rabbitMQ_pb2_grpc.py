@@ -25,7 +25,7 @@ class SideCarStub(object):
         self.Consume = channel.unary_stream(
                 '/proto.SideCar/Consume',
                 request_serializer=rabbitMQ__pb2.ConsumeRequest.SerializeToString,
-                response_deserializer=rabbitMQ__pb2.RabbitMQMessage.FromString,
+                response_deserializer=rabbitMQ__pb2.SideCarMessage.FromString,
                 )
         self.SendRequestApproval = channel.unary_unary(
                 '/proto.SideCar/SendRequestApproval',
@@ -105,8 +105,7 @@ class SideCarServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def SendTest(self, request, context):
-        """rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -134,7 +133,7 @@ def add_SideCarServicer_to_server(servicer, server):
             'Consume': grpc.unary_stream_rpc_method_handler(
                     servicer.Consume,
                     request_deserializer=rabbitMQ__pb2.ConsumeRequest.FromString,
-                    response_serializer=rabbitMQ__pb2.RabbitMQMessage.SerializeToString,
+                    response_serializer=rabbitMQ__pb2.SideCarMessage.SerializeToString,
             ),
             'SendRequestApproval': grpc.unary_unary_rpc_method_handler(
                     servicer.SendRequestApproval,
@@ -212,7 +211,7 @@ class SideCar(object):
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/proto.SideCar/Consume',
             rabbitMQ__pb2.ConsumeRequest.SerializeToString,
-            rabbitMQ__pb2.RabbitMQMessage.FromString,
+            rabbitMQ__pb2.SideCarMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

@@ -35,11 +35,8 @@ kubectl logs rabbitmq-575f76fff7-v54pr
 kubectl get events
 kubectl exec -it <pod_name> -- /bin/bash
 
-kubectl create secret generic rabbit --from-literal=password=$(openssl rand -base64 12) -n core
-kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n core
-kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n orchestrator
-kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n uva
-kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n vu
+
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n core -n orchestrator -n uva -n vu -n surf
 
 kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand -base64 12) --from-literal=db_dba_password=$(openssl rand -base64 12) -n core
 
@@ -90,6 +87,7 @@ go get github.com/Jorrit05/GoLib@7f4fdc0293d3af27b39f3a7f811322bcd3e6b9dc
 
 
 # ETCD
+etcdctl --endpoints=http://localhost:30005 get / --prefix
 
 - Leader:
 etcdctl --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint status --write-out=table

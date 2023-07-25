@@ -8,7 +8,7 @@ import (
 )
 
 // Handle incoming AMQ messages.
-// Stream functionality to send responses to the 'main' container. Create a RabbitMQMessage type by making sure the type is easily accessible
+// Stream functionality to send responses to the 'main' container. Create a SideCarMessage type by making sure the type is easily accessible
 // and package the body.
 func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer, pbMsg proto.Message) error {
 	proto.Reset(pbMsg)
@@ -24,7 +24,7 @@ func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServ
 		return err
 	}
 
-	grpcMsg := &pb.RabbitMQMessage{
+	grpcMsg := &pb.SideCarMessage{
 		Body: any,
 		Type: msg.Type,
 	}

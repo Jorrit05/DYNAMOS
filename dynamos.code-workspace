@@ -4,9 +4,6 @@
 			"path": "go/cmd/orchestrator"
 		},
 		{
-			"path": "go/cmd/archetype_playground"
-		},
-		{
 			"path": "go/cmd/agent"
 		},
 		{

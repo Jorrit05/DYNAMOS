@@ -85,14 +85,6 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 		return fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
 	}
 
-	// logger.Sugar().Debugw("Pod info:", "dataStewardName: ", dataStewardName, "jobName: ", jobName)
-
-	// // Get the jobname of this user
-	// jobMutex.Lock()
-	// jobCounter[jobName]++
-	// newValue := jobCounter[jobName]
-	// jobMutex.Unlock()
-
 	// Define the job
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -156,15 +148,6 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 		logger.Sugar().Errorf("failed to create job: %v", err)
 		return err
 	}
-
-	// // /agents/jobs/UVA/activeJob/jorrit-3141334
-	// jobNameKey := fmt.Sprintf("%s/%s/activeJob/%s", etcdJobRootKey, agentConfig.Name, jobName)
-	// // One entry with the jobName with the userName as key
-	// err = etcd.PutValueToEtcd(etcdClient, jobNameKey, jobName, etcd.WithMaxElapsedTime(time.Second*5))
-	// if err != nil {
-	// 	logger.Sugar().Warnf("Error saving jobname to etcd: %v", err)
-	// 	return "", err
-	// }
 
 	return nil
 }

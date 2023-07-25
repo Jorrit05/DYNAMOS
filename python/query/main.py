@@ -21,6 +21,7 @@ from opentelemetry.propagate import extract
 from opentelemetry.trace.span import TraceFlags, TraceState
 from opentelemetry.trace.propagation import set_span_in_context
 
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
 if os.getenv('ENV') == 'PROD':
     import config_prod as config
 else:
@@ -44,6 +45,8 @@ trace.set_tracer_provider(provider)
 
 tracer = trace.get_tracer("query.tracer")
 
+grpc_server_instrumentor = GrpcInstrumentorClient()
+grpc_server_instrumentor.instrument()
 # Go into local test code with flag '-t'
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--test", action='store_true')
@@ -105,7 +108,11 @@ def process_sql_data_request(sqlDataRequest, msComm):
         data, metadata = dataframe_to_protobuf(result)
         logger.debug("Got 1")
 
-        microserviceCommunicator = MsCommunication(config)
+        current_span = trace.get_current_span()
+
+        # Get the span context
+        ctx = current_span.get_span_context()
+        microserviceCommunicator = MsCommunication(config, ctx)
         logger.debug("Got 2")
         microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
         logger.debug("Got 3")

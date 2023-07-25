@@ -39,7 +39,7 @@ type Configuration struct {
 	ServiceName     string
 	SideCarClient   pb.SideCarClient
 	GrpcConnection  *grpc.ClientConn
-	SideCarCallback func(config *Configuration) func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error
+	SideCarCallback func(config *Configuration) func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
 	GrpcCallback    func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)
 	Stopped         chan struct{} // channel to tell us the server has stopped
 	StopServer      chan struct{} // Tell the server to stop
@@ -47,7 +47,7 @@ type Configuration struct {
 
 func NewConfiguration(serviceName string,
 	grpcAddr string,
-	sidecarCallback func(config *Configuration) func(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error,
+	sidecarCallback func(config *Configuration) func(ctx context.Context, grpcMsg *pb.SideCarMessage) error,
 	grpcCallback func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)) (*Configuration, error) {
 
 	port, err := strconv.Atoi(os.Getenv("DESIGNATED_GRPC_PORT"))

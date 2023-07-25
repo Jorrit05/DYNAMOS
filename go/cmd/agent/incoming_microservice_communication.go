@@ -84,7 +84,7 @@ func isThirdPartyWaiting(ctx context.Context, msComm *pb.MicroserviceCommunicati
 	return false
 }
 
-func handleMicroserviceCommunication(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
+func handleMicroserviceCommunication(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 
 	logger.Debug("Received microserviceCommunication")
 

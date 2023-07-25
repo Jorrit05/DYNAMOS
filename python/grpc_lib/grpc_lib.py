@@ -31,6 +31,7 @@ class SecureChannel:
         # )
         # intercept the channel
         self.channel = grpc.insecure_channel(self.grpc_addr + self.grpc_port)
+
         # self.channel = grpc.intercept_channel(self.channel, tracer_interceptor)
 
         # intercept

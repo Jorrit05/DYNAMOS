@@ -8,7 +8,7 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
-func handleIncomingMessages(ctx context.Context, grpcMsg *pb.RabbitMQMessage) error {
+func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 	switch grpcMsg.Type {
 	case "requestApproval":
 		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: checkRequestApproval", grpcMsg.Traces)

@@ -24,7 +24,6 @@ func createAcceptedDataRequest(ctx context.Context, validationResponse *pb.Valid
 
 	result.AuthorizedProviders = make(map[string]string)
 	result.AuthorizedProviders = userTargets
-	result.ResultChannel = "tmp"
 
 	jsonResponse, err := json.Marshal(result)
 	if err != nil {
@@ -33,8 +32,6 @@ func createAcceptedDataRequest(ctx context.Context, validationResponse *pb.Valid
 		return ctx
 	}
 
-	logger.Debug("Response:")
-	logger.Debug(string(jsonResponse))
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 	return ctx

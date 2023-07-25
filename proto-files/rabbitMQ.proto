@@ -7,17 +7,15 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "generic.proto";
 import "microserviceCommunication.proto";
-// import "google/protobuf/struct.proto";
 
 // The sidecar definition.
 service SideCar {
   rpc InitRabbitMq(InitRequest) returns (google.protobuf.Empty) {}
-  rpc Consume(ConsumeRequest) returns (stream RabbitMQMessage) {}
+  rpc Consume(ConsumeRequest) returns (stream SideCarMessage) {}
   rpc SendRequestApproval(RequestApproval) returns  (google.protobuf.Empty) {}
   rpc SendValidationResponse(ValidationResponse) returns  (google.protobuf.Empty) {}
   rpc SendCompositionRequest(CompositionRequest) returns  (google.protobuf.Empty) {}
   rpc SendSqlDataRequest(SqlDataRequest) returns  (google.protobuf.Empty) {}
-  // rpc SendSqlDataRequestResponse(SqlDataRequestResponse) returns  (google.protobuf.Empty) {}
   rpc SendTest(SqlDataRequest) returns  (google.protobuf.Empty) {}
   rpc SendMicroserviceComm(MicroserviceCommunication) returns  (google.protobuf.Empty) {}
   rpc CreateQueue(QueueInfo) returns  (google.protobuf.Empty) {}
@@ -39,7 +37,7 @@ message ConsumeRequest {
   bool auto_ack = 2;
 }
 
-message RabbitMQMessage {
+message SideCarMessage {
   string type = 1;
   google.protobuf.Any body = 2;
   map<string, bytes> traces = 3;// Binary or textual representation of span context
@@ -82,7 +80,6 @@ message AcceptedDataRequest  {
   User user = 2;
   Auth auth = 3;
   map<string, string> authorized_providers = 4;
-  string result_channel = 5;
 }
 
 message CompositionRequest {
@@ -97,21 +94,10 @@ message CompositionRequest {
 
 message SqlDataRequest {
   string type = 1;
-  repeated string data_providers = 2;
-  string query = 3;
-  bool graph = 4;
-  string algorithm = 5;
-  map<string, string> algorithm_columns = 6;
-  User user = 7;
-  RequestMetada request_metada = 8;
+  string query = 2;
+  bool graph = 3;
+  string algorithm = 4;
+  map<string, string> algorithm_columns = 5;
+  User user = 6;
+  RequestMetada request_metada = 7;
 }
-
-// message SqlDataRequestResponse {
-//   string correlation_id = 1;
-//   google.protobuf.Struct data = 2;
-//   string return_address = 3;
-//   string job_name = 4;
-//   map<string, string> metadata = 5;
-//   google.protobuf.Any user_request = 6;
-//   string destination_queue = 7;
-// }

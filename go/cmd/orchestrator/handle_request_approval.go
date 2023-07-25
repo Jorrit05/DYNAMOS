@@ -72,10 +72,8 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 				return
 			}
 
-			// On succesful requestApproval
-			//   - Reply with AcceptedDataRequest
-			//   - Start a composition request
-
+			//TODO: This has a bug I think. When the third party is not online but the agent is.
+			// there will be a valid provider, so the code will go through, but crashes on 'startCompositionRequest'
 			authorizedProviders, err := getAuthorizedProviders(msg)
 			if err != nil {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
