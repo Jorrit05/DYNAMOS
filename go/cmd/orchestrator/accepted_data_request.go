@@ -9,7 +9,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-func createAcceptedDataRequest(ctx context.Context, validationResponse *pb.ValidationResponse, w http.ResponseWriter, userTargets map[string]string) context.Context {
+func createAcceptedDataRequest(ctx context.Context, validationResponse *pb.ValidationResponse, w http.ResponseWriter, userTargets map[string]string, jobId string) context.Context {
 	logger.Debug("Entering createAcceptedDataRequest")
 	ctx, span := trace.StartSpan(ctx, "createAcceptedDataRequest")
 	defer span.End()
@@ -24,7 +24,7 @@ func createAcceptedDataRequest(ctx context.Context, validationResponse *pb.Valid
 
 	result.AuthorizedProviders = make(map[string]string)
 	result.AuthorizedProviders = userTargets
-
+	result.JobId = jobId
 	jsonResponse, err := json.Marshal(result)
 	if err != nil {
 		logger.Sugar().Errorf("Error marshalling result, %v", err)

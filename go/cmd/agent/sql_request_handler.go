@@ -36,7 +36,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		}
 
 		sqlDataRequest := &pb.SqlDataRequest{}
-		sqlDataRequest.RequestMetada = &pb.RequestMetada{}
+		sqlDataRequest.RequestMetadata = &pb.RequestMetadata{}
 
 		err = protojson.Unmarshal(body, sqlDataRequest)
 		if err != nil {
@@ -44,46 +44,26 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		if sqlDataRequest.RequestMetada == nil {
-			sqlDataRequest.RequestMetada = &pb.RequestMetada{}
-		}
 
-		// Get the jobname of this user
-		// /agents/jobs/UVA/jorrit.stutterheim@cloudnation.nl -> jorrit-3141334
-		jobName, err := getJobName(sqlDataRequest.User.UserName)
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		if sqlDataRequest.RequestMetadata.JobId == "" {
+			http.Error(w, "Job ID not passed", http.StatusInternalServerError)
 			return
 		}
 
 		// Get the matching composition request and determine our role
 		// /agents/jobs/UVA/jorrit-3141334
-		compositionRequest, err := getCompositionRequest(jobName)
+		compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
 		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			http.Error(w, "No job found for this user", http.StatusBadRequest)
 			return
 		}
 
 		// Generate correlationID for this request
 		correlationId := uuid.New().String()
 
-		actualJobMutex.Lock()
-		localJobname, ok := actualJobMap[compositionRequest.JobName]
-		actualJobMutex.Unlock()
-
-		if ok {
-			actualJobMutex.Lock()
-			delete(actualJobMap, compositionRequest.JobName)
-			actualJobMutex.Unlock()
-		} else {
-			logger.Sugar().Error("Unknown actualjob")
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-
 		// Switch on the role we have in this data request
 		if strings.EqualFold(compositionRequest.Role, "computeProvider") {
-			ctx, err = handleSqlComputeProvider(ctx, localJobname, compositionRequest, sqlDataRequest, correlationId)
+			ctx, err = handleSqlComputeProvider(ctx, compositionRequest.LocalJobName, compositionRequest, sqlDataRequest, correlationId)
 			if err != nil {
 				logger.Sugar().Errorf("Error in computeProvider role: %v", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -91,7 +71,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			}
 
 		} else if strings.EqualFold(compositionRequest.Role, "all") {
-			ctx, err = handleSqlAll(ctx, localJobname, compositionRequest, sqlDataRequest, correlationId)
+			ctx, err = handleSqlAll(ctx, compositionRequest.LocalJobName, compositionRequest, sqlDataRequest, correlationId)
 			if err != nil {
 				logger.Sugar().Errorf("Error in all role: %v", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -115,7 +95,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		case dataResponseStruct := <-responseChan:
 			msg := dataResponseStruct.response
 
-			logger.Sugar().Infof("Received response, %s", msg.RequestMetada.CorrelationId)
+			logger.Sugar().Infof("Received response, %s", msg.RequestMetadata.CorrelationId)
 
 			// Marshaling google.protobuf.Struct to JSON
 			m := &jsonpb.Marshaler{}
@@ -151,10 +131,10 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 	}
 
 	msComm := &pb.MicroserviceCommunication{}
-	msComm.RequestMetada = &pb.RequestMetada{}
+	msComm.RequestMetadata = &pb.RequestMetadata{}
 	msComm.Type = "microserviceCommunication"
-	msComm.RequestMetada.DestinationQueue = jobName
-	msComm.RequestMetada.ReturnAddress = agentConfig.RoutingKey
+	msComm.RequestMetadata.DestinationQueue = jobName
+	msComm.RequestMetadata.ReturnAddress = agentConfig.RoutingKey
 	msComm.RequestType = compositionRequest.RequestType
 
 	any, err := anypb.New(sqlDataRequest)
@@ -164,9 +144,15 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 	}
 
 	msComm.OriginalRequest = any
-	msComm.RequestMetada.CorrelationId = correlationId
+	msComm.RequestMetadata.CorrelationId = correlationId
 
 	logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", jobName)
+
+	key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, jobName)
+	err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, jobName, 600)
+	if err != nil {
+		logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
+	}
 
 	go c.SendMicroserviceComm(ctx, msComm)
 	return ctx, nil
@@ -190,15 +176,21 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 			return ctx, fmt.Errorf("error getting dataProvider dns")
 		}
 
-		sqlDataRequest.RequestMetada.DestinationQueue = agentData.RoutingKey
+		sqlDataRequest.RequestMetadata.DestinationQueue = agentData.RoutingKey
 
 		// This is a bit confusing, but it tells the other agent to go back here.
 		// The other agent, will reset the address to get the message from the job.
-		sqlDataRequest.RequestMetada.ReturnAddress = agentConfig.RoutingKey
+		sqlDataRequest.RequestMetadata.ReturnAddress = agentConfig.RoutingKey
 
-		sqlDataRequest.RequestMetada.CorrelationId = correlationId
-		sqlDataRequest.RequestMetada.JobName = compositionRequest.JobName
-		logger.Sugar().Debugf("Sending sqlDataRequest to: %s", sqlDataRequest.RequestMetada.DestinationQueue)
+		sqlDataRequest.RequestMetadata.CorrelationId = correlationId
+		sqlDataRequest.RequestMetadata.JobName = compositionRequest.JobName
+		logger.Sugar().Debugf("Sending sqlDataRequest to: %s", sqlDataRequest.RequestMetadata.DestinationQueue)
+
+		key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, jobName)
+		err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, jobName, 600)
+		if err != nil {
+			logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
+		}
 
 		c.SendSqlDataRequest(ctx, sqlDataRequest)
 	}
@@ -210,7 +202,7 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 	}
 
 	waitingJobMutex.Lock()
-	waitingJobMap[sqlDataRequest.RequestMetada.CorrelationId] = jobName
+	waitingJobMap[sqlDataRequest.RequestMetadata.CorrelationId] = jobName
 	waitingJobMutex.Unlock()
 
 	return ctx, nil

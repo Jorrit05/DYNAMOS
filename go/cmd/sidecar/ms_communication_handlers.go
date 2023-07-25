@@ -23,7 +23,7 @@ func SendDataThroughAMQ(ctx context.Context, data *pb.MicroserviceCommunication)
 	}
 
 	msg := amqp.Publishing{
-		CorrelationId: data.RequestMetada.CorrelationId,
+		CorrelationId: data.RequestMetadata.CorrelationId,
 		Body:          body,
 		Type:          "microserviceCommunication",
 		Headers:       amqp.Table{},
@@ -45,14 +45,14 @@ func SendDataThroughAMQ(ctx context.Context, data *pb.MicroserviceCommunication)
 	timeoutCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
 	defer cancel()
 
-	err = channel.PublishWithContext(timeoutCtx, exchangeName, data.RequestMetada.ReturnAddress, true, false, msg)
+	err = channel.PublishWithContext(timeoutCtx, exchangeName, data.RequestMetadata.ReturnAddress, true, false, msg)
 	if err != nil {
 		logger.Sugar().Errorf("Error sending microserviceCommunication: %v", err)
 		return &emptypb.Empty{}, err
 	}
 
 	close(stop)
-	// go send(ctx, msg, data.RequestMetada.ReturnAddress)
+	// go send(ctx, msg, data.RequestMetadata.ReturnAddress)
 
 	return &emptypb.Empty{}, nil
 }

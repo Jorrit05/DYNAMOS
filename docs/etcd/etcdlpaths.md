@@ -26,6 +26,9 @@ Todo?:
 /policyEnforcer/agreements/RUG -> JSON definition
 /dataStewards/UVA (agent availability in the distributed system)
 <!-- /microservices/queryService/deploymentData -> JSON deployment definition -->
-
+<!--
 /activeJobs/<agent>/fullName -> jobName?
-/activeJobs/<agent>/Jobname -> Full composition struct?
+/activeJobs/<agent>/Jobname -> Full composition struct? -->
+
+/agents/jobs/UVA/jorrit.stutterheim@cloudnation.nl -> jobname
+/agents/jobs/UVA/jorrit.stutterheim@cloudnation.nl/jobname -> compositionRequest with local jobName

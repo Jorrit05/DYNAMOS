@@ -21,21 +21,21 @@ func PrettyPrintMicroserviceCommunication(msComm *pb.MicroserviceCommunication) 
 		metadata = append(metadata, fmt.Sprintf("%s: %s", k, v))
 	}
 
-	requestMetadata := ""
-	if msComm.RequestMetada != nil {
-		requestMetadata = fmt.Sprintf("CorrelationId: %s, DestinationQueue: %s, JobName: %s, ReturnAddress: %s",
-			msComm.RequestMetada.CorrelationId,
-			msComm.RequestMetada.DestinationQueue,
-			msComm.RequestMetada.JobName,
-			msComm.RequestMetada.ReturnAddress,
+	RequestMetadatata := ""
+	if msComm.RequestMetadata != nil {
+		RequestMetadatata = fmt.Sprintf("CorrelationId: %s, DestinationQueue: %s, JobName: %s, ReturnAddress: %s",
+			msComm.RequestMetadata.CorrelationId,
+			msComm.RequestMetadata.DestinationQueue,
+			msComm.RequestMetadata.JobName,
+			msComm.RequestMetadata.ReturnAddress,
 		)
 	}
 
-	logger.Sugar().Infof("MicroserviceCommunication:\n  Type: %s\n  RequestType: %s\n  Metadata: {%s}\n  RequestMetada: {%s}\n",
+	logger.Sugar().Infof("MicroserviceCommunication:\n  Type: %s\n  RequestType: %s\n  Metadata: {%s}\n  RequestMetadata: {%s}\n",
 		msComm.Type,
 		msComm.RequestType,
 		strings.Join(metadata, ", "),
-		requestMetadata,
+		RequestMetadatata,
 	)
 }
 
@@ -43,8 +43,8 @@ func handleFurtherProcessing(ctx context.Context, waitingJobName string, msComm 
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: handleFurtherProcessing")
 	defer span.End()
 
-	msComm.RequestMetada.DestinationQueue = waitingJobName
-	msComm.RequestMetada.ReturnAddress = agentConfig.RoutingKey
+	msComm.RequestMetadata.DestinationQueue = waitingJobName
+	msComm.RequestMetadata.ReturnAddress = agentConfig.RoutingKey
 	PrettyPrintMicroserviceCommunication(msComm)
 	logger.Sugar().Debugf("handleFurtherProcessing: %v", time.Now())
 

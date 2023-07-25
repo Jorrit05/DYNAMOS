@@ -31,13 +31,11 @@ var (
 	ttpMutex        = &sync.Mutex{}
 	jobMutex        = &sync.Mutex{}
 	waitingJobMutex = &sync.Mutex{}
-	actualJobMutex  = &sync.Mutex{}
 
 	responseMap   = make(map[string]chan dataResponse)
 	thirdPartyMap = make(map[string]string)
 	jobCounter    = make(map[string]int)
 	waitingJobMap = make(map[string]string)
-	actualJobMap  = make(map[string]string)
 )
 
 type dataResponse struct {

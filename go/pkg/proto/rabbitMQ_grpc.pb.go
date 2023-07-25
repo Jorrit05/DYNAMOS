@@ -32,6 +32,7 @@ type SideCarClient interface {
 	SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sideCarClient struct {
@@ -146,6 +147,15 @@ func (c *sideCarClient) CreateQueue(ctx context.Context, in *QueueInfo, opts ...
 	return out, nil
 }
 
+func (c *sideCarClient) DeleteQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/DeleteQueue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SideCarServer is the server API for SideCar service.
 // All implementations must embed UnimplementedSideCarServer
 // for forward compatibility
@@ -159,6 +169,7 @@ type SideCarServer interface {
 	SendTest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
 	SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error)
 	CreateQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
+	DeleteQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSideCarServer()
 }
 
@@ -192,6 +203,9 @@ func (UnimplementedSideCarServer) SendMicroserviceComm(context.Context, *Microse
 }
 func (UnimplementedSideCarServer) CreateQueue(context.Context, *QueueInfo) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateQueue not implemented")
+}
+func (UnimplementedSideCarServer) DeleteQueue(context.Context, *QueueInfo) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteQueue not implemented")
 }
 func (UnimplementedSideCarServer) mustEmbedUnimplementedSideCarServer() {}
 
@@ -371,6 +385,24 @@ func _SideCar_CreateQueue_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SideCar_DeleteQueue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueueInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).DeleteQueue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/DeleteQueue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).DeleteQueue(ctx, req.(*QueueInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SideCar_ServiceDesc is the grpc.ServiceDesc for SideCar service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -409,6 +441,10 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateQueue",
 			Handler:    _SideCar_CreateQueue_Handler,
+		},
+		{
+			MethodName: "DeleteQueue",
+			Handler:    _SideCar_DeleteQueue_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

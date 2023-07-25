@@ -19,6 +19,7 @@ service SideCar {
   rpc SendTest(SqlDataRequest) returns  (google.protobuf.Empty) {}
   rpc SendMicroserviceComm(MicroserviceCommunication) returns  (google.protobuf.Empty) {}
   rpc CreateQueue(QueueInfo) returns  (google.protobuf.Empty) {}
+  rpc DeleteQueue(QueueInfo) returns  (google.protobuf.Empty) {}
 }
 
 message InitRequest {
@@ -80,6 +81,7 @@ message AcceptedDataRequest  {
   User user = 2;
   Auth auth = 3;
   map<string, string> authorized_providers = 4;
+  string job_id = 5;
 }
 
 message CompositionRequest {
@@ -89,7 +91,8 @@ message CompositionRequest {
     User user = 4;
     repeated string data_providers = 5;
     string destination_queue = 6;
-    string job_name =7;
+    string job_name = 7;
+    string local_job_name = 8; // for saving the generated local job name with this composition request
 }
 
 message SqlDataRequest {
@@ -99,5 +102,5 @@ message SqlDataRequest {
   string algorithm = 4;
   map<string, string> algorithm_columns = 5;
   User user = 6;
-  RequestMetada request_metada = 7;
+  RequestMetadata request_metadata = 7;
 }

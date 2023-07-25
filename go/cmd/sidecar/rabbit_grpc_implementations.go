@@ -25,7 +25,7 @@ func (s *server) InitRabbitMq(ctx context.Context, in *pb.InitRequest) (*emptypb
 }
 
 func (s *server) CreateQueue(ctx context.Context, in *pb.QueueInfo) (*emptypb.Empty, error) {
-	queue, err := declareQueue(in.QueueName, channel, true)
+	queue, err := declareQueue(in.QueueName, channel, in.AutoDelete)
 	if err != nil {
 		logger.Sugar().Fatalw("Failed to declare queue: %v", err)
 		return nil, err
@@ -40,6 +40,19 @@ func (s *server) CreateQueue(ctx context.Context, in *pb.QueueInfo) (*emptypb.Em
 		logger.Sugar().Fatalw("Queue Bind: %s", err)
 		return nil, err
 	}
+	return &emptypb.Empty{}, nil
+}
+
+func (s *server) DeleteQueue(ctx context.Context, in *pb.QueueInfo) (*emptypb.Empty, error) {
+	logger.Sugar().Debugf("Delete Queue: %s", in.QueueName)
+
+	purgedMessages, err := channel.QueueDelete(in.QueueName, false, false, false)
+	if err != nil {
+		logger.Sugar().Warnf("Error deleting queue: %v", err)
+		return &emptypb.Empty{}, err
+	}
+
+	logger.Sugar().Infof("Deleted queue %s, purged %d, messages", in.QueueName, purgedMessages)
 	return &emptypb.Empty{}, nil
 }
 

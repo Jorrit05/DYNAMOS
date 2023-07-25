@@ -88,14 +88,17 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 
 			// TODO: Might be able to improve processing by converting functions to go routines
 			// Seems a bit tricky though due to the response writer.
-			userTargets, ctx, err := startCompositionRequest(validationStruct.localContext, msg, authorizedProviders, c)
+
+			compositionRequest := &pb.CompositionRequest{}
+			compositionRequest.User = &pb.User{}
+			userTargets, ctx, err := startCompositionRequest(validationStruct.localContext, msg, authorizedProviders, c, compositionRequest)
 			if err != nil {
 				logger.Sugar().Errorf("Error starting composition request: %v", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
 
-			createAcceptedDataRequest(ctx, msg, w, userTargets)
+			createAcceptedDataRequest(ctx, msg, w, userTargets, compositionRequest.JobName)
 			return
 
 		case <-ctx.Done():

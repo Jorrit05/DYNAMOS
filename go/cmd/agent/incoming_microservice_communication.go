@@ -73,7 +73,7 @@ func isThirdPartyWaiting(ctx context.Context, msComm *pb.MicroserviceCommunicati
 	if ok {
 		logger.Sugar().Infof("Sending sql response to returnAddress: %s", returnAddress)
 		// Send a signal on the channel to indicate that the response is ready
-		msComm.RequestMetada.DestinationQueue = returnAddress
+		msComm.RequestMetadata.DestinationQueue = returnAddress
 
 		c.SendMicroserviceComm(ctx, msComm)
 
@@ -89,13 +89,13 @@ func handleMicroserviceCommunication(ctx context.Context, grpcMsg *pb.SideCarMes
 	logger.Debug("Received microserviceCommunication")
 
 	msComm := &pb.MicroserviceCommunication{}
-	msComm.RequestMetada = &pb.RequestMetada{}
+	msComm.RequestMetadata = &pb.RequestMetadata{}
 
 	if err := grpcMsg.Body.UnmarshalTo(msComm); err != nil {
 		logger.Sugar().Errorf("Failed to unmarshal msComm message: %v", err)
 	}
 
-	correlationId := msComm.RequestMetada.CorrelationId
+	correlationId := msComm.RequestMetadata.CorrelationId
 
 	if isJobWaiting(ctx, msComm, correlationId) {
 		return nil

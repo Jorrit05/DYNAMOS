@@ -250,7 +250,7 @@ def main():
     if int(os.getenv("FIRST")) > 0:
         logger.debug("First service")
         job_name = os.getenv("JOB_NAME")
-        rabbitClient = RabbitClient(config, job_name, job_name, True, handle_incoming_request)
+        rabbitClient = RabbitClient(config, job_name, job_name, False, handle_incoming_request)
         rabbitClient.start_consuming(job_name, 10, 2)
     else:
         #TODO: Setup listener service for Python

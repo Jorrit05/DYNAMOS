@@ -104,7 +104,7 @@ func (s *Configuration) InitSidecarMessaging() {
 	s.SideCarClient = lib.InitializeSidecarMessaging(s.GrpcConnection, &pb.InitRequest{
 		ServiceName:     jobName,
 		RoutingKey:      jobName,
-		QueueAutoDelete: true,
+		QueueAutoDelete: false,
 	})
 
 	go func() {

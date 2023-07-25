@@ -19,6 +19,6 @@ message MicroserviceCommunication {
   google.protobuf.Struct data = 3;
   map<string, string> metadata = 4;
   google.protobuf.Any original_request = 5;
-  RequestMetada request_metada = 6;
+  RequestMetadata request_metadata = 6;
   map<string, bytes> traces = 7;// Binary or textual representation of span context
 }

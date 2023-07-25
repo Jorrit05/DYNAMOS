@@ -87,7 +87,7 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 				return bo.Permanent(errors.New("unknown error"))
 			}
 		case <-time.After(8 * time.Second): // Timeout if no message is received in 3 seconds
-			// logger.Sugar().Debugf("8 seconds have passed for target: %v", target)
+			logger.Sugar().Debugf("8 seconds have passed for target: %v", target)
 
 		}
 
@@ -175,13 +175,13 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 
 	// Do other stuff
 	message := amqp.Publishing{
-		CorrelationId: in.RequestMetada.CorrelationId,
+		CorrelationId: in.RequestMetadata.CorrelationId,
 		Body:          data,
 		Type:          "sqlDataRequest",
 	}
 
-	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetada.DestinationQueue)
-	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetadata.DestinationQueue)
+	go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
 
 }
@@ -197,12 +197,12 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 
 	// Do other stuff
 	message := amqp.Publishing{
-		CorrelationId: in.RequestMetada.CorrelationId,
+		CorrelationId: in.RequestMetadata.CorrelationId,
 		Body:          data,
 		Type:          in.Type,
 	}
 
-	go send(ctx, message, in.RequestMetada.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
+	go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
 	return &emptypb.Empty{}, nil
 }
 
@@ -216,7 +216,7 @@ func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.
 
 	// Do other stuff
 	message := amqp.Publishing{
-		CorrelationId: "in.RequestMetada.CorrelationId",
+		CorrelationId: "in.RequestMetadata.CorrelationId",
 		Body:          data,
 		Type:          "testSet",
 	}

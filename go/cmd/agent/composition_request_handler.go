@@ -7,8 +7,10 @@ import (
 	"strings"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/mschain"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.opencensus.io/trace"
 )
 
@@ -29,6 +31,24 @@ func generateJobName(jobName string) (string, error) {
 	return jobName + dataStewardName + strconv.Itoa(newValue), nil
 }
 
+func watchQueue(ctx context.Context, key string) {
+	watchChan := etcdClient.Watch(ctx, key)
+	go func() {
+		for watchResp := range watchChan {
+			for _, event := range watchResp.Events {
+				// event.Type will be either PUT or DELETE
+				logger.Sugar().Infof("Event received! Type: %s Key:%s Value:%s\n", event.Type, event.Kv.Key, event.Kv.Value)
+
+				// Take action if key is deleted
+				if event.Type == clientv3.EventTypeDelete {
+					logger.Sugar().Infof("Key has been deleted! Taking action...")
+					c.DeleteQueue(ctx, &pb.QueueInfo{QueueName: lib.LastPartAfterSlash(string(event.Kv.Key)), AutoDelete: false})
+				}
+			}
+		}
+	}()
+}
+
 func compositionRequestHandler(ctx context.Context, compositionRequest *pb.CompositionRequest) {
 	// get local requiredServices
 	// Generate microservice chain
@@ -38,29 +58,28 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: startCompositionRequest")
 	defer span.End()
 
-	err := registerUserWithJob(compositionRequest)
-	if err != nil {
-		logger.Sugar().Errorf("Error in registering Job %v", err)
-		return
-	}
-
 	localJobname, err := generateJobName(compositionRequest.JobName)
 	if err != nil {
 		logger.Sugar().Errorf("generateJobName err: %v", err)
 	}
 
-	actualJobMutex.Lock()
-	actualJobMap[compositionRequest.JobName] = localJobname
-	actualJobMutex.Unlock()
-	// Create queue for this job
-	// I think the actualJobname should be stored in etcd as well on a timer.
-	// think on this in combination with the actualJobMap.. The user should be able to send multiple
-	// sqlDAtaReqeuest, so the initial queue should not be autoDeleted, but deleted when the timer on
-	// this active job expires
+	compositionRequest.LocalJobName = localJobname
+	err = registerUserWithJob(compositionRequest)
+	if err != nil {
+		logger.Sugar().Errorf("Error in registering Job %v", err)
+		return
+	}
+
 	queueInfo := &pb.QueueInfo{}
-	queueInfo.AutoDelete = true
+	queueInfo.AutoDelete = false
 	queueInfo.QueueName = localJobname
 
+	key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, localJobname)
+	err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, localJobname, 600)
+	if err != nil {
+		logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
+	}
+	watchQueue(ctx, key)
 	c.CreateQueue(ctx, queueInfo)
 
 	if strings.EqualFold(compositionRequest.Role, "dataProvider") {

@@ -85,10 +85,16 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 		return fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
 	}
 
+	jobMutex.Lock()
+	jobCounter[jobName]++
+	newValue := jobCounter[jobName]
+	jobMutex.Unlock()
+
+	newJobName := replaceLastCharacter(jobName, newValue)
 	// Define the job
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      jobName,
+			Name:      newJobName,
 			Namespace: dataStewardName,
 			Labels:    map[string]string{"app": dataStewardName, "jobName": jobName},
 		},
@@ -212,4 +218,18 @@ func RequestTypeMicroservices(requestType string) (mschain.RequestType, error) {
 	}
 
 	return request, nil
+}
+
+func replaceLastCharacter(name string, replaceWith int) string {
+	if name == "" {
+		return ""
+	}
+
+	nameSlice := []rune(name)
+	nameSlice = nameSlice[:len(nameSlice)-1]
+
+	runeSlice := []rune(strconv.Itoa(replaceWith))
+	nameSlice = append(nameSlice, runeSlice...)
+
+	return string(nameSlice)
 }

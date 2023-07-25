@@ -25,7 +25,7 @@ func sideCarMessageHandler(config *msinit.Configuration) func(ctx context.Contex
 
 			logger.Sugar().Info("switching on microserviceCommunication")
 			msComm := &pb.MicroserviceCommunication{}
-			msComm.RequestMetada = &pb.RequestMetada{}
+			msComm.RequestMetadata = &pb.RequestMetadata{}
 
 			if err := grpcMsg.Body.UnmarshalTo(msComm); err != nil {
 				logger.Sugar().Errorf("Failed to unmarshal msComm message: %v", err)

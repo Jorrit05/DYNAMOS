@@ -11,7 +11,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-func startCompositionRequest(ctx context.Context, validationResponse *pb.ValidationResponse, authorizedProviders map[string]lib.AgentDetails, c pb.SideCarClient) (map[string]string, context.Context, error) {
+func startCompositionRequest(ctx context.Context, validationResponse *pb.ValidationResponse, authorizedProviders map[string]lib.AgentDetails, c pb.SideCarClient, compositionRequest *pb.CompositionRequest) (map[string]string, context.Context, error) {
 	logger.Debug("Entering startCompositionRequest")
 
 	ctx, span := trace.StartSpan(ctx, "startCompositionRequest")
@@ -29,8 +29,6 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 		return nil, ctx, err
 	}
 
-	compositionRequest := &pb.CompositionRequest{}
-	compositionRequest.User = &pb.User{}
 	compositionRequest.User = validationResponse.User
 	compositionRequest.DataProviders = []string{}
 	compositionRequest.ArchetypeId = archetype

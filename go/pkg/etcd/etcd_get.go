@@ -130,7 +130,7 @@ func GetAndUnmarshalJSON[T any](etcdClient *clientv3.Client, key string, target 
 
 	if len(resp.Kvs) == 0 {
 		logger.Sugar().Warnw("no value found for", "key", key)
-		return nil, nil
+		return nil, nil //fmt.Errorf("no value found for key %v", key)
 	}
 
 	// Unmarshal the JSON value into the target struct.

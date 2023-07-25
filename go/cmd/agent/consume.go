@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -42,43 +43,63 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 
 		waitingJobMutex.Lock()
-		actualJobName, ok := waitingJobMap[sqlDataRequest.RequestMetada.JobName]
+		actualJobName, ok := waitingJobMap[sqlDataRequest.RequestMetadata.JobName]
 		waitingJobMutex.Unlock()
 
 		ttpMutex.Lock()
-		thirdPartyMap[sqlDataRequest.RequestMetada.CorrelationId] = sqlDataRequest.RequestMetada.ReturnAddress
+		thirdPartyMap[sqlDataRequest.RequestMetadata.CorrelationId] = sqlDataRequest.RequestMetadata.ReturnAddress
 		ttpMutex.Unlock()
 
-		logger.Sugar().Warnf("jobName: %v", sqlDataRequest.RequestMetada.JobName)
+		msComm := &pb.MicroserviceCommunication{}
+		msComm.RequestMetadata = &pb.RequestMetadata{}
+
+		msComm.Type = "microserviceCommunication"
+		msComm.RequestType = sqlDataRequest.Type
+		msComm.RequestMetadata.ReturnAddress = agentConfig.RoutingKey
+		msComm.RequestMetadata.CorrelationId = sqlDataRequest.RequestMetadata.CorrelationId
+
+		any, err := anypb.New(sqlDataRequest)
+		if err != nil {
+			logger.Sugar().Error(err)
+			return err
+		}
+
+		msComm.OriginalRequest = any
+
+		logger.Sugar().Warnf("jobName: %v", sqlDataRequest.RequestMetadata.JobName)
 		logger.Sugar().Warnf("actualJobName: %v", actualJobName)
+
+		key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, actualJobName)
+		value := actualJobName
+
 		if ok {
 			waitingJobMutex.Lock()
-			delete(waitingJobMap, sqlDataRequest.RequestMetada.JobName)
+			delete(waitingJobMap, sqlDataRequest.RequestMetadata.JobName)
 			waitingJobMutex.Unlock()
 
-			msComm := &pb.MicroserviceCommunication{}
-			msComm.RequestMetada = &pb.RequestMetada{}
-
-			msComm.Type = "microserviceCommunication"
-			msComm.RequestType = sqlDataRequest.Type
-			msComm.RequestMetada.DestinationQueue = actualJobName
-			msComm.RequestMetada.ReturnAddress = agentConfig.RoutingKey
-			msComm.RequestMetada.CorrelationId = sqlDataRequest.RequestMetada.CorrelationId
-
-			any, err := anypb.New(sqlDataRequest)
-			if err != nil {
-				logger.Sugar().Error(err)
-				return err
-			}
-
-			msComm.OriginalRequest = any
-
 			logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", actualJobName)
+			msComm.RequestMetadata.DestinationQueue = actualJobName
 
 			go c.SendMicroserviceComm(ctx, msComm)
 
 		} else {
-			logger.Sugar().Warnf("No job found for: %v", sqlDataRequest.RequestMetada.JobName)
+			logger.Sugar().Infof("No waiting job found for: %v", sqlDataRequest.RequestMetadata.JobName)
+			compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
+			if err != nil {
+				logger.Sugar().Errorf("Error getting matching composition request: %v", err)
+				return err
+			}
+			msComm.RequestMetadata.DestinationQueue = compositionRequest.LocalJobName
+			key = fmt.Sprintf("/agents/jobs/%s/%s/queueInfo", serviceName, compositionRequest.LocalJobName)
+			value = compositionRequest.LocalJobName
+			generateChainAndDeploy(ctx, compositionRequest, compositionRequest.LocalJobName, sqlDataRequest)
+			go c.SendMicroserviceComm(ctx, msComm)
+		}
+		logger.Sugar().Warnf("key: %v", key)
+		logger.Sugar().Warnf("value: %v", value)
+		err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, value, 600)
+		if err != nil {
+			logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
 		}
 	default:
 		logger.Sugar().Errorf("Unknown message type: %s", grpcMsg.Type)
@@ -86,27 +107,4 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 	}
 
 	return nil
-}
-
-// MapCarrier is a type that can carry context in a map and
-// it implements propagation.TextMapCarrier
-type MapCarrier map[string]string
-
-// Get returns the value associated with the passed key.
-func (c MapCarrier) Get(key string) string {
-	return c[key]
-}
-
-// Set stores the key-value pair.
-func (c MapCarrier) Set(key string, value string) {
-	c[key] = value
-}
-
-// Keys lists the keys stored in this carrier.
-func (c MapCarrier) Keys() []string {
-	keys := make([]string, 0, len(c))
-	for k := range c {
-		keys = append(keys, k)
-	}
-	return keys
 }

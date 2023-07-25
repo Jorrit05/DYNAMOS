@@ -72,5 +72,5 @@ func (s *server) handleSqlDataRequest(msg amqp.Delivery, stream pb.SideCar_Consu
 func (s *server) handleMicroserviceCommunication(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
 	logger.Debug("Starting handleMicroserviceCommunication")
 
-	return s.handleResponse(msg, stream, &pb.MicroserviceCommunication{RequestMetada: &pb.RequestMetada{}})
+	return s.handleResponse(msg, stream, &pb.MicroserviceCommunication{RequestMetadata: &pb.RequestMetadata{}})
 }
