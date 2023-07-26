@@ -108,7 +108,7 @@ func (s *Configuration) InitSidecarMessaging() {
 	})
 
 	go func() {
-		lib.StartConsumingWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(s), 5, 5*time.Second)
+		lib.ChainConsumeWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(s), 5, 5*time.Second)
 	}()
 }
 
@@ -129,7 +129,8 @@ func (s *Configuration) StartGrpcServer() {
 		serverInstance.RegisterCallback("microserviceCommunication", s.GrpcCallback)
 		go func() {
 			<-s.StopServer
-			logger.Info("Stopping StartGrpcServer")
+			logger.Info("Stopping StartGrpcServer wait 2 seconds")
+			time.Sleep(2 * time.Second)
 			timeout := time.After(5 * time.Second)
 			done := make(chan bool)
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
@@ -34,6 +35,8 @@ func main() {
 
 	<-config.Stopped
 	oce.Flush()
+	logger.Sugar().Infof("Wait 2 seconds before ending algorithm service")
+	time.Sleep(2 * time.Second)
 	oce.Stop()
 	config.CloseConnection()
 	logger.Sugar().Infof("Exiting algorithm service")

@@ -91,7 +91,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 				return err
 			}
 			msComm.RequestMetadata.DestinationQueue = compositionRequest.LocalJobName
-			key = fmt.Sprintf("/agents/jobs/%s/%s/queueInfo", serviceName, compositionRequest.LocalJobName)
+			key = fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, compositionRequest.LocalJobName)
 			value = compositionRequest.LocalJobName
 			generateChainAndDeploy(ctx, compositionRequest, compositionRequest.LocalJobName, sqlDataRequest)
 			go c.SendMicroserviceComm(ctx, msComm)

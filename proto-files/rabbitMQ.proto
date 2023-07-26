@@ -12,6 +12,7 @@ import "microserviceCommunication.proto";
 service SideCar {
   rpc InitRabbitMq(InitRequest) returns (google.protobuf.Empty) {}
   rpc Consume(ConsumeRequest) returns (stream SideCarMessage) {}
+  rpc ChainConsume(ConsumeRequest) returns (stream SideCarMessage) {}
   rpc SendRequestApproval(RequestApproval) returns  (google.protobuf.Empty) {}
   rpc SendValidationResponse(ValidationResponse) returns  (google.protobuf.Empty) {}
   rpc SendCompositionRequest(CompositionRequest) returns  (google.protobuf.Empty) {}

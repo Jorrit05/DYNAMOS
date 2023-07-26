@@ -25,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type SideCarClient interface {
 	InitRabbitMq(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Consume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ConsumeClient, error)
+	ChainConsume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ChainConsumeClient, error)
 	SendRequestApproval(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendCompositionRequest(ctx context.Context, in *CompositionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -77,6 +78,38 @@ type sideCarConsumeClient struct {
 }
 
 func (x *sideCarConsumeClient) Recv() (*SideCarMessage, error) {
+	m := new(SideCarMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *sideCarClient) ChainConsume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ChainConsumeClient, error) {
+	stream, err := c.cc.NewStream(ctx, &SideCar_ServiceDesc.Streams[1], "/proto.SideCar/ChainConsume", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &sideCarChainConsumeClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type SideCar_ChainConsumeClient interface {
+	Recv() (*SideCarMessage, error)
+	grpc.ClientStream
+}
+
+type sideCarChainConsumeClient struct {
+	grpc.ClientStream
+}
+
+func (x *sideCarChainConsumeClient) Recv() (*SideCarMessage, error) {
 	m := new(SideCarMessage)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -162,6 +195,7 @@ func (c *sideCarClient) DeleteQueue(ctx context.Context, in *QueueInfo, opts ...
 type SideCarServer interface {
 	InitRabbitMq(context.Context, *InitRequest) (*emptypb.Empty, error)
 	Consume(*ConsumeRequest, SideCar_ConsumeServer) error
+	ChainConsume(*ConsumeRequest, SideCar_ChainConsumeServer) error
 	SendRequestApproval(context.Context, *RequestApproval) (*emptypb.Empty, error)
 	SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error)
 	SendCompositionRequest(context.Context, *CompositionRequest) (*emptypb.Empty, error)
@@ -182,6 +216,9 @@ func (UnimplementedSideCarServer) InitRabbitMq(context.Context, *InitRequest) (*
 }
 func (UnimplementedSideCarServer) Consume(*ConsumeRequest, SideCar_ConsumeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Consume not implemented")
+}
+func (UnimplementedSideCarServer) ChainConsume(*ConsumeRequest, SideCar_ChainConsumeServer) error {
+	return status.Errorf(codes.Unimplemented, "method ChainConsume not implemented")
 }
 func (UnimplementedSideCarServer) SendRequestApproval(context.Context, *RequestApproval) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendRequestApproval not implemented")
@@ -256,6 +293,27 @@ type sideCarConsumeServer struct {
 }
 
 func (x *sideCarConsumeServer) Send(m *SideCarMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _SideCar_ChainConsume_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ConsumeRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SideCarServer).ChainConsume(m, &sideCarChainConsumeServer{stream})
+}
+
+type SideCar_ChainConsumeServer interface {
+	Send(*SideCarMessage) error
+	grpc.ServerStream
+}
+
+type sideCarChainConsumeServer struct {
+	grpc.ServerStream
+}
+
+func (x *sideCarChainConsumeServer) Send(m *SideCarMessage) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -451,6 +509,11 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Consume",
 			Handler:       _SideCar_Consume_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ChainConsume",
+			Handler:       _SideCar_ChainConsume_Handler,
 			ServerStreams: true,
 		},
 	},

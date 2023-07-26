@@ -27,6 +27,11 @@ class SideCarStub(object):
                 request_serializer=rabbitMQ__pb2.ConsumeRequest.SerializeToString,
                 response_deserializer=rabbitMQ__pb2.SideCarMessage.FromString,
                 )
+        self.ChainConsume = channel.unary_stream(
+                '/proto.SideCar/ChainConsume',
+                request_serializer=rabbitMQ__pb2.ConsumeRequest.SerializeToString,
+                response_deserializer=rabbitMQ__pb2.SideCarMessage.FromString,
+                )
         self.SendRequestApproval = channel.unary_unary(
                 '/proto.SideCar/SendRequestApproval',
                 request_serializer=rabbitMQ__pb2.RequestApproval.SerializeToString,
@@ -62,6 +67,11 @@ class SideCarStub(object):
                 request_serializer=rabbitMQ__pb2.QueueInfo.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
+        self.DeleteQueue = channel.unary_unary(
+                '/proto.SideCar/DeleteQueue',
+                request_serializer=rabbitMQ__pb2.QueueInfo.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
 
 
 class SideCarServicer(object):
@@ -75,6 +85,12 @@ class SideCarServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def Consume(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ChainConsume(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -122,6 +138,12 @@ class SideCarServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DeleteQueue(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SideCarServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -132,6 +154,11 @@ def add_SideCarServicer_to_server(servicer, server):
             ),
             'Consume': grpc.unary_stream_rpc_method_handler(
                     servicer.Consume,
+                    request_deserializer=rabbitMQ__pb2.ConsumeRequest.FromString,
+                    response_serializer=rabbitMQ__pb2.SideCarMessage.SerializeToString,
+            ),
+            'ChainConsume': grpc.unary_stream_rpc_method_handler(
+                    servicer.ChainConsume,
                     request_deserializer=rabbitMQ__pb2.ConsumeRequest.FromString,
                     response_serializer=rabbitMQ__pb2.SideCarMessage.SerializeToString,
             ),
@@ -167,6 +194,11 @@ def add_SideCarServicer_to_server(servicer, server):
             ),
             'CreateQueue': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateQueue,
+                    request_deserializer=rabbitMQ__pb2.QueueInfo.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'DeleteQueue': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteQueue,
                     request_deserializer=rabbitMQ__pb2.QueueInfo.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
@@ -210,6 +242,23 @@ class SideCar(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/proto.SideCar/Consume',
+            rabbitMQ__pb2.ConsumeRequest.SerializeToString,
+            rabbitMQ__pb2.SideCarMessage.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ChainConsume(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/proto.SideCar/ChainConsume',
             rabbitMQ__pb2.ConsumeRequest.SerializeToString,
             rabbitMQ__pb2.SideCarMessage.FromString,
             options, channel_credentials,
@@ -329,6 +378,23 @@ class SideCar(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/proto.SideCar/CreateQueue',
+            rabbitMQ__pb2.QueueInfo.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DeleteQueue(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/proto.SideCar/DeleteQueue',
             rabbitMQ__pb2.QueueInfo.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,

@@ -11,4 +11,4 @@ var exchangeName = "topic_exchange"
 var rabbitPort = "30020"
 var rabbitDNS = "localhost"
 var etcdEndpoints = "http://localhost:30005"
-var grpcPort = 50052
+var grpcPort = 50051

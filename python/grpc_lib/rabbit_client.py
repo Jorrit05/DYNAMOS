@@ -8,37 +8,32 @@ from grpc_lib import SecureChannel
 
 
 class RabbitClient(SecureChannel):
-    def __init__(self, config, service_name, routing_key, auto_delete_queue, callback=None):
+    def __init__(self, config, service_name, routing_key, callback=None):
         super().__init__(config, os.getenv("SIDECAR_PORT"))
-        self.client = rabbit.SideCarStub(self.channel)
-        service_request = rabbitTypes.InitRequest()
-        service_request.service_name = service_name
-        service_request.routing_key = routing_key
-        service_request.queue_auto_delete = auto_delete_queue
+        self.sidecar = rabbit.SideCarStub(self.channel)
         self.callback = callback
         self.stop_consuming = False
-        self.initialize_rabbit(service_request)
+        self.initialize_rabbit(service_name, routing_key)
 
-    def initialize_rabbit(self, service_request):
+    def initialize_rabbit(self, service_name, routing_key):
         try:
-            self.client.InitRabbitMq(service_request)
+            service_request = rabbitTypes.InitRequest()
+            service_request.service_name = service_name
+            service_request.routing_key = routing_key
+            service_request.queue_auto_delete = False
+            self.sidecar.InitRabbitMq(service_request)
             self.logger.debug("Rabbit service started successfully")
         except grpc.RpcError as e:
             self.logger.warning(f"Attempt : could not establish connection with RabbitMQ: {e}")
 
-    def close_program(self):
-        # Call this function to close gRPC channel gracefully
-        self.channel.close()
-        self.logger.debug("Closed gRPC connection")
 
     def start_consuming(self, queue_name, max_retries=5, wait_time=1):
-        self._consume_with_retry(queue_name, max_retries, wait_time)
+        return self._consume_with_retry(queue_name, max_retries, wait_time)
 
     def _consume_with_retry(self, queue_name, max_retries, wait_time):
         for i in range(max_retries):
             try:
-                self._consume(queue_name)
-                return
+                return self._consume(queue_name)
             except grpc.RpcError as e:
                 self.logger.error(f"Failed to start consuming (attempt {i+1}/{max_retries}): {e}")
                 if self.stop_consuming:  # Check if we've been told to stop before handling each response
@@ -48,14 +43,25 @@ class RabbitClient(SecureChannel):
     def _consume(self, queue_name):
         consume_request = rabbitTypes.ConsumeRequest()
         consume_request.queue_name = queue_name
-        consume_request.auto_ack = True
+        consume_request.auto_ack = False
 
+        # Handle 1 response only
         try:
-            responses = self.client.Consume(consume_request)
+            responses = self.sidecar.ChainConsume(consume_request)
+
             for response in responses:
-                self._handle_response(response)
-                if self.stop_consuming:  # Check if we've been told to stop before handling each response
-                    return
+                if self.callback:
+                    if self.callback(self, response):
+                        self.logger.info("query service handled callback successfully")
+                        self.close_program()
+                        return True
+                    else:
+                        self.logger.info("Error in query service callback handling")
+                        self.close_program()
+                        return False
+                else:
+                    self.logger.warning("no rabbitMq callback registered")
+                    return False
         except grpc.RpcError as e:
             self.logger.error(f"Error on consume: {e}")
             raise e

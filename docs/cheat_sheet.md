@@ -113,6 +113,7 @@ helm install -f /Users/jorrit/Documents/master-software-engineering/thesis/DYNAM
 export DESIGNATED_GRPC_PORT="50053"
 export SIDECAR_PORT="50052"
 export FIRST="1"
+export LAST="1"
 export JOB_NAME=""
 
 # Algorithm

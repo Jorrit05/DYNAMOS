@@ -57,7 +57,6 @@ func (s *server) DeleteQueue(ctx context.Context, in *pb.QueueInfo) (*emptypb.Em
 }
 
 func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer) error {
-	logger.Debug("Starting Consume")
 	var err error
 	messages, err = channel.Consume(
 		in.QueueName, // queue
@@ -84,7 +83,7 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 			}
 		case "requestApproval":
 			if err := s.handleRequestApprovalResponse(msg, stream); err != nil {
-				logger.Sugar().Errorf("Error handling validation response: %v", err)
+				logger.Sugar().Errorf("Error handling requestApproval response: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
 		case "compositionRequest":
@@ -102,11 +101,6 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 				logger.Sugar().Errorf("Error handling microserviceCommunication: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
-		// case "sqlDataRequestResponse":
-		// 	if err := s.handleSqlDataRequestResponse(msg, stream); err != nil {
-		// 		logger.Sugar().Errorf("Error handling SqlDataRequestResponse response: %v", err)
-		// 		return status.Error(codes.Internal, err.Error())
-		// 	}
 
 		// Handle other message types...
 		default:
@@ -114,6 +108,6 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 			return status.Error(codes.Unknown, fmt.Sprintf("Unknown message type: %s", msg.Type))
 		}
 	}
-
+	channel.Close()
 	return nil
 }

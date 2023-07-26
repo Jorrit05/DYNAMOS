@@ -56,7 +56,8 @@ func main() {
 
 		go func() {
 			<-stop
-			logger.Info("Stopping sidecar")
+			logger.Info("Stopping sidecar wait for a few 2 seconds before initating stop")
+			time.Sleep(2 * time.Second)
 			timeout := time.After(5 * time.Second)
 			done := make(chan bool)
 

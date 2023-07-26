@@ -57,3 +57,8 @@ class SecureChannel:
 
             if i == 7:
                 raise Exception(f"Could not connect with gRPC after {i} tries")
+
+    def close_program(self):
+        # Call this function to close gRPC channel gracefully
+        self.channel.close()
+        self.logger.debug("Closed gRPC channel")

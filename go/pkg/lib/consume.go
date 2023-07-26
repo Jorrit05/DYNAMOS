@@ -43,20 +43,10 @@ func startConsuming(serviceName string, c pb.SideCarClient, from string, handler
 			logger.Sugar().Fatalf("Failed to receive: %v", err)
 		}
 
-		// Deserialize the span context
-		// spanContext, ok := propagation.FromBinary(grpcMsg.Trace)
-		// if !ok {
-		// 	return errors.New("invalid span context")
-		// }
-		// _, span := trace.StartSpanWithRemoteParent(ctx, serviceName+"/consume/"+grpcMsg.Type, spanContext)
-		// logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
-
 		err = handler(ctx, grpcMsg)
 		if err != nil {
 			logger.Sugar().Fatalf("Failed to handle message: %v", err)
 		}
-
-		// span.End()
 	}
 	return err
 }

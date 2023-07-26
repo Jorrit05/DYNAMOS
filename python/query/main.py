@@ -102,39 +102,32 @@ def process_sql_data_request(sqlDataRequest, msComm, microserviceCommunicator, c
     logger.debug("Start process_sql_data_request")
 
     try:
+        result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
+        data, metadata = dataframe_to_protobuf(result)
 
-
-        with tracer.start_as_current_span("load_and_query_csv") as span1:
-            result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
-
-        with tracer.start_as_current_span("dataframe_to_protobuf") as span2:
-            data, metadata = dataframe_to_protobuf(result)
-        logger.debug("Got 1")
+        logger.debug("Starting sendData")
         with tracer.start_as_current_span("SendData") as span3:
             microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
 
-        logger.debug("Got 2")
+        logger.debug("After sendData")
+        return True
     except FileNotFoundError:
         logger.error(f"File not found at path {config.dataset_filepath}")
+        return False
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
-
+        return False
 
 def handleMsCommunication(msComm, microserviceCommunicator, ctx):
-    logger.info(type(msComm))
-
-    logger.info(f"response.request_type: {msComm.request_type}")
-
     if msComm.request_type == "sqlDataRequest":
 
         sqlDataRequest = rabbitTypes.SqlDataRequest()
         msComm.original_request.Unpack(sqlDataRequest)
 
-        logger.info("Query: " + sqlDataRequest.query)
-
         with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
-            process_sql_data_request(sqlDataRequest, msComm, microserviceCommunicator, ctx)
-        return True
+            result = process_sql_data_request(sqlDataRequest, msComm, microserviceCommunicator, ctx)
+            span1.set_attribute("handleMsCommunication finished:", result)
+            return result
 
     else:
         logger.error(f"An unexpected msCommunication: {msComm.request_type}")
@@ -142,9 +135,6 @@ def handleMsCommunication(msComm, microserviceCommunicator, ctx):
 
 
 def handle_incoming_request(rabbitClient, msg):
-    print(f"TYPE if trace: {type(msg.traces)}")
-
-    logger.info(len(msg.traces))
     # Parse the trace header back into a dictionary
     scMap = json.loads(msg.traces["jsonTrace"])
     logger.warning(scMap)
@@ -157,9 +147,6 @@ def handle_incoming_request(rabbitClient, msg):
         trace_state=state
     )
 
-    logger.warning(f"sc.trace_id: {sc.trace_id}")
-
-    # ctx = set_span_in_context(sc)
     # create a non-recording span with the SpanContext and set it in a Context
     span = trace.NonRecordingSpan(sc)
     ctx = set_span_in_context(span)
@@ -174,42 +161,26 @@ def handle_incoming_request(rabbitClient, msg):
             for k, v in msg.traces.items():
                 msComm.traces[k] = v
 
-            handleMsCommunication(msComm, microserviceCommunicator, ctx)
-            logger.debug("Returning True")
-            rabbitClient.close_program()
-            return True
+            result = handleMsCommunication(msComm, microserviceCommunicator, ctx)
+            logger.debug(f"Returning restult {result}")
+            return result
         except Exception as e:
-            logger.error(f"Failed to unmarshal message: {e}")
-            return False
-        except:
-            logger.error("An unexpected error occurred.")
+            logger.error(f"An unexpected error occurred: {e}")
             return False
     else:
         logger.error(f"An unexpected message arrived occurred: {msg.type}")
         return False
 
 # @tracer.start_as_current_span("test_single_query")
-def test_single_query():
-
-    # # Define your SQL query
-    # query = """SELECT DISTINCT p.Unieknr, p.Geslacht, p.Gebdat, s.Aanst_22, s.Functcat, s.Salschal as Salary
-    #            FROM Personen p
-    #            JOIN Aanstellingen s
-    #            ON p.Unieknr = s.Unieknr LIMIT 4"""
-
+def test_single_query(rabbitClient, msg):
     # Define your SQL query
     query = """SELECT *
                FROM Personen p
-               JOIN Aanstellingen s LIMIT 30000"""
+               JOIN Aanstellingen s LIMIT 2"""
 
+    # print(msg)
     # Load the CSV file and execute the query
     result_df = load_and_query_csv(config.dataset_filepath, query)
-    # data, metadata = dataframe_to_protobuf(result_df)
-
-    # print("--------------\ndata:")
-    # print(data)
-    # print("--------------\nmetadata:")
-    # print(metadata)
 
     # with open("output.json", "w") as file1:
         # Writing data to a file
@@ -218,14 +189,17 @@ def test_single_query():
     end = time.time()
     print(f'Time elapsed for file write: {end - start} seconds')
 
-        # file1.write(df.to_csv('output.txt', sep='\t', index=False))
-        # file1.writelines(L)
+    return True
 
 def main():
     if test:
         job_name="Test"
 
-        test_single_query()
+        rabbitClient = RabbitClient(config, job_name, job_name, test_single_query)
+        result = rabbitClient.start_consuming(job_name, 10, 2)
+        logger.info("lets wait a few seconds before quitting")
+        time.sleep(5)
+        # test_single_query()
 
         exit(0)
 
@@ -234,7 +208,7 @@ def main():
     if int(os.getenv("FIRST")) > 0:
         logger.debug("First service")
         job_name = os.getenv("JOB_NAME")
-        rabbitClient = RabbitClient(config, job_name, job_name, False, handle_incoming_request)
+        rabbitClient = RabbitClient(config, job_name, job_name, handle_incoming_request)
         rabbitClient.start_consuming(job_name, 10, 2)
     else:
         #TODO: Setup listener service for Python
