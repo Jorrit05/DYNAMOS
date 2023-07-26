@@ -67,8 +67,6 @@ func sendDataHandler(ctx context.Context, data *pb.MicroserviceCommunication) (*
 
 	switch data.RequestType {
 	case "sqlDataRequest":
-		logger.Debug("config.ServiceName:")
-		logger.Debug(config.ServiceName)
 		handleSqlDataRequest(ctx, data, config)
 	default:
 		logger.Sugar().Errorf("Unknown RequestType type: %v", data.RequestType)
