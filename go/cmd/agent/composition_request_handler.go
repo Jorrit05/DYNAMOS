@@ -42,6 +42,9 @@ func watchQueue(ctx context.Context, key string) {
 				// Take action if key is deleted
 				if event.Type == clientv3.EventTypeDelete {
 					logger.Sugar().Infof("Key has been deleted! Taking action...")
+					//TODO probably should figure out a way to also delete the jobs compositionrequest here (/agents/jobs/UVA/jorrit.stutterheim@cloudnation.nl/jorrit-stutterheim-7e2d9c4c)
+					// userKey := fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, compositionRequest.User.UserName, compositionRequest.JobName)
+
 					c.DeleteQueue(ctx, &pb.QueueInfo{QueueName: lib.LastPartAfterSlash(string(event.Kv.Key)), AutoDelete: false})
 				}
 			}
@@ -64,7 +67,7 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 	}
 
 	compositionRequest.LocalJobName = localJobname
-	err = registerUserWithJob(compositionRequest)
+	err = registerUserWithJob(ctx, compositionRequest)
 	if err != nil {
 		logger.Sugar().Errorf("Error in registering Job %v", err)
 		return
@@ -75,7 +78,7 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 	queueInfo.QueueName = localJobname
 
 	key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, localJobname)
-	err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, localJobname, 600)
+	err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, localJobname, queueDeleteAfter)
 	if err != nil {
 		logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
 	}

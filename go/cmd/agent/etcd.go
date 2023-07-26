@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
@@ -31,7 +32,7 @@ func getCompositionRequest(userName string, jobName string) (*pb.CompositionRequ
 	return compositionRequest, nil
 }
 
-func registerUserWithJob(compositionRequest *pb.CompositionRequest) error {
+func registerUserWithJob(ctx context.Context, compositionRequest *pb.CompositionRequest) error {
 	logger.Debug("Entering registerUserWithJob")
 
 	// // /agents/jobs/UVA/jorrit-3141334 ->  pb.CompositionRequest

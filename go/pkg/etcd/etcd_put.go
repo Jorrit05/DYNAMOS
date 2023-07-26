@@ -137,3 +137,29 @@ func SaveStructToEtcd[T any](etcdClient *clientv3.Client, key string, target T) 
 
 	return nil
 }
+
+// T is the struct type to be saved.
+// target is an instance of the struct.
+// etcdClient is an instance of the etcd client.
+// key is the etcd key where the value will be stored.
+func SaveStructToEtcdTimeout[T any](ctx context.Context, etcdClient *clientv3.Client, key string, target T, timeout int64) error {
+	// Marshal the target struct into a JSON representation
+	jsonRep, err := json.Marshal(target)
+	if err != nil {
+		logger.Sugar().Fatalw("failed to marshal struct: %v", err)
+		return err
+	}
+
+	grantResp, err := etcdClient.Grant(ctx, timeout)
+	if err != nil {
+		logger.Sugar().Errorf("error granting etcd lease %v", err)
+		return err
+	}
+	_, err = etcdClient.Put(ctx, key, string(jsonRep), clientv3.WithLease(grantResp.ID))
+	if err != nil {
+		logger.Sugar().Errorf("error putting key in  etcd %v", err)
+		return err
+	}
+
+	return nil
+}

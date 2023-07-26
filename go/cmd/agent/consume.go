@@ -44,7 +44,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 
 		waitingJobMutex.Lock()
 		actualJobName, ok := waitingJobMap[sqlDataRequest.RequestMetadata.JobName]
-		waitingJobMutex.Unlock()
+		// mutex moved to ensure requests can closely follow eachother.
 
 		ttpMutex.Lock()
 		thirdPartyMap[sqlDataRequest.RequestMetadata.CorrelationId] = sqlDataRequest.RequestMetadata.ReturnAddress
@@ -60,6 +60,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 
 		any, err := anypb.New(sqlDataRequest)
 		if err != nil {
+			waitingJobMutex.Unlock()
 			logger.Sugar().Error(err)
 			return err
 		}
@@ -73,9 +74,8 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		value := actualJobName
 
 		if ok {
-			waitingJobMutex.Lock()
+
 			delete(waitingJobMap, sqlDataRequest.RequestMetadata.JobName)
-			waitingJobMutex.Unlock()
 
 			logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", actualJobName)
 			msComm.RequestMetadata.DestinationQueue = actualJobName
@@ -86,6 +86,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 			logger.Sugar().Infof("No waiting job found for: %v", sqlDataRequest.RequestMetadata.JobName)
 			compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
 			if err != nil {
+				waitingJobMutex.Unlock()
 				logger.Sugar().Errorf("Error getting matching composition request: %v", err)
 				return err
 			}
@@ -95,9 +96,11 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 			generateChainAndDeploy(ctx, compositionRequest, compositionRequest.LocalJobName, sqlDataRequest)
 			go c.SendMicroserviceComm(ctx, msComm)
 		}
+		waitingJobMutex.Unlock()
+
 		logger.Sugar().Warnf("key: %v", key)
 		logger.Sugar().Warnf("value: %v", value)
-		err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, value, 600)
+		err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, value, queueDeleteAfter)
 		if err != nil {
 			logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
 		}

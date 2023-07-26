@@ -45,7 +45,7 @@ func StartRemoteParentSpan(ctx context.Context, name string, parentTraceMap map[
 	}
 
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, name, spanContext)
-	logger.Sugar().Debugf("Trace ID remote parent span: %v", span.SpanContext().TraceID)
+	// logger.Sugar().Debugf("Trace ID remote parent span: %v", span.SpanContext().TraceID)
 	return ctx, span, nil
 }
 

@@ -30,7 +30,8 @@ class MsCommunication(SecureChannel):
 
         # Create metadata for gRPC request
         # metadata = Metadata()
-
+        # metadata = [('binaryTrace', msComm.traces["binaryTrace"])]
+        # metadata = [('binarytrace', serialized_span_context)]
         # Inject context into metadata
         # set_in_grpc_metadata(self.ctx, metadata)
 

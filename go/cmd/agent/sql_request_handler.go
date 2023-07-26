@@ -40,8 +40,8 @@ func sqlDataRequestHandler() http.HandlerFunc {
 
 		err = protojson.Unmarshal(body, sqlDataRequest)
 		if err != nil {
-			logger.Sugar().Errorf("Error unmarshalling sqlDataRequest: %v", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			logger.Sugar().Warnf("Error unmarshalling sqlDataRequest: %v", err)
+			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
 
@@ -149,7 +149,7 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 	logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", jobName)
 
 	key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, jobName)
-	err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, jobName, 600)
+	err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, jobName, queueDeleteAfter)
 	if err != nil {
 		logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
 	}
@@ -187,7 +187,7 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 		logger.Sugar().Debugf("Sending sqlDataRequest to: %s", sqlDataRequest.RequestMetadata.DestinationQueue)
 
 		key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, jobName)
-		err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, jobName, 600)
+		err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, jobName, queueDeleteAfter)
 		if err != nil {
 			logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
 		}

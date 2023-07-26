@@ -22,7 +22,7 @@ var (
 func main() {
 	logger.Debug("Starting algorithm service")
 
-	_, err := lib.InitTracer(serviceName)
+	oce, err := lib.InitTracer(serviceName)
 	if err != nil {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
@@ -31,9 +31,11 @@ func main() {
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
 	}
-	defer config.CloseConnection()
 
 	<-config.Stopped
+	oce.Flush()
+	oce.Stop()
+	config.CloseConnection()
 	logger.Sugar().Infof("Exiting algorithm service")
 	os.Exit(0)
 }
@@ -55,9 +57,9 @@ func main() {
 // // }
 
 // This is the function being called by the last microservice
-func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunication) error {
+func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunication, config *msinit.Configuration) error {
 	ctx, span := trace.StartSpan(ctx, "handleSqlDataRequest")
-	defer span.End()
+	// defer span.End()
 
 	logger.Info("Start handleSqlDataRequest")
 	// Unpack the metadata
@@ -101,8 +103,10 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
 	// // Just pass on the data for now...
-	c.SendData(ctx, data)
+	span.End()
 
+	c.SendData(ctx, data)
+	// time.Sleep(1 * time.Second)
 	close(config.StopServer)
 	return nil
 }

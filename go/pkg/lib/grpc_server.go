@@ -37,7 +37,14 @@ func (s *SharedServer) RegisterCallback(msgType string, callback func(ctx contex
 }
 
 func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
-	logger.Debug("Starting lib.SendData")
+	logger.Sugar().Debugf("Starting lib.SendData: %v", data.RequestMetadata.DestinationQueue)
+
+	ctx, span, err := StartRemoteParentSpan(ctx, "sidecar SendData/func:", data.Traces)
+	if err != nil {
+		logger.Sugar().Warnf("Error starting span: %v", err)
+	}
+	defer span.End()
+
 	logger.Sugar().Debugf("data.Type: %v", data.Type)
 	logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)
 	callback, ok := s.callbacks[data.Type]

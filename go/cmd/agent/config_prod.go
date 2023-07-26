@@ -19,3 +19,4 @@ var kubeconfig = ""
 var rabbitMqUser = "normal_user"
 var etcdJobRootKey = "/agents/jobs"
 var tracingHost = "collector.linkerd-jaeger:55678"
+var queueDeleteAfter = int64(600)

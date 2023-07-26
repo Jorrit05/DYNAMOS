@@ -7,7 +7,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-	"go.opencensus.io/trace"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -33,7 +33,7 @@ func sideCarMessageHandler(config *msinit.Configuration) func(ctx context.Contex
 
 			switch msComm.RequestType {
 			case "sqlDataRequest":
-				handleSqlDataRequest(ctx, msComm)
+				handleSqlDataRequest(ctx, msComm, config)
 			default:
 				logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
 				return fmt.Errorf("unknown RequestType type: %s", msComm.RequestType)
@@ -50,15 +50,13 @@ func sideCarMessageHandler(config *msinit.Configuration) func(ctx context.Contex
 
 func sendDataHandler(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
 	logger.Debug("Start sendDataHandler")
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		logger.Sugar().Infof("OK: %v", md)
+		// for _, v := range md. {
 
-	// Assuming 'ctx' is your context
-	if span := trace.FromContext(ctx); span != nil {
-		spanContext := span.SpanContext()
-		logger.Sugar().Infof("TraceID: %s\n", spanContext.TraceID)
-		logger.Sugar().Infof("SpanID: %s\n", spanContext.SpanID)
-		logger.Sugar().Infof("TraceOptions: %v\n", spanContext.TraceOptions)
-	} else {
-		logger.Sugar().Warn("No span found in context")
+		// 	logger.Sugar().Infof("v: %v", v)
+		// }
 	}
 
 	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: sendDataHandler, process grpc MS", data.Traces)
@@ -69,9 +67,12 @@ func sendDataHandler(ctx context.Context, data *pb.MicroserviceCommunication) (*
 
 	switch data.RequestType {
 	case "sqlDataRequest":
-		handleSqlDataRequest(ctx, data)
+		logger.Debug("config.ServiceName:")
+		logger.Debug(config.ServiceName)
+		handleSqlDataRequest(ctx, data, config)
 	default:
 		logger.Sugar().Errorf("Unknown RequestType type: %v", data.RequestType)
+
 		return nil, fmt.Errorf("unknown RequestType type: %s", data.RequestType)
 	}
 

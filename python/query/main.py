@@ -98,31 +98,29 @@ def dataframe_to_protobuf(df):
 
     return data_struct, metadata
 
-@tracer.start_as_current_span("process_sql_data_request")
-def process_sql_data_request(sqlDataRequest, msComm):
+def process_sql_data_request(sqlDataRequest, msComm, microserviceCommunicator, ctx):
     logger.debug("Start process_sql_data_request")
 
     try:
-        print(config.dataset_filepath)
-        result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
-        data, metadata = dataframe_to_protobuf(result)
+
+
+        with tracer.start_as_current_span("load_and_query_csv") as span1:
+            result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
+
+        with tracer.start_as_current_span("dataframe_to_protobuf") as span2:
+            data, metadata = dataframe_to_protobuf(result)
         logger.debug("Got 1")
+        with tracer.start_as_current_span("SendData") as span3:
+            microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
 
-        current_span = trace.get_current_span()
-
-        # Get the span context
-        ctx = current_span.get_span_context()
-        microserviceCommunicator = MsCommunication(config, ctx)
         logger.debug("Got 2")
-        microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
-        logger.debug("Got 3")
     except FileNotFoundError:
         logger.error(f"File not found at path {config.dataset_filepath}")
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
 
-@tracer.start_as_current_span("handleMsCommunication")
-def handleMsCommunication(rabbitClient, msComm):
+
+def handleMsCommunication(msComm, microserviceCommunicator, ctx):
     logger.info(type(msComm))
 
     logger.info(f"response.request_type: {msComm.request_type}")
@@ -133,7 +131,9 @@ def handleMsCommunication(rabbitClient, msComm):
         msComm.original_request.Unpack(sqlDataRequest)
 
         logger.info("Query: " + sqlDataRequest.query)
-        process_sql_data_request(sqlDataRequest, msComm)
+
+        with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
+            process_sql_data_request(sqlDataRequest, msComm, microserviceCommunicator, ctx)
         return True
 
     else:
@@ -164,7 +164,7 @@ def handle_incoming_request(rabbitClient, msg):
     span = trace.NonRecordingSpan(sc)
     ctx = set_span_in_context(span)
 
-
+    microserviceCommunicator = MsCommunication(config, ctx)
     # _, span = tracer_class.create_parent_span("handle_incoming", msg.trace)
     if msg.type == "microserviceCommunication":
         try:
@@ -174,19 +174,7 @@ def handle_incoming_request(rabbitClient, msg):
             for k, v in msg.traces.items():
                 msComm.traces[k] = v
 
-
-            # extract trace context from msComm
-            # carrier = {"trace": msComm.trace}  # replace with actual trace field name
-            # span_context = rabbitClient.tracer.extract(Format.TEXT_MAP, carrier)
-            # with rabbitClient.tracer.start_active_span("handle_incoming_request", child_of=span_context) as scope:
-            logger.warning("1")
-            # with trace.use_span(trace.NonRecordingSpan(sc)) as span:
-
-            with tracer.start_as_current_span("newqueryTracer.", context=ctx) as span1:
-                trace_id_hex = "{:032x}".format(span1.get_span_context().trace_id)
-                print(f"Trace ID: {trace_id_hex}")
-                handleMsCommunication(rabbitClient, msComm)
-            logger.warning("2")
+            handleMsCommunication(msComm, microserviceCommunicator, ctx)
             logger.debug("Returning True")
             rabbitClient.close_program()
             return True
@@ -239,10 +227,6 @@ def main():
 
         test_single_query()
 
-        # rollspan.finish()
-        # tracer.finish()
-        # print("Stat sleep")
-        # time.sleep(5)
         exit(0)
 
     logger.debug("Starting Query service")
@@ -254,17 +238,10 @@ def main():
         rabbitClient.start_consuming(job_name, 10, 2)
     else:
         #TODO: Setup listener service for Python
-        # microserviceCommunicator = MsCommunication(config.grpc_addr)
-        # microserviceCommunicator.
         logger.debug("Not the first service")
         exit(1)
 
 
-    # for thread in threading.enumerate():
-    #     if isinstance(thread, PeriodicMetricTask):
-    #         logger.debug("closing thread before closing..")
-    #         thread.close()
-    #         thread.join(timeout=60)
 
     logger.debug("Exiting query service")
     sys.exit(0)
