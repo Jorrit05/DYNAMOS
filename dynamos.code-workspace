@@ -10,7 +10,7 @@
 			"path": "go/cmd/sidecar"
 		},
 		{
-			"path": "go/cmd/policy_enforcer"
+			"path": "go/cmd/load_test"
 		},
 		{
 			"path": "go/pkg"
@@ -32,9 +32,6 @@
 		},
 		{
 			"path": "go/cmd/test"
-		},
-		{
-			"path": "stack"
 		},
 		{
 			"path": "go/cmd/algorithm"
