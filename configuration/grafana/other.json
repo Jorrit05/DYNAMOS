@@ -30,8 +30,7 @@
     "panels": [
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -84,8 +83,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "QIeKbDVVz"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "expr": "rabbitmq_queue_consumers { queue=~\"api-.+\" }",
@@ -99,8 +97,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -150,8 +147,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "QIeKbDVVz"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "expr": "rate(rabbitmq_queue_messages_published_total{ queue=~\"api-.+\" }[$__rate_interval])",
@@ -231,8 +227,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -251,8 +246,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "description": "Non available RAM memory",
         "fieldConfig": {
@@ -312,8 +306,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -329,8 +322,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -350,8 +342,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -415,8 +406,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -430,8 +420,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -495,8 +484,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -512,8 +500,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -565,8 +552,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "QIeKbDVVz"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "expr": "node_filesystem_avail_bytes{ mountpoint=~\"/opt/thesisfair|/\" }",
@@ -593,8 +579,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -673,8 +658,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -691,8 +675,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "description": "The incoming message rate before any routing rules are applied.\n\nIf this value is lower than the number of messages published to queues, it may indicate that some messages are delivered to more than one queue.\n\nIf this value is higher than the number of messages published to queues, messages cannot be routed and will either be dropped or returned to publishers.\n\n* [Publishers](https://www.rabbitmq.com/publishers.html)",
         "fieldConfig": {
@@ -930,8 +913,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -949,8 +931,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "description": "Total number of ready messages ready to be delivered to consumers.\n\nAim to keep this value as low as possible. RabbitMQ behaves best when messages are flowing through it. It's OK for publishers to occasionally outpace consumers, but the expectation is that consumers will eventually process all ready messages.\n\nIf this metric keeps increasing, your system will eventually run out of memory and/or disk space. Consider using TTL or Queue Length Limit to prevent unbounded message growth.\n\n* [Queues](https://www.rabbitmq.com/queues.html)\n* [Consumers](https://www.rabbitmq.com/consumers.html)\n* [Queue Length Limit](https://www.rabbitmq.com/maxlength.html)\n* [Time-To-Live and Expiration](https://www.rabbitmq.com/ttl.html)",
         "fieldConfig": {
@@ -1188,8 +1169,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -1207,8 +1187,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1288,8 +1267,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -1306,8 +1284,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "description": "",
         "fieldConfig": {
@@ -1546,8 +1523,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -1565,8 +1541,7 @@
       },
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1647,8 +1622,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "QIeKbDVVz"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": false,
@@ -1773,8 +1747,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -1790,8 +1763,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "sum by (instance)(rate(node_cpu_seconds_total{mode='user', instance=\"$node\"}[$__rate_interval])) * 100",
@@ -1805,8 +1777,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "sum by (instance)(rate(node_cpu_seconds_total{mode='iowait', instance=\"$node\"}[$__rate_interval])) * 100",
@@ -1819,8 +1790,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "sum by (instance)(rate(node_cpu_seconds_total{mode=~\".*irq\", instance=\"$node\"}[$__rate_interval])) * 100",
@@ -1833,8 +1803,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "sum (rate(node_cpu_seconds_total{mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq', instance=\"$node\"}[$__rate_interval])) * 100",
@@ -1847,8 +1816,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='idle', instance=\"$node\"}[$__rate_interval])) * 100",
@@ -1906,8 +1874,7 @@
         "dashLength": 10,
         "dashes": false,
         "datasource": {
-          "type": "prometheus",
-          "uid": "QIeKbDVVz"
+          "type": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1963,8 +1930,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -1979,8 +1945,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -2128,8 +2093,7 @@
         "targets": [
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -2145,8 +2109,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "node_memory_MemTotal_bytes{instance=\"$node\"} - node_memory_MemFree_bytes{instance=\"$node\"} - (node_memory_Cached_bytes{instance=\"$node\"} + node_memory_Buffers_bytes{instance=\"$node\"} + node_memory_SReclaimable_bytes{instance=\"$node\"})",
@@ -2160,8 +2123,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "node_memory_Cached_bytes{instance=\"$node\"} + node_memory_Buffers_bytes{instance=\"$node\"} + node_memory_SReclaimable_bytes{instance=\"$node\"}",
@@ -2174,8 +2136,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "node_memory_MemFree_bytes{instance=\"$node\"}",
@@ -2188,8 +2149,7 @@
           },
           {
             "datasource": {
-              "type": "prometheus",
-              "uid": "fLDBMRC7z"
+              "type": "prometheus"
             },
             "exemplar": true,
             "expr": "(node_memory_SwapTotal_bytes{instance=\"$node\"} - node_memory_SwapFree_bytes{instance=\"$node\"})",
@@ -2249,8 +2209,7 @@
             "value": "node-exporter:9100"
           },
           "datasource": {
-            "type": "prometheus",
-            "uid": "QIeKbDVVz"
+            "type": "prometheus"
           },
           "definition": "label_values(node_uname_info, instance)",
           "hide": 0,
@@ -2291,7 +2250,7 @@
       ]
     },
     "timezone": "",
-    "title": "Thesis Fair Platform",
+    "title": "RabbitMQ",
     "uid": "UdDybv44z",
     "version": 8,
     "weekStart": ""

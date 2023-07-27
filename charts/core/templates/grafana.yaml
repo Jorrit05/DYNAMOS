@@ -29,6 +29,11 @@ spec:
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
               value: "Admin"
+            - name: GF_SERVER_ROOT_URL
+              value: "http://localhost:30001/grafana/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+
             # - name: GF_SERVER_ROOT_URL
             #   value: "http://localhost:80/grafana"
             # - name: GF_SERVER_SERVE_FROM_SUB_PATH
@@ -88,15 +93,24 @@ data:
       isDefault: true
       version: 1
       editable: false
-    - name: Prometheus
+    - name: prometheus
       type: prometheus
       access: proxy
       orgId: 1
-      url: http://prometheus-server.{{ .Values.Namespace }}.svc.cluster.local
-      basicAuth: false
+      url: http://prometheus-server.default.svc.cluster.local:9090
       isDefault: false
-      version: 1
-      editable: false
+      jsonData:
+        timeInterval: "5s"
+      editable: true
+    # - name: Prometheus
+    #   type: prometheus
+    #   access: proxy
+    #   orgId: 1
+    #   url: http://prometheus-server.{{ .Values.Namespace }}.svc.cluster.local
+    #   basicAuth: false
+    #   isDefault: false
+    #   version: 1
+    #   editable: false
     EOF
 
     cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml

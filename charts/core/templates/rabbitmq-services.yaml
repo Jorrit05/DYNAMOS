@@ -17,6 +17,10 @@ spec:
       port: 15672
       targetPort: 15672
       nodePort: 30000
+    - name: metrics
+      protocol: TCP
+      port: 15692
+      targetPort: 15692
   type: NodePort
 
 ---

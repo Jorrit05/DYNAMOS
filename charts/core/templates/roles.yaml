@@ -35,3 +35,48 @@ subjects:
 - kind: ServiceAccount
   name: {{ .Release.Name }}-service-account
   namespace: {{ .Release.Namespace }}
+
+# ---
+# apiVersion: policy.linkerd.io/v1beta1
+# kind: Server
+# metadata:
+#   namespace: linkerd-viz
+#   name: prometheus
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: prometheus
+#   port: 9090
+#   proxyProtocol: HTTP/2
+
+
+# ---
+# apiVersion: policy.linkerd.io/v1beta1
+# kind: ServerAuthorization
+# metadata:
+#   namespace: linkerd-viz
+#   name: prometheus
+# spec:
+#   server:
+#     name: prometheus
+#   client:
+#     meshTLS:
+#       serviceAccounts:
+#         - name: default
+#           namespace: core
+
+# ---
+# apiVersion: policy.linkerd.io/v1alpha1
+# kind: AuthorizationPolicy
+# metadata:
+#   namespace: linkerd-viz
+#   name: prometheus-admin
+# spec:
+#   targetRef:
+#     group: policy.linkerd.io
+#     kind: Server
+#     name: prometheus-admin
+#   requiredAuthenticationRefs:
+#     - kind: ServiceAccount
+#       name: default
+#       namespace: core

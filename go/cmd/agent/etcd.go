@@ -21,9 +21,11 @@ func getJobName(user string) (string, error) {
 
 func getCompositionRequest(userName string, jobName string) (*pb.CompositionRequest, error) {
 	var compositionRequest *pb.CompositionRequest
-	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, userName, jobName), &compositionRequest)
+
+	key := fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, userName, jobName)
+	_, err := etcd.GetAndUnmarshalJSON(etcdClient, key, &compositionRequest)
 	if err != nil {
-		logger.Sugar().Warnf("Error getting composition request: %v", err)
+		logger.Sugar().Warnf("Error getting composition request for key: %s, error: %v", key, err)
 		return nil, err
 	}
 	if compositionRequest == nil {

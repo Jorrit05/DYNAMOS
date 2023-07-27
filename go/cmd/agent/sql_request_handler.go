@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"go.opencensus.io/trace"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -95,7 +96,14 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		case dataResponseStruct := <-responseChan:
 			msg := dataResponseStruct.response
 
-			logger.Sugar().Infof("Received response, %s", msg.RequestMetadata.CorrelationId)
+			logger.Sugar().Debugf("Received response, %s", msg.RequestMetadata.CorrelationId)
+			msgBytes, err := proto.Marshal(msg)
+			if err != nil {
+				logger.Sugar().Warnf("error marshalling message, %v", err)
+			}
+			logger.Sugar().Infof("Size results, %v", len(msgBytes))
+
+			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.messageSize", int64(len(msgBytes))))
 
 			// Marshaling google.protobuf.Struct to JSON
 			m := &jsonpb.Marshaler{}
@@ -105,6 +113,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("Error in returning result"))
 			}
+			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.JSONsize", int64(len([]byte(jsonString)))))
 
 			//Handle response information
 			w.WriteHeader(http.StatusOK)

@@ -24,3 +24,19 @@ spec:
       nodePort: 32003
   selector:
     component: collector
+
+# ---
+# apiVersion: policy.linkerd.io/v1alpha1
+# kind: AuthorizationPolicy
+# metadata:
+#   namespace: linkerd-jaeger
+#   name: jaeger-admin
+# spec:
+#   targetRef:
+#     group: policy.linkerd.io
+#     kind: Server
+#     name: jaeger-ui
+#   requiredAuthenticationRefs:
+#     - kind: ServiceAccount
+#       name: default
+#       namespace: core

@@ -109,6 +109,8 @@ func (s *Configuration) InitSidecarMessaging() {
 
 	go func() {
 		lib.ChainConsumeWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(s), 5, 5*time.Second)
+		// Consuming is done, so am assuming processing is finished as well.
+		close(s.Stopped)
 	}()
 }
 

@@ -34,8 +34,9 @@ func main() {
 	}
 
 	<-config.Stopped
-	oce.Flush()
 	logger.Sugar().Infof("Wait 2 seconds before ending algorithm service")
+
+	oce.Flush()
 	time.Sleep(2 * time.Second)
 	oce.Stop()
 	config.CloseConnection()
@@ -62,7 +63,7 @@ func main() {
 // This is the function being called by the last microservice
 func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunication, config *msinit.Configuration) error {
 	ctx, span := trace.StartSpan(ctx, "handleSqlDataRequest")
-	// defer span.End()
+	defer span.End()
 
 	logger.Info("Start handleSqlDataRequest")
 	// Unpack the metadata
@@ -106,7 +107,6 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
 	// // Just pass on the data for now...
-	span.End()
 
 	c.SendData(ctx, data)
 	// time.Sleep(1 * time.Second)

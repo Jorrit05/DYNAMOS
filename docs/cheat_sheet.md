@@ -106,7 +106,8 @@ https://github.com/argoproj/argo-workflows/releases/tag/v3.4.8
 # Prometheus
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm install -f /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/prometheus.yaml prometheus prometheus-community/prometheus
+<!-- helm install -f /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/prometheus.yaml prometheus prometheus-community/prometheus -->
+helm install prometheus prometheus-community/prometheus
 
 
 # Python
@@ -133,7 +134,8 @@ linkerd check
 
 
 linkerd jaeger install | kubectl apply -f -
-linkerd viz install | kubectl apply -f -
+linkerd viz install --set grafana.url=grafana.grafana:3000 \
+  | kubectl apply -f -
 
 kubectl get -n emojivoto deploy -o yaml \
   | linkerd inject - \
@@ -142,3 +144,9 @@ kubectl get -n emojivoto deploy -o yaml \
 
 
 linkerd jaeger dashboard
+
+sum(container_memory_usage_bytes{namespace="uva"}) by (namespace)
+sum(container_cpu_load_average_10s{namespace="uva"}) by (namespace)
+
+linkerd viz install --set grafana.url=grafana.core.svc.cluster.local:3000 \
+  | kubectl apply -f -
