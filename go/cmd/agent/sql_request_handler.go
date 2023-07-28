@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -99,11 +100,16 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			logger.Sugar().Debugf("Received response, %s", msg.RequestMetadata.CorrelationId)
 			msgBytes, err := proto.Marshal(msg)
 			if err != nil {
-				logger.Sugar().Warnf("error marshalling message, %v", err)
+				logger.Sugar().Warnf("error marshalling proto message, %v", err)
 			}
-			logger.Sugar().Infof("Size results, %v", len(msgBytes))
+			jsonBytes, err := json.Marshal(msg)
+			if err != nil {
+				logger.Sugar().Warnf("error marshalling jsonBytes message, %v", err)
+			}
+			// logger.Sugar().Infof("Size results, %v", len(msgBytes))
 
-			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.messageSize", int64(len(msgBytes))))
+			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.proto.messageSize", int64(len(msgBytes))))
+			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.json.messageSize", int64(len(jsonBytes))))
 
 			// Marshaling google.protobuf.Struct to JSON
 			m := &jsonpb.Marshaler{}
@@ -113,7 +119,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("Error in returning result"))
 			}
-			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.JSONsize", int64(len([]byte(jsonString)))))
+			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.String.messageSize", int64(len([]byte(jsonString)))))
 
 			//Handle response information
 			w.WriteHeader(http.StatusOK)

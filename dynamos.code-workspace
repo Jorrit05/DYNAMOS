@@ -10,7 +10,7 @@
 			"path": "go/cmd/sidecar"
 		},
 		{
-			"path": "go/cmd/load_test"
+			"path": "go/cmd/loadtest"
 		},
 		{
 			"path": "go/pkg"

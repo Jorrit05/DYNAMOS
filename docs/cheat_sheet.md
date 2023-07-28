@@ -36,7 +36,10 @@ kubectl get events
 kubectl exec -it <pod_name> -- /bin/bash
 
 
-kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n core -n orchestrator -n uva -n vu -n surf
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n orchestrator
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n uva
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n vu
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n surf
 
 kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand -base64 12) --from-literal=db_dba_password=$(openssl rand -base64 12) -n core
 
@@ -149,4 +152,8 @@ sum(container_memory_usage_bytes{namespace="uva"}) by (namespace)
 sum(container_cpu_load_average_10s{namespace="uva"}) by (namespace)
 
 linkerd viz install --set grafana.url=grafana.core.svc.cluster.local:3000 \
+  | kubectl apply -f -
+
+
+  linkerd jaeger install --set grafana.url=grafana.core.svc.cluster.local:3000 \
   | kubectl apply -f -
