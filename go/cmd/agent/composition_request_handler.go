@@ -45,7 +45,24 @@ func watchQueue(ctx context.Context, key string) {
 					//TODO probably should figure out a way to also delete the jobs compositionrequest here (/agents/jobs/UVA/jorrit.stutterheim@cloudnation.nl/jorrit-stutterheim-7e2d9c4c)
 					// userKey := fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, compositionRequest.User.UserName, compositionRequest.JobName)
 
-					c.DeleteQueue(ctx, &pb.QueueInfo{QueueName: lib.LastPartAfterSlash(string(event.Kv.Key)), AutoDelete: false})
+					// delete the jobs compositionrequest here
+					queueName := lib.LastPartAfterSlash(string(event.Kv.Key))
+					queueInfoMutex.Lock()
+					queueInfo, ok := queueInfoMap[queueName]
+					if ok {
+						key := fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, queueInfo.UserName, queueInfo.JobName)
+
+						_, err := etcdClient.Delete(ctx, key)
+						if err != nil {
+							logger.Sugar().Warnf("error deleting key from etcd: %v", err)
+						}
+					} else {
+						logger.Sugar().Warnf("Can't find queueInfo for this expired key")
+					}
+					delete(queueInfoMap, queueName)
+					queueInfoMutex.Unlock()
+
+					c.DeleteQueue(ctx, &pb.QueueInfo{QueueName: queueName, AutoDelete: false})
 				}
 			}
 		}
@@ -73,17 +90,7 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 		return ctx
 	}
 
-	queueInfo := &pb.QueueInfo{}
-	queueInfo.AutoDelete = false
-	queueInfo.QueueName = localJobname
-
-	key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, localJobname)
-	err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, localJobname, queueDeleteAfter)
-	if err != nil {
-		logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
-	}
-	watchQueue(ctx, key)
-	c.CreateQueue(ctx, queueInfo)
+	ctx = handleQueue(ctx, compositionRequest.JobName, localJobname, compositionRequest.User.UserName)
 
 	if strings.EqualFold(compositionRequest.Role, "dataProvider") {
 		ctx, err = generateChainAndDeploy(ctx, compositionRequest, localJobname, &pb.SqlDataRequest{})
@@ -97,6 +104,26 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 		waitingJobMap[compositionRequest.JobName] = localJobname
 		waitingJobMutex.Unlock()
 	}
+	return ctx
+}
+
+func handleQueue(ctx context.Context, jobName string, localJobname string, userName string) context.Context {
+	queueInfo := &pb.QueueInfo{}
+	queueInfo.AutoDelete = false
+	queueInfo.QueueName = localJobname
+	queueInfo.JobName = jobName
+	queueInfo.UserName = userName
+
+	key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, localJobname)
+	err := etcd.PutEtcdWithGrant(ctx, etcdClient, key, localJobname, queueDeleteAfter)
+	if err != nil {
+		logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
+	}
+	queueInfoMutex.Lock()
+	queueInfoMap[localJobname] = queueInfo
+	queueInfoMutex.Unlock()
+	watchQueue(ctx, key)
+	c.CreateQueue(ctx, queueInfo)
 	return ctx
 }
 

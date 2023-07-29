@@ -102,15 +102,15 @@ data:
       jsonData:
         timeInterval: "5s"
       editable: true
-    # - name: Prometheus
-    #   type: prometheus
-    #   access: proxy
-    #   orgId: 1
-    #   url: http://prometheus-server.{{ .Values.Namespace }}.svc.cluster.local
-    #   basicAuth: false
-    #   isDefault: false
-    #   version: 1
-    #   editable: false
+    - name: Jaeger
+      type: jaeger
+      access: proxy
+      orgId: 1
+      url: http://jaeger.linkerd-jaeger.svc.cluster.local:16686/jaeger/
+      basicAuth: false
+      isDefault: false
+      version: 1
+      editable: false
     EOF
 
     cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
