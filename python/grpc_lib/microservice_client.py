@@ -6,6 +6,7 @@ from google.protobuf.any_pb2 import Any
 from grpc_lib import SecureChannel
 # from opentelemetry.propagate import set_in_grpc_metadata
 # from grpc import Metadata
+from opentelemetry import trace, context
 
 class MsCommunication(SecureChannel):
     def __init__(self, config, ctx):
@@ -25,8 +26,8 @@ class MsCommunication(SecureChannel):
         for key, value in metadata.items():
             msComm.metadata[key] = value
 
-        if msComm.traces == None:
-            self.logger.warning(" msComm.Trace == None")
+        # if msComm.traces == None:
+        #     self.logger.warning(" msComm.Trace == None")
 
         # Create metadata for gRPC request
         # metadata = Metadata()
@@ -36,6 +37,13 @@ class MsCommunication(SecureChannel):
         # set_in_grpc_metadata(self.ctx, metadata)
 
         # Add metadata to gRPC call
+        span = trace.get_current_span()
+        span_context = span.get_span_context()
+        print(f"Span ID: {hex(span_context.span_id)[2:].zfill(16)}")
+        print(f"Span trace_id: {hex(span_context.trace_id)[2:].zfill(16)}")
+        print(f"Span trace_flags: {hex(span_context.trace_flags)[2:].zfill(2)}")
+        print(f"Span trace_state: {span_context.trace_state}")
+
         self.logger.debug(f"Sending message to {self.next_service_port}")
         self.client.SendData(msComm)
 

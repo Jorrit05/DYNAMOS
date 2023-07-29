@@ -7,6 +7,7 @@ import health_pb2 as healthTypes
 import grpc
 import time
 from my_logger import InitLogger
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
 
 class SecureChannel:
     def __init__(self, config, grpc_port):
@@ -31,7 +32,8 @@ class SecureChannel:
         # )
         # intercept the channel
         self.channel = grpc.insecure_channel(self.grpc_addr + self.grpc_port)
-
+        grpc_server_instrumentor = GrpcInstrumentorClient()
+        grpc_server_instrumentor.instrument(channel=self.channel)
         # self.channel = grpc.intercept_channel(self.channel, tracer_interceptor)
 
         # intercept

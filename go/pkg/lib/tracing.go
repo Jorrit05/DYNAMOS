@@ -53,4 +53,5 @@ func PrettyPrintSpanContext(ctx trace.SpanContext) {
 	fmt.Printf("Trace ID: %s\n", ctx.TraceID.String())
 	fmt.Printf("Span ID: %s\n", ctx.SpanID.String())
 	fmt.Printf("Trace options: %v\n", ctx.TraceOptions)
+	fmt.Printf("Trace IsSampled: %v\n", ctx.TraceOptions.IsSampled())
 }

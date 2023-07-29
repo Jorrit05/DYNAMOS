@@ -21,7 +21,6 @@ from opentelemetry.propagate import extract
 from opentelemetry.trace.span import TraceFlags, TraceState
 from opentelemetry.trace.propagation import set_span_in_context
 
-from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
 if os.getenv('ENV') == 'PROD':
     import config_prod as config
 else:
@@ -45,8 +44,7 @@ trace.set_tracer_provider(provider)
 
 tracer = trace.get_tracer("query.tracer")
 
-grpc_server_instrumentor = GrpcInstrumentorClient()
-grpc_server_instrumentor.instrument()
+
 # Go into local test code with flag '-t'
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--test", action='store_true')
@@ -105,7 +103,6 @@ def process_sql_data_request(sqlDataRequest, msComm, microserviceCommunicator, c
         result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
         data, metadata = dataframe_to_protobuf(result)
 
-        logger.debug("Starting sendData")
         with tracer.start_as_current_span("SendData") as span3:
             microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
 
@@ -137,7 +134,6 @@ def handleMsCommunication(msComm, microserviceCommunicator, ctx):
 def handle_incoming_request(rabbitClient, msg):
     # Parse the trace header back into a dictionary
     scMap = json.loads(msg.traces["jsonTrace"])
-    logger.warning(scMap)
     state = TraceState([("sampled", "1")])
     sc = trace.SpanContext(
         trace_id=int(scMap['TraceID'], 16),
@@ -172,11 +168,12 @@ def handle_incoming_request(rabbitClient, msg):
         return False
 
 # @tracer.start_as_current_span("test_single_query")
-def test_single_query(rabbitClient, msg):
+def test_single_query():
+    size = "1"
     # Define your SQL query
-    query = """SELECT *
+    query = f"""SELECT *
                FROM Personen p
-               JOIN Aanstellingen s LIMIT 2"""
+               JOIN Aanstellingen s LIMIT {size}"""
 
     # print(msg)
     # Load the CSV file and execute the query
@@ -185,7 +182,8 @@ def test_single_query(rabbitClient, msg):
     # with open("output.json", "w") as file1:
         # Writing data to a file
     start = time.time()
-    result_df.to_csv('output.txt', sep='\t', index=False)
+    result_df.to_csv(f"output_{size}.txt", sep='\t', index=False)
+    # df = pd.read_csv(f"output_{size}.txt", sep='\t')
     end = time.time()
     print(f'Time elapsed for file write: {end - start} seconds')
 
@@ -195,24 +193,24 @@ def main():
     if test:
         job_name="Test"
 
-        rabbitClient = RabbitClient(config, job_name, job_name, test_single_query)
-        result = rabbitClient.start_consuming(job_name, 10, 2)
-        logger.info("lets wait a few seconds before quitting")
-        time.sleep(5)
-        # test_single_query()
+        # rabbitClient = RabbitClient(config, job_name, job_name, test_single_query)
+        # result = rabbitClient.start_consuming(job_name, 10, 2)
+        # logger.info("lets wait a few seconds before quitting")
+        # time.sleep(5)
+        test_single_query()
 
         exit(0)
 
     logger.debug("Starting Query service")
 
     if int(os.getenv("FIRST")) > 0:
-        logger.debug("First service")
+        # logger.debug("First service")
         job_name = os.getenv("JOB_NAME")
         rabbitClient = RabbitClient(config, job_name, job_name, handle_incoming_request)
         rabbitClient.start_consuming(job_name, 10, 2)
     else:
         #TODO: Setup listener service for Python
-        logger.debug("Not the first service")
+        # logger.debug("Not the first service")
         exit(1)
 
 

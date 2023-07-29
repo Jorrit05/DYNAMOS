@@ -1,11 +1,12 @@
-FROM golang:1.20.5-bullseye AS builder
+# FROM golang:1.20.5-bullseye AS builder
+FROM test:latest AS builder
 ARG NAME
 ENV NAME=$NAME
 
 # Set the working directory
 WORKDIR /app/cmd/$NAME
-RUN mkdir /app/pkg
-RUN mkdir /app/etcd
+# RUN mkdir /app/pkg
+# RUN mkdir /app/etcd
 
 COPY *.go .
 
@@ -17,7 +18,6 @@ COPY go.sum /app
 COPY pkg /app/pkg
 
 # Build the application
-# RUN go build -o /app/$NAME .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/$NAME .
 
 # 2. Running the Application in a Small Image

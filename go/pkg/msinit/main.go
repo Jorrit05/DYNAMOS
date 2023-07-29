@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
@@ -74,13 +75,20 @@ func NewConfiguration(serviceName string,
 		StopServer:      make(chan struct{}), // Tell the server to stop
 	}
 
-	conf.ConnectNextService(grpcAddr)
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		conf.ConnectNextService(grpcAddr)
+		wg.Done()
+	}()
 
 	if conf.FirstService {
 		conf.InitSidecarMessaging()
 	} else {
 		conf.StartGrpcServer()
 	}
+	wg.Wait()
 
 	return conf, nil
 }

@@ -2,7 +2,6 @@ package lib
 
 import (
 	"context"
-	"fmt"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -36,6 +35,8 @@ func (s *SharedServer) RegisterCallback(msgType string, callback func(ctx contex
 	s.callbacks[msgType] = callback
 }
 
+// TODO: This go function is mostly to get an accurate feel for data transfer speeds.
+// It's probably better to just remove the Go func in the long run
 func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
 	logger.Sugar().Debugf("Starting lib.SendData: %v", data.RequestMetadata.DestinationQueue)
 
@@ -44,19 +45,23 @@ func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommun
 		logger.Sugar().Warnf("Error starting span: %v", err)
 	}
 	defer span.End()
-
-	logger.Sugar().Debugf("data.Type: %v", data.Type)
-	logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)
+	// logger.Sugar().Debugf("data.Type: %v", data.Type)
+	// logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)
 	callback, ok := s.callbacks[data.Type]
 	if !ok {
 		logger.Warn("no callback registered for this message type")
-		return nil, fmt.Errorf("no callback registered for this message type: %v", data.Type)
+		span.End()
+		return &emptypb.Empty{}, nil
 	}
 
+	// go func(data *pb.MicroserviceCommunication, callback func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)) {
+	logger.Sugar().Debugf("In go routine SendData:")
+	span.End()
 	if _, err := callback(ctx, data); err != nil {
 		logger.Sugar().Errorf("Callback Error: %v", err)
-		return nil, err
+		return &emptypb.Empty{}, nil
 	}
+	// }(data, callback)
 
 	return &emptypb.Empty{}, nil
 }

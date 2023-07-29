@@ -1,3 +1,2 @@
 Instcode	Unieknr	Geslacht	Gebdat	Nationaliteit	BKO	SKO	Peildat	Instcode	Unieknr	Volgnrar	Aadnstvb	Ingdatdv	Eindatdv	HOOPgeb	Functcat	WelGeenHGL	Salschal	Taakomv	Aanst_22	Peildat
 AAA	2104	V	19900101	0	0	0	20191231	AAA	1	1	V	20040101	99990101	ECON	10940	0	10	2000	V	20191231
-AAA	2104	V	19900101	0	0	0	20191231	AAA	1	1	V	19000101	99990101	G&M	10620	0	13	10000	V	20201231

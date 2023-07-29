@@ -12,7 +12,6 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-	"github.com/gogo/protobuf/jsonpb"
 	"github.com/google/uuid"
 	"go.opencensus.io/trace"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -95,35 +94,25 @@ func sqlDataRequestHandler() http.HandlerFunc {
 
 		select {
 		case dataResponseStruct := <-responseChan:
-			msg := dataResponseStruct.response
+			msComm := dataResponseStruct.response
 
-			logger.Sugar().Debugf("Received response, %s", msg.RequestMetadata.CorrelationId)
-			msgBytes, err := proto.Marshal(msg)
+			logger.Sugar().Debugf("Received response, %s", msComm.RequestMetadata.CorrelationId)
+			msgBytes, err := proto.Marshal(msComm)
 			if err != nil {
 				logger.Sugar().Warnf("error marshalling proto message, %v", err)
 			}
-			jsonBytes, err := json.Marshal(msg)
+			jsonBytes, err := json.Marshal(msComm)
 			if err != nil {
 				logger.Sugar().Warnf("error marshalling jsonBytes message, %v", err)
 			}
-			// logger.Sugar().Infof("Size results, %v", len(msgBytes))
 
 			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.proto.messageSize", int64(len(msgBytes))))
 			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.json.messageSize", int64(len(jsonBytes))))
-
-			// Marshaling google.protobuf.Struct to JSON
-			m := &jsonpb.Marshaler{}
-			jsonString, err := m.MarshalToString(msg.Data)
-			if err != nil {
-				logger.Sugar().Errorf("Error in unmarshalling data: %v", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("Error in returning result"))
-			}
-			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.String.messageSize", int64(len([]byte(jsonString)))))
+			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.String.messageSize", int64(len(msComm.Result))))
 
 			//Handle response information
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(jsonString))
+			w.Write(msComm.Result)
 			return
 
 		case <-ctx.Done():

@@ -1,4 +1,4 @@
-targets := sidecar policy_enforcer orchestrator agent algorithm
+targets := sidecar policy_enforcer orchestrator agent algorithm test
 
 
 prepare:
@@ -17,5 +17,5 @@ $(targets): prepare proto
 
 all: $(targets)
 
-.PHONY: all $(targets) prepare proto sidecar algorithm
+.PHONY: all $(targets) prepare proto sidecar algorithm test
 

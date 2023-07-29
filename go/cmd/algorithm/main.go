@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -61,15 +62,15 @@ func main() {
 // // }
 
 // This is the function being called by the last microservice
-func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunication, config *msinit.Configuration) error {
+func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication, config *msinit.Configuration) error {
 	ctx, span := trace.StartSpan(ctx, "handleSqlDataRequest")
 	defer span.End()
 
 	logger.Info("Start handleSqlDataRequest")
 	// Unpack the metadata
-	metadata := data.Metadata
+	metadata := msComm.Metadata
 	// fields := make(map[string]*structpb.Value)
-	dataField := data.GetData()
+	dataField := msComm.GetData()
 	// Get the "Functcat" field from the struct
 	functcatValue := dataField.Fields["HOOPgeb"]
 
@@ -101,15 +102,86 @@ func handleSqlDataRequest(ctx context.Context, data *pb.MicroserviceCommunicatio
 	}
 
 	sqlDataRequest := &pb.SqlDataRequest{}
-	if err := data.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
+	if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
 		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 	}
 
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
 	// // Just pass on the data for now...
-
-	c.SendData(ctx, data)
-	// time.Sleep(1 * time.Second)
+	if config.LastService {
+		msComm.Result = getFirstRow(msComm.Data)
+	}
+	// Process all data to make this service more realistic.
+	ctx, _ = convertAllData(ctx, msComm.Data)
+	c.SendData(ctx, msComm)
+	// time.Sleep(2 * time.Second)
 	close(config.StopServer)
 	return nil
+}
+
+func convertAllData(ctx context.Context, data *structpb.Struct) (context.Context, []byte) {
+	ctx, span := trace.StartSpan(ctx, "convertAllData")
+	defer span.End()
+	keys := make([]string, 0)
+	allValues := make([][]string, 0)
+	maxLength := 0
+
+	for key, value := range data.GetFields() {
+		stringValues := value.GetListValue().GetValues()
+		if len(stringValues) > 0 {
+			keys = append(keys, key)
+			rowValues := make([]string, len(stringValues))
+			for i, v := range stringValues {
+				rowValues[i] = v.GetStringValue()
+			}
+			allValues = append(allValues, rowValues)
+			if len(rowValues) > maxLength {
+				maxLength = len(rowValues)
+			}
+		}
+	}
+
+	result := make([][]string, maxLength+1)
+	result[0] = keys
+	for i := 1; i < maxLength+1; i++ {
+		row := make([]string, len(keys))
+		for j := 0; j < len(keys); j++ {
+			if i <= len(allValues[j]) {
+				row[j] = allValues[j][i-1]
+			} else {
+				row[j] = ""
+			}
+		}
+		result[i] = row
+	}
+
+	jsonData, err := json.Marshal(result)
+	if err != nil {
+		fmt.Printf("Error while marshalling to JSON: %v\n", err)
+		return ctx, nil
+	}
+
+	return ctx, jsonData
+}
+
+func getFirstRow(data *structpb.Struct) []byte {
+	keys := make([]string, 0)
+	values := make([]string, 0)
+	for key, value := range data.GetFields() {
+		stringValues := value.GetListValue().GetValues()
+		if len(stringValues) > 0 {
+			keys = append(keys, key)
+			values = append(values, stringValues[0].GetStringValue())
+		}
+	}
+
+	// Convert to JSON format
+	result := []interface{}{keys, values}
+	jsonData, err := json.Marshal(result)
+	if err != nil {
+		fmt.Printf("Error while marshalling to JSON: %v\n", err)
+		return nil
+	}
+
+	return jsonData
 }

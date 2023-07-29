@@ -21,4 +21,5 @@ message MicroserviceCommunication {
   google.protobuf.Any original_request = 5;
   RequestMetadata request_metadata = 6;
   map<string, bytes> traces = 7;// Binary or textual representation of span context
+  bytes result = 8;
 }

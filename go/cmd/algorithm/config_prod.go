@@ -5,8 +5,9 @@ package main
 
 import "go.uber.org/zap"
 
-// var logLevel = zap.DebugLevel
-var logLevel = zap.InfoLevel
+var logLevel = zap.DebugLevel
+
+// var logLevel = zap.InfoLevel
 
 var serviceName = "algorithmService"
 

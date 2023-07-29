@@ -186,23 +186,26 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 
 }
 
+// TODO: This go function is mostly to get an accurate feel for data transfer speeds.
+// It's probably better to just remove the Go func in the long run
 func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
-	data, err := proto.Marshal(in)
-	if err != nil {
-		logger.Sugar().Errorf("Marshal SendMicroserviceComm failed: %s", err)
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+	go func(in *pb.MicroserviceCommunication) {
+		data, err := proto.Marshal(in)
+		if err != nil {
+			logger.Sugar().Errorf("Marshal SendMicroserviceComm failed: %s", err)
+			return
+			// return nil, status.Error(codes.Internal, err.Error())
+		}
 
-	logger.Sugar().Infof("JOrrit hier microserviceComm: %v", trace.FromContext(ctx).SpanContext().TraceID)
+		// Do other stuff
+		message := amqp.Publishing{
+			CorrelationId: in.RequestMetadata.CorrelationId,
+			Body:          data,
+			Type:          in.Type,
+		}
 
-	// Do other stuff
-	message := amqp.Publishing{
-		CorrelationId: in.RequestMetadata.CorrelationId,
-		Body:          data,
-		Type:          in.Type,
-	}
-
-	go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
+		go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
+	}(in)
 	return &emptypb.Empty{}, nil
 }
 
