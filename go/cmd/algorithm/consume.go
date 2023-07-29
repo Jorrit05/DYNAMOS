@@ -5,13 +5,12 @@ import (
 	"fmt"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
-	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func sideCarMessageHandler(config *msinit.Configuration) func(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
+func sideCarMessageHandler() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 	return func(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 
 		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: messageHandler, process MS", grpcMsg.Traces)
@@ -33,7 +32,7 @@ func sideCarMessageHandler(config *msinit.Configuration) func(ctx context.Contex
 
 			switch msComm.RequestType {
 			case "sqlDataRequest":
-				handleSqlDataRequest(ctx, msComm, config)
+				handleSqlDataRequest(ctx, msComm)
 			default:
 				logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
 				return fmt.Errorf("unknown RequestType type: %s", msComm.RequestType)
@@ -67,7 +66,7 @@ func sendDataHandler(ctx context.Context, data *pb.MicroserviceCommunication) (*
 
 	switch data.RequestType {
 	case "sqlDataRequest":
-		handleSqlDataRequest(ctx, data, config)
+		handleSqlDataRequest(ctx, data)
 	default:
 		logger.Sugar().Errorf("Unknown RequestType type: %v", data.RequestType)
 

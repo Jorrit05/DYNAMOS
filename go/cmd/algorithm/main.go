@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	logger = lib.InitLogger(logLevel)
-	config *msinit.Configuration
+	logger      = lib.InitLogger(logLevel)
+	config      *msinit.Configuration
+	COORDINATOR = make(chan struct{})
 )
 
 // Main function
@@ -30,7 +31,7 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
-	config, err = msinit.NewConfiguration(serviceName, grpcAddr, sideCarMessageHandler, sendDataHandler)
+	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler)
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
 	}
@@ -63,7 +64,7 @@ func main() {
 // // }
 
 // This is the function being called by the last microservice
-func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication, config *msinit.Configuration) error {
+func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
 	ctx, span := trace.StartSpan(ctx, "handleSqlDataRequest")
 	defer span.End()
 
@@ -71,30 +72,30 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	// Unpack the metadata
 	metadata := msComm.Metadata
 	// fields := make(map[string]*structpb.Value)
-	dataField := msComm.GetData()
+	// dataField := msComm.GetData()
 	// Get the "Functcat" field from the struct
-	functcatValue := dataField.Fields["HOOPgeb"]
+	// functcatValue := dataField.Fields["HOOPgeb"]
 
-	// Check if it's a ListValue
-	if functcatValue != nil {
-		if listValue, ok := functcatValue.Kind.(*structpb.Value_ListValue); ok {
-			// Iterate over the Values in the ListValue
-			for _, item := range listValue.ListValue.GetValues() {
-				// item is a *structpb.Value, so we need to get the actual value using one of its getter methods
-				switch v := item.Kind.(type) {
-				case *structpb.Value_StringValue:
-					fmt.Printf("String value: %s\n", v.StringValue)
-				case *structpb.Value_NumberValue:
-					fmt.Printf("Number value: %f\n", v.NumberValue)
-				case *structpb.Value_BoolValue:
-					fmt.Printf("Bool value: %v\n", v.BoolValue)
-				// etc. for other possible types
-				default:
-					fmt.Printf("Other value: %v\n", v)
-				}
-			}
-		}
-	}
+	// // Check if it's a ListValue
+	// if functcatValue != nil {
+	// 	if listValue, ok := functcatValue.Kind.(*structpb.Value_ListValue); ok {
+	// 		// Iterate over the Values in the ListValue
+	// 		for _, item := range listValue.ListValue.GetValues() {
+	// 			// item is a *structpb.Value, so we need to get the actual value using one of its getter methods
+	// 			switch v := item.Kind.(type) {
+	// 			case *structpb.Value_StringValue:
+	// 				fmt.Printf("String value: %s\n", v.StringValue)
+	// 			case *structpb.Value_NumberValue:
+	// 				fmt.Printf("Number value: %f\n", v.NumberValue)
+	// 			case *structpb.Value_BoolValue:
+	// 				fmt.Printf("Bool value: %v\n", v.BoolValue)
+	// 			// etc. for other possible types
+	// 			default:
+	// 				fmt.Printf("Other value: %v\n", v)
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	// Print each metadata field
 	logger.Sugar().Debugf("Length metadata: %s", strconv.Itoa(len(metadata)))
@@ -107,6 +108,7 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 	}
 
+	<-COORDINATOR
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
 	// // Just pass on the data for now...
 	if config.LastService {

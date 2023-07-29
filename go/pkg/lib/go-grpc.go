@@ -40,7 +40,7 @@ func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 			logger.Sugar().Fatalf("could not connect with gRPC after %s tries: %v", "8", err)
 		}
 	}
-
+	logger.Debug("returning conn GetGrpcConnection")
 	return conn
 }
 

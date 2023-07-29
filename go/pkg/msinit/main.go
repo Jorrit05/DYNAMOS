@@ -39,7 +39,7 @@ type Configuration struct {
 	ServiceName     string
 	SideCarClient   pb.SideCarClient
 	GrpcConnection  *grpc.ClientConn
-	SideCarCallback func(config *Configuration) func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
+	SideCarCallback func() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
 	GrpcCallback    func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)
 	Stopped         chan struct{} // channel to tell us the server has stopped
 	StopServer      chan struct{} // Tell the server to stop
@@ -47,7 +47,8 @@ type Configuration struct {
 
 func NewConfiguration(serviceName string,
 	grpcAddr string,
-	sidecarCallback func(config *Configuration) func(ctx context.Context, grpcMsg *pb.SideCarMessage) error,
+	COORDINATOR chan struct{},
+	sidecarCallback func() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error,
 	grpcCallback func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)) (*Configuration, error) {
 
 	port, err := strconv.Atoi(os.Getenv("DESIGNATED_GRPC_PORT"))
@@ -74,20 +75,18 @@ func NewConfiguration(serviceName string,
 		StopServer:      make(chan struct{}), // Tell the server to stop
 	}
 
-	nextService := make(chan struct{})
-
 	go func() {
 		conf.ConnectNextService(grpcAddr)
-		close(nextService)
+		// Probably not a best practice to close it here
+		close(COORDINATOR)
 	}()
 
 	if conf.FirstService {
-		conf.InitSidecarMessaging(nextService)
+		conf.InitSidecarMessaging(COORDINATOR)
 	} else {
 		conf.StartGrpcServer()
 	}
-	<-nextService
-
+	<-COORDINATOR
 	return conf, nil
 }
 
@@ -99,14 +98,20 @@ func (s *Configuration) ConnectNextService(grpcAddr string) {
 		// Connect to following service
 		s.GrpcConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(s.Port+1))
 	}
+	logger.Debug("done with ConnectNextService")
+	if s.GrpcConnection == nil {
+		logger.Warn("ds.GrpcConnection is nil!!")
+	} else {
+		logger.Debug("s.GrpcConnection is NOT nil!!")
+	}
 }
 
-func (s *Configuration) InitSidecarMessaging(nextService chan struct{}) {
+func (s *Configuration) InitSidecarMessaging(COORDINATOR chan struct{}) {
 	jobName := os.Getenv("JOB_NAME")
 	if jobName == "" {
 		logger.Sugar().Fatalf("Jobname not defined.")
 	}
-	<-nextService
+	<-COORDINATOR
 	s.SideCarClient = lib.InitializeSidecarMessaging(s.GrpcConnection, &pb.InitRequest{
 		ServiceName:     jobName,
 		RoutingKey:      jobName,
@@ -114,7 +119,7 @@ func (s *Configuration) InitSidecarMessaging(nextService chan struct{}) {
 	})
 
 	go func() {
-		lib.ChainConsumeWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(s), 5, 5*time.Second)
+		lib.ChainConsumeWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(), 5, 5*time.Second)
 		// Consuming is done, so am assuming processing is finished as well.
 		close(s.Stopped)
 	}()
