@@ -1,12 +1,12 @@
-# FROM golang:1.20.5-bullseye AS builder
-FROM test:latest AS builder
+FROM golang:1.20.5-bullseye AS builder
+# FROM test:latest AS builder
 ARG NAME
 ENV NAME=$NAME
 
 # Set the working directory
 WORKDIR /app/cmd/$NAME
-# RUN mkdir /app/pkg
-# RUN mkdir /app/etcd
+RUN mkdir /app/pkg
+RUN mkdir /app/etcd
 
 COPY *.go .
 

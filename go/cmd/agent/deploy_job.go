@@ -41,7 +41,7 @@ func getKubeConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.CompositionRequest, localJobName string, sqlDataRequest *pb.SqlDataRequest) error {
+func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.CompositionRequest, localJobName string, sqlDataRequest *pb.SqlDataRequest) (context.Context, error) {
 	logger.Debug("Starting generateChainAndDeploy")
 
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: generateChainAndDeploy")
@@ -52,17 +52,17 @@ func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.Composit
 	msChain, err := generateMicroserviceChain(compositionRequest)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
-		return err
+		return ctx, err
 	}
 
 	err = deployJob(ctx, msChain, localJobName)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
-		return err
+		return ctx, err
 	}
 
 	logger.Sugar().Infow("Deployed job.", "actualJobName", localJobName, "msChain", msChain)
-	return nil
+	return ctx, nil
 }
 
 func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobName string) error {

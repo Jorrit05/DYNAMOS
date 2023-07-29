@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
@@ -75,20 +74,19 @@ func NewConfiguration(serviceName string,
 		StopServer:      make(chan struct{}), // Tell the server to stop
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	nextService := make(chan struct{})
 
 	go func() {
 		conf.ConnectNextService(grpcAddr)
-		wg.Done()
+		close(nextService)
 	}()
 
 	if conf.FirstService {
-		conf.InitSidecarMessaging()
+		conf.InitSidecarMessaging(nextService)
 	} else {
 		conf.StartGrpcServer()
 	}
-	wg.Wait()
+	<-nextService
 
 	return conf, nil
 }
@@ -103,12 +101,12 @@ func (s *Configuration) ConnectNextService(grpcAddr string) {
 	}
 }
 
-func (s *Configuration) InitSidecarMessaging() {
+func (s *Configuration) InitSidecarMessaging(nextService chan struct{}) {
 	jobName := os.Getenv("JOB_NAME")
 	if jobName == "" {
 		logger.Sugar().Fatalf("Jobname not defined.")
 	}
-
+	<-nextService
 	s.SideCarClient = lib.InitializeSidecarMessaging(s.GrpcConnection, &pb.InitRequest{
 		ServiceName:     jobName,
 		RoutingKey:      jobName,

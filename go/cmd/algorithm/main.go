@@ -12,6 +12,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"go.opencensus.io/trace"
+	"go.opencensus.io/trace/propagation"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -113,6 +114,9 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	}
 	// Process all data to make this service more realistic.
 	ctx, _ = convertAllData(ctx, msComm.Data)
+
+	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
+
 	c.SendData(ctx, msComm)
 	// time.Sleep(2 * time.Second)
 	close(config.StopServer)

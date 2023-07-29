@@ -128,7 +128,8 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: handleSqlAll")
 	defer span.End()
 
-	err := generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest)
+	var err error
+	ctx, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest)
 	if err != nil {
 		logger.Sugar().Errorf("error deploying job: %v", err)
 		return ctx, err
@@ -200,7 +201,8 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 	}
 
 	// TODO: Parse SQL request for extra compute services
-	err := generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest)
+	var err error
+	ctx, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest)
 	if err != nil {
 		logger.Sugar().Errorf("error deploying job: %v", err)
 	}

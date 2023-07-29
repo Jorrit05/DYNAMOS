@@ -52,7 +52,7 @@ func watchQueue(ctx context.Context, key string) {
 	}()
 }
 
-func compositionRequestHandler(ctx context.Context, compositionRequest *pb.CompositionRequest) {
+func compositionRequestHandler(ctx context.Context, compositionRequest *pb.CompositionRequest) context.Context {
 	// get local requiredServices
 	// Generate microservice chain
 	// Spin up pod
@@ -70,7 +70,7 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 	err = registerUserWithJob(ctx, compositionRequest)
 	if err != nil {
 		logger.Sugar().Errorf("Error in registering Job %v", err)
-		return
+		return ctx
 	}
 
 	queueInfo := &pb.QueueInfo{}
@@ -86,10 +86,10 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 	c.CreateQueue(ctx, queueInfo)
 
 	if strings.EqualFold(compositionRequest.Role, "dataProvider") {
-		err := generateChainAndDeploy(ctx, compositionRequest, localJobname, &pb.SqlDataRequest{})
+		ctx, err = generateChainAndDeploy(ctx, compositionRequest, localJobname, &pb.SqlDataRequest{})
 		if err != nil {
 			logger.Sugar().Errorf("Error in deploying job: %v", err)
-			return
+			return ctx
 		}
 		logger.Sugar().Warnf("jobName: %v", compositionRequest.JobName)
 		logger.Sugar().Warnf("actualJobName: %v", localJobname)
@@ -97,6 +97,7 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 		waitingJobMap[compositionRequest.JobName] = localJobname
 		waitingJobMutex.Unlock()
 	}
+	return ctx
 }
 
 func generateMicroserviceChain(compositionRequest *pb.CompositionRequest) ([]mschain.MicroserviceMetadata, error) {
