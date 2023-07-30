@@ -20,6 +20,8 @@ spec:
       - name: uva
         image: agent:latest
         imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
         env:
         - name: DATA_STEWARD_NAME
           value: UVA
@@ -33,8 +35,6 @@ spec:
       - name: sidecar
         image: sidecar:latest
         imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 3005
         env:
         - name: AMQ_PASSWORD
           valueFrom:
@@ -61,6 +61,27 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30030
-  type: NodePort
+  type: ClusterIP
 
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uva-ingress
+  namespace: uva
+  annotations:
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: uva.uva.svc.cluster.local
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/agent/v1/sqlDataRequest/uva"
+        backend:
+          service:
+            name: uva
+            port:
+              number: 8080

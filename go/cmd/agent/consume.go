@@ -79,7 +79,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 			logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", actualJobName)
 			msComm.RequestMetadata.DestinationQueue = actualJobName
 
-			go c.SendMicroserviceComm(ctx, msComm)
+			c.SendMicroserviceComm(ctx, msComm)
 
 		} else {
 			logger.Sugar().Infof("No waiting job found for: %v", sqlDataRequest.RequestMetadata.JobName)
@@ -93,7 +93,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 			key = fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, compositionRequest.LocalJobName)
 			value = compositionRequest.LocalJobName
 			generateChainAndDeploy(ctx, compositionRequest, compositionRequest.LocalJobName, sqlDataRequest)
-			go c.SendMicroserviceComm(ctx, msComm)
+			c.SendMicroserviceComm(ctx, msComm)
 		}
 		waitingJobMutex.Unlock()
 

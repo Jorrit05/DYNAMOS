@@ -34,14 +34,14 @@ func checkRequestApproval(ctx context.Context, requestApproval *pb.RequestApprov
 	getValidAgreements(requestApproval, &agreements, protoRequest)
 	if len(agreements) == 0 || len(protoRequest.ValidDataproviders) == 0 {
 		logger.Sugar().Info("No agreements exist for this user ")
-		go c.SendValidationResponse(ctx, protoRequest)
+		c.SendValidationResponse(ctx, protoRequest)
 		return nil
 	}
 
 	protoRequest.RequestApproved = len(protoRequest.ValidDataproviders) > 0
 
 	protoRequest.Auth = generateAuthToken()
-	go c.SendValidationResponse(ctx, protoRequest)
+	c.SendValidationResponse(ctx, protoRequest)
 
 	return nil
 }

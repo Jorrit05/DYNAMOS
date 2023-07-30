@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
@@ -15,9 +16,10 @@ import (
 )
 
 var (
-	port   = flag.Int("port", grpcPort, "The server port")
-	logger = lib.InitLogger(logLevel)
-	stop   = make(chan struct{}) // channel to tell the server to stop
+	port      = flag.Int("port", grpcPort, "The server port")
+	logger    = lib.InitLogger(logLevel)
+	stop      = make(chan struct{}) // channel to tell the server to stop
+	sendMutex = &sync.Mutex{}
 )
 
 type server struct {

@@ -53,3 +53,15 @@ metadata:
     "app.kubernetes.io/managed-by": "Helm"
     "linkerd.io/inject" : disabled
     "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name:  ingress
+  annotations:
+    "helm.sh/resource-policy": keep
+    # "linkerd.io/inject" : enabled
+    # "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
+

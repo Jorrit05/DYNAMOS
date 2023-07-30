@@ -159,7 +159,7 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 		logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
 	}
 
-	go c.SendMicroserviceComm(ctx, msComm)
+	c.SendMicroserviceComm(ctx, msComm)
 	return ctx, nil
 }
 

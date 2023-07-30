@@ -20,6 +20,8 @@ spec:
       - name: surf
         image: agent:latest
         imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
         env:
         - name: DATA_STEWARD_NAME
           value: SURF
@@ -28,8 +30,6 @@ spec:
       - name: sidecar
         image: sidecar:latest
         imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 3005
         env:
         - name: AMQ_PASSWORD
           valueFrom:
@@ -56,6 +56,27 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30040
-  type: NodePort
+  type: ClusterIP
 
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: surf-ingress
+  namespace: {{ .Values.Namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: surf.surf.svc.cluster.local
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/agent/v1/sqlDataRequest/surf"
+        backend:
+          service:
+            name: surf
+            port:
+              number: 8080

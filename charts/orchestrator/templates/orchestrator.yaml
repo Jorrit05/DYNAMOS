@@ -63,6 +63,27 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30010
-  type: NodePort
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: orchestrator-ingress
+  namespace: {{ .Values.Namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: orchestrator.orchestrator.svc.cluster.local
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/api/v1"
+        backend:
+          service:
+            name: orchestrator
+            port:
+              number: 8080
 

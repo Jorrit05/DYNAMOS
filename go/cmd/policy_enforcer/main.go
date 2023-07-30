@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	logger                      = lib.InitLogger(logLevel)
-	etcdClient *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
-	c          pb.SideCarClient
-	conn       *grpc.ClientConn
+	logger                        = lib.InitLogger(logLevel)
+	etcdClient   *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
+	c            pb.SideCarClient
+	conn         *grpc.ClientConn
+	receiveMutex = &sync.Mutex{}
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 	wg.Add(1)
 	logger.Debug("In main, starting startConsumingWithRetry")
 	go func() {
-		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second)
+		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second, receiveMutex)
 
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()

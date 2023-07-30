@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
@@ -16,11 +15,6 @@ import (
 
 var (
 	logger = lib.InitLogger(logLevel)
-
-	portMap = map[string]string{
-		"surf": "30040",
-		"uva":  "30030",
-	}
 )
 
 func main() {
@@ -29,28 +23,28 @@ func main() {
 	duration := 5 * time.Second
 
 	metrics := &vegeta.Metrics{}
-	attacker := vegeta.NewAttacker(vegeta.Timeout(60 * time.Second))
+	attacker := vegeta.NewAttacker(vegeta.Timeout(90 * time.Second))
 
 	res := &vegeta.Result{}
-	var wg sync.WaitGroup
+	// var wg sync.WaitGroup
 
 	// First attack
-	for r := range attacker.Attack(customTargeter(res), rate, duration, "Get Request approval") {
+	for r := range attacker.Attack(requesApprovalTargeter(res), rate, duration, "Get Request approval") {
 		metrics.Add(r)
 		if r.Code == http.StatusOK {
 			res = r
-			wg.Add(1)
+			// wg.Add(1)
 
-			// Send data request
-			go func(res *vegeta.Result) {
-				// Decrement the counter when the goroutine completes.
-				defer wg.Done()
+			// // Send data request
+			// go func(res *vegeta.Result) {
+			// 	// Decrement the counter when the goroutine completes.
+			// 	defer wg.Done()
 
-				// Second attack
-				for r := range attacker.Attack(dataRequestTargeter(res), rate, duration, "Data Request") {
-					metrics.Add(r)
-				}
-			}(res)
+			// 	// Second attack
+			// 	for r := range attacker.Attack(dataRequestTargeter(res), rate, duration, "Data Request") {
+			// 		metrics.Add(r)
+			// 	}
+			// }(res)
 		} else {
 			// Optionally log the error here
 			logger.Sugar().Infof("Error: %s, Code: %d, Body: %s\n", r.Error, r.Code, r.Body)
@@ -59,7 +53,7 @@ func main() {
 	}
 
 	// Wait for all attacks to finish
-	wg.Wait()
+	// wg.Wait()
 	metrics.Close()
 	fmt.Printf("99th percentile: %s\n", metrics.Latencies.P99)
 	report := vegeta.NewTextReporter(metrics)
@@ -73,7 +67,7 @@ func createDataRequest(res *vegeta.Result) ([]byte, string) {
 		logger.Sugar().Warnf("error: %v", err)
 	}
 
-	fmt.Println(acceptedRequest.JobId)
+	// fmt.Println(acceptedRequest.JobId)
 	dataRequest := getDataRequest(acceptedRequest)
 
 	jsonData, err := json.Marshal(dataRequest)
@@ -82,27 +76,30 @@ func createDataRequest(res *vegeta.Result) ([]byte, string) {
 	}
 
 	target := ""
-	for k := range acceptedRequest.AuthorizedProviders {
+	url := ""
+	for k, v := range acceptedRequest.AuthorizedProviders {
 		target = strings.ToLower(k)
+		url = v
 		break
 	}
-	endpoint := fmt.Sprintf("http://localhost:%s/agent/v1/sqlDataRequest/%s", portMap[target], target)
+	endpoint := fmt.Sprintf("http://%s:80/agent/v1/sqlDataRequest/%s", url, target)
 	return jsonData, endpoint
 }
 
-func customTargeter(res *vegeta.Result) vegeta.Targeter {
+func requesApprovalTargeter(res *vegeta.Result) vegeta.Targeter {
 
-	requestApproval := "http://localhost:30010/api/v1/requestapproval"
+	requestApproval := "http://orchestrator.orchestrator.svc.cluster.local:80/api/v1/requestapproval"
 
 	headers := http.Header{}
 	headers.Add("Content-Type", "application/json")
 
-	return vegeta.NewStaticTargeter(vegeta.Target{
-		Method: "POST",
-		URL:    requestApproval,
-		Body:   getRequestApproval(),
-		Header: headers,
-	})
+	return func(t *vegeta.Target) error {
+		t.Method = "POST"
+		t.URL = requestApproval
+		t.Body = getRequestApproval()
+		t.Header = headers
+		return nil
+	}
 }
 
 func dataRequestTargeter(res *vegeta.Result) vegeta.Targeter {

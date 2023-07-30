@@ -49,9 +49,12 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 			SyncServices:  reqApproval.SyncServices,
 		}
 
-		go func(ctx context.Context) {
-			c.SendRequestApproval(ctx, protoRequest)
-		}(ctx)
+		go func() {
+			_, err := c.SendRequestApproval(ctx, protoRequest)
+			if err != nil {
+				logger.Sugar().Errorf("error in sending requestapproval: %v", err)
+			}
+		}()
 
 		// Create a channel to receive the response
 		responseChan := make(chan validation)

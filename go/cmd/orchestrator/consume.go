@@ -9,7 +9,7 @@ import (
 )
 
 func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
-
+	logger.Debug("start orchestrator handleIncomingMessages")
 	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleIncomingMessages", grpcMsg.Traces)
 	if err != nil {
 		logger.Sugar().Warnf("Error starting span: %v", err)
@@ -27,20 +27,22 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		mutex.Lock()
 		// Look up the corresponding channel in the request map
 		validationChannel, ok := validationMap[validationResponse.User.Id]
-		mutex.Unlock()
 
 		if ok {
 			logger.Sugar().Info("Sending validation to channel")
 			// Send a signal on the channel to indicate that the response is ready
 			validationChannel <- validation{response: validationResponse, localContext: ctx}
+			delete(validationMap, validationResponse.User.Id)
 		} else {
 			logger.Sugar().Errorw("unknown validation response", "GUID", validationResponse.User.Id)
 		}
 
+		mutex.Unlock()
 	default:
 		logger.Sugar().Errorf("Unknown message type: %s", grpcMsg.Type)
 		return fmt.Errorf("unknown message type: %s", grpcMsg.Type)
 	}
+	logger.Debug("end orchestrator handleIncomingMessages")
 
 	return nil
 }

@@ -109,8 +109,8 @@ https://github.com/argoproj/argo-workflows/releases/tag/v3.4.8
 # Prometheus
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
+
 <!-- helm install -f /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/prometheus.yaml prometheus prometheus-community/prometheus -->
-helm install prometheus prometheus-community/prometheus
 
 
 # Python
@@ -157,3 +157,11 @@ linkerd viz install --set grafana.url=grafana.core.svc.cluster.local:3000 \
 
   linkerd jaeger install --set grafana.url=grafana.core.svc.cluster.local:3000 \
   | kubectl apply -f -
+
+
+  # Ingress
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install -f "${coreChart}/ingress-values.yaml" nginx oci://ghcr.io/nginxinc/charts/nginx-ingress -n ingress --version 0.18.0
+
+kubectl get svc --namespace ingress nginx

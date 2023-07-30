@@ -35,6 +35,9 @@
 		},
 		{
 			"path": "go/cmd/algorithm"
+		},
+		{
+			"path": "go/cmd/policy_enforcer"
 		}
 	],
 	"settings": {}

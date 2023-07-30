@@ -45,8 +45,13 @@ func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServ
 			grpcMsg.Traces["binaryTrace"] = value.([]byte)
 		}
 	}
-
+	logger.Sugar().Debugf("Start stream, context: %v", stream.Context())
+	sendMutex.Lock()
 	err = stream.SendMsg(grpcMsg)
+	sendMutex.Unlock()
+	if err != nil {
+		logger.Sugar().Warnf("stream error: %v", err)
+	}
 	return err
 }
 
