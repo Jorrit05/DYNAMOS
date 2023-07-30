@@ -169,7 +169,7 @@ def handle_incoming_request(rabbitClient, msg):
 
 # @tracer.start_as_current_span("test_single_query")
 def test_single_query():
-    size = "1"
+    size = "30000"
     # Define your SQL query
     query = f"""SELECT *
                FROM Personen p

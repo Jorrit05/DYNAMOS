@@ -44,19 +44,19 @@ func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommun
 	if err != nil {
 		logger.Sugar().Warnf("Error starting span: %v", err)
 	}
-	defer span.End()
+	span.End()
 	// logger.Sugar().Debugf("data.Type: %v", data.Type)
 	// logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)
 	callback, ok := s.callbacks[data.Type]
 	if !ok {
 		logger.Warn("no callback registered for this message type")
-		span.End()
+		// span.End()
 		return &emptypb.Empty{}, nil
 	}
 
 	// go func(data *pb.MicroserviceCommunication, callback func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)) {
 	logger.Sugar().Debugf("In go routine SendData:")
-	span.End()
+	// span.End()
 	if _, err := callback(ctx, data); err != nil {
 		logger.Sugar().Errorf("Callback Error: %v", err)
 		return &emptypb.Empty{}, nil
