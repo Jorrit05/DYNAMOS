@@ -52,7 +52,7 @@ func isHttpWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, co
 		delete(responseMap, correlationId)
 		mutex.Unlock()
 
-		logger.Warn("returning from responding......")
+		// logger.Debug("returning from responding......")
 		return true
 	}
 
@@ -77,7 +77,7 @@ func isThirdPartyWaiting(ctx context.Context, msComm *pb.MicroserviceCommunicati
 
 		c.SendMicroserviceComm(ctx, msComm)
 
-		logger.Warn("returning from forwarding to 3rd party......")
+		// logger.Debug("returning from forwarding to 3rd party......")
 		return true
 	}
 

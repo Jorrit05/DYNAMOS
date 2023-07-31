@@ -66,8 +66,8 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 
 		msComm.OriginalRequest = any
 
-		logger.Sugar().Warnf("jobName: %v", sqlDataRequest.RequestMetadata.JobName)
-		logger.Sugar().Warnf("actualJobName: %v", actualJobName)
+		// logger.Sugar().Warnf("jobName: %v", sqlDataRequest.RequestMetadata.JobName)
+		// logger.Sugar().Warnf("actualJobName: %v", actualJobName)
 
 		key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, actualJobName)
 		value := actualJobName

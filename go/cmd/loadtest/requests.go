@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -56,15 +58,15 @@ func getRequestApproval() []byte {
 
 	}
 
-	seed := getRandomInt(20000)
-	requestApproval.User.ID = fmt.Sprintf("bearer 12%s34%s", strconv.Itoa(seed), strconv.Itoa(seed*3))
+	counter++
+	requestApproval.User.ID = fmt.Sprintf("1234%s", strconv.Itoa(counter))
 
 	json, err := json.Marshal(requestApproval)
 	if err != nil {
 		logger.Sugar().Fatalf("Error json.Marshal: %v", err)
 
 	}
-	logger.Info(string(json))
+	// logger.Info(string(json))
 	return json
 }
 
@@ -97,7 +99,7 @@ func getDataRequest(acceptedDataRequest *pb.AcceptedDataRequest) *SQLDataRequest
 			"Geslacht": "Aanst_22, Gebdat",
 		},
 		User: User{
-			ID:       "1234",
+			ID:       acceptedDataRequest.User.Id,
 			UserName: acceptedDataRequest.User.UserName,
 		},
 		RequestMetadata: Metadata{
@@ -112,4 +114,42 @@ func prettyPrint(v interface{}) {
 		logger.Sugar().Fatalf("Error when trying to pretty-print: %v", err)
 	}
 	fmt.Println(string(b))
+}
+
+func updateArchetype(allowedArchetypes string) error {
+	url := "http://orchestrator.orchistrator.svc.cluster.local:80/api/v1/policyEnforcer/agreements"
+
+	jsonData := []byte(fmt.Sprintf(`{
+		"name": "UVA",
+		"relations": {
+			"jorrit.stutterheim@cloudnation.nl" : {
+				"ID" : "GUID",
+				"requestTypes" : ["sqlDataRequest"],
+				"dataSets" : ["wageGap"],
+				"allowedArchetypes" : [%s],
+				"allowedComputeProviders" : ["SURF"]
+			}
+		},
+		"computeProviders" : ["SURF", "otherCompany"],
+		"archetypes" : ["computeToData", "dataThroughTtp",  "reproducableScience"]
+	}`, allowedArchetypes))
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "bearer 1234")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if http.StatusOK != resp.StatusCode {
+		logger.Warn(strconv.Itoa(resp.StatusCode))
+	}
+	return nil
 }

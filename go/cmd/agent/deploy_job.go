@@ -61,7 +61,7 @@ func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.Composit
 		return ctx, err
 	}
 
-	logger.Sugar().Infow("Deployed job.", "actualJobName", localJobName, "msChain", msChain)
+	// logger.Sugar().Infow("Deployed job.", "actualJobName", localJobName, "msChain", msChain)
 	return ctx, nil
 }
 

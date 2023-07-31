@@ -98,8 +98,8 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 			logger.Sugar().Errorf("Error in deploying job: %v", err)
 			return ctx
 		}
-		logger.Sugar().Warnf("jobName: %v", compositionRequest.JobName)
-		logger.Sugar().Warnf("actualJobName: %v", localJobname)
+		// logger.Sugar().Warnf("jobName: %v", compositionRequest.JobName)
+		// logger.Sugar().Warnf("actualJobName: %v", localJobname)
 		waitingJobMutex.Lock()
 		waitingJobMap[compositionRequest.JobName] = localJobname
 		waitingJobMutex.Unlock()
