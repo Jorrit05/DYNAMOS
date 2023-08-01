@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	progress "github.com/cheggaaa/pb/v3"
+
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
@@ -108,6 +110,21 @@ func getDataRequest(acceptedDataRequest *pb.AcceptedDataRequest) *SQLDataRequest
 	}
 }
 
+func progressBar() {
+	// Create a new progress bar with a total of 10.
+	bar := progress.StartNew(10)
+
+	for i := 0; i < 10; i++ {
+		// Sleep for 1 second to simulate work.
+		time.Sleep(time.Second)
+
+		// Increment the progress bar.
+		bar.Increment()
+	}
+
+	// Finish the progress bar.
+	bar.Finish()
+}
 func prettyPrint(v interface{}) {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
@@ -117,7 +134,7 @@ func prettyPrint(v interface{}) {
 }
 
 func updateArchetype(allowedArchetypes string) error {
-	url := "http://orchestrator.orchistrator.svc.cluster.local:80/api/v1/policyEnforcer/agreements"
+	url := "http://orchestrator.orchestrator.svc.cluster.local:80/api/v1/policyEnforcer/agreements"
 
 	jsonData := []byte(fmt.Sprintf(`{
 		"name": "UVA",
@@ -126,7 +143,7 @@ func updateArchetype(allowedArchetypes string) error {
 				"ID" : "GUID",
 				"requestTypes" : ["sqlDataRequest"],
 				"dataSets" : ["wageGap"],
-				"allowedArchetypes" : [%s],
+				"allowedArchetypes" : ["%s"],
 				"allowedComputeProviders" : ["SURF"]
 			}
 		},
@@ -134,7 +151,7 @@ func updateArchetype(allowedArchetypes string) error {
 		"archetypes" : ["computeToData", "dataThroughTtp",  "reproducableScience"]
 	}`, allowedArchetypes))
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}

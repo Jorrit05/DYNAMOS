@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,9 +16,46 @@ import (
 )
 
 var (
-	logger  = lib.InitLogger(logLevel)
-	counter = 0
+	logger        = lib.InitLogger(logLevel)
+	counter       = 0
+	archetypeMap  = make(map[int]string)
+	customMetrics = &CustomMetrics{Requests: 0, Successes: 0, Failures: 0}
 )
+
+type CustomMetrics struct {
+	Requests  int // Total number of requests
+	Successes int // Total number of successful responses
+	Failures  int // Total number of failed responses
+	// Add more fields as needed...
+}
+
+func sendDataRequest(res *vegeta.Result) error {
+
+	jsonData, endpoint := createDataRequest(res)
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "bearer 1234")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if http.StatusOK != resp.StatusCode {
+		customMetrics.Failures++
+		logger.Sugar().Infof("sendDataRequest, Code: %d, Body: %s\n", resp.StatusCode, resp.Body)
+
+	} else {
+		customMetrics.Successes++
+	}
+
+	return nil
+}
 
 func doDataRequest(attacker *vegeta.Attacker, rate vegeta.ConstantPacer, duration time.Duration, metrics *vegeta.Metrics, wg *sync.WaitGroup) {
 	res := &vegeta.Result{}
@@ -27,25 +65,32 @@ func doDataRequest(attacker *vegeta.Attacker, rate vegeta.ConstantPacer, duratio
 		metrics.Add(r)
 		if r.Code == http.StatusOK {
 			res = r
+
 			wg.Add(1)
-
-			// Send data request
-			go func(res *vegeta.Result) {
-				// Decrement the counter when the goroutine completes.
-				defer wg.Done()
-
-				// Second attack
-				for r := range attacker.Attack(dataRequestTargeter(res), rate, duration, "Data Request") {
-
-					if r.Code != http.StatusOK {
-						logger.Sugar().Infof("Second attack! Error: %s, Code: %d, Body: %s\n", r.Error, r.Code, r.Body)
-
-					}
-					metrics.Add(r)
+			go func() {
+				// Second call
+				// nrOfCalls := 1 //getRandomInt(2)
+				// customMetrics.Requests += nrOfCalls
+				// for i := 1; i <= nrOfCalls; i++ {
+				time.Sleep(500 * time.Millisecond)
+				err := sendDataRequest(res)
+				if err != nil {
+					logger.Sugar().Warn("error: %v", err)
 				}
-			}(res)
+				// time.Sleep(time.Duration(getRandomInt(2)) * time.Second)
+				// }
+				wg.Done()
+			}()
+			time.Sleep(2 * time.Second)
+
+			// for r := range attacker.Attack(dataRequestTargeter(res), rate, duration, "Data Request") {
+			// 	if r.Code != http.StatusOK {
+			// 		logger.Sugar().Infof("Second attack! Error: %s, Code: %d, Body: %s\n", r.Error, r.Code, r.Body)
+
+			// 	}
+			// 	metrics.Add(r)
+			// }
 		} else {
-			// Optionally log the error here
 			logger.Sugar().Infof("Error: %s, Code: %d, Body: %s\n", r.Error, r.Code, r.Body)
 			continue
 		}
@@ -61,39 +106,59 @@ func getAttackerAttributes(frequency int, length int) (*vegeta.Attacker, vegeta.
 	attacker := vegeta.NewAttacker(vegeta.Timeout(90 * time.Second))
 	return attacker, rate, duration
 }
-
 func main() {
+	// go progressBar()
+	archetypeMap[1] = "computToData"
+	archetypeMap[2] = "dataThroughTtp"
 
 	metrics := &vegeta.Metrics{}
-	attacker, rate, duration := getAttackerAttributes(2, 2)
 	var wg sync.WaitGroup
+	start := time.Now()
+	for i := 1; i <= 15; i++ {
 
-	// Series 1
-	doDataRequest(attacker, rate, duration, metrics, &wg)
+		logger.Sugar().Debugf("Series: %d", i)
+		// Series 1
+		attacker, rate, duration := getAttackerAttributes(1, 10)
 
-	time.Sleep(2 * time.Second)
-	attacker, rate, duration = getAttackerAttributes(1, 5)
+		doDataRequest(attacker, rate, duration, metrics, &wg)
 
-	doDataRequest(attacker, rate, duration, metrics, &wg)
+		// time.Sleep(4 * time.Second)
+		// // logger.Debug("start 2 second sleep")
 
-	err := updateArchetype("computeToData")
-	if err != nil {
-		logger.Sugar().Warnf("update archetype err: %v", err)
+		// // Series 2
+		// // attacker, rate, duration = getAttackerAttributes(2, 3)
+
+		// // doDataRequest(attacker, rate, duration, metrics, &wg)
+
+		// // // Series 3
+		err := updateArchetype(archetypeMap[getRandomInt(2)])
+		if err != nil {
+			logger.Sugar().Warnf("update archetype err: %v", err)
+		}
+		time.Sleep(5 * time.Second)
+
+		// logger.Debug("start 4 second sleep")
+		// time.Sleep(time.Duration(getRandomInt(3)) * time.Second)
+		// attacker, rate, duration = getAttackerAttributes(1, 5)
+
+		// doDataRequest(attacker, rate, duration, metrics, &wg)
+		// time.Sleep(time.Duration(getRandomInt(3)) * time.Second)
 	}
-
-	time.Sleep(3 * time.Second)
-	attacker, rate, duration = getAttackerAttributes(3, 3)
-
-	doDataRequest(attacker, rate, duration, metrics, &wg)
-
 	// Wait for all attacks to finish
 
 	wg.Wait()
-
 	metrics.Close()
 	fmt.Printf("99th percentile: %s\n", metrics.Latencies.P99)
 	report := vegeta.NewTextReporter(metrics)
 	report.Report(os.Stdout)
+
+	logger.Info("Custom metrics:")
+	logger.Sugar().Infof("Request: %d", customMetrics.Requests)
+	logger.Sugar().Infof("Successes: %d", customMetrics.Successes)
+	logger.Sugar().Infof("Failures: %d", customMetrics.Failures)
+	elapsed := time.Since(start)
+
+	fmt.Printf("The test took %s seconds to execute.\n", elapsed)
 
 }
 
@@ -119,6 +184,7 @@ func createDataRequest(res *vegeta.Result) ([]byte, string) {
 		break
 	}
 	endpoint := fmt.Sprintf("http://%s:80/agent/v1/sqlDataRequest/%s", url, target)
+	logger.Info(string(jsonData))
 	return jsonData, endpoint
 }
 
@@ -145,11 +211,11 @@ func dataRequestTargeter(res *vegeta.Result) vegeta.Targeter {
 	headers.Add("Authorization", "bearer 1234")
 
 	jsonData, endpoint := createDataRequest(res)
-
-	return vegeta.NewStaticTargeter(vegeta.Target{
-		Method: "POST",
-		URL:    endpoint,
-		Body:   jsonData,
-		Header: headers,
-	})
+	return func(t *vegeta.Target) error {
+		t.Method = "POST"
+		t.URL = endpoint
+		t.Body = jsonData
+		t.Header = headers
+		return nil
+	}
 }

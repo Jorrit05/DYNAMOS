@@ -1,3 +1,2 @@
 controller:
-  podAnnotations:
-    linkerd.io/inject: enabled
+  podAnnotations: { linkerd.io/inject: enabled }

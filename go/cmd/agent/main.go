@@ -38,6 +38,7 @@ var (
 	jobCounter    = make(map[string]int)
 	waitingJobMap = make(map[string]string)
 	queueInfoMap  = make(map[string]*pb.QueueInfo)
+	receiveMutex  = &sync.Mutex{}
 )
 
 type dataResponse struct {
@@ -68,7 +69,7 @@ func main() {
 	wg.Add(1)
 
 	go func() {
-		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second)
+		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second, receiveMutex)
 
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()

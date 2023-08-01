@@ -99,9 +99,9 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 
 	// Print each metadata field
 	logger.Sugar().Debugf("Length metadata: %s", strconv.Itoa(len(metadata)))
-	for key, value := range metadata {
-		fmt.Printf("Key: %s, Value: %+v\n", key, value)
-	}
+	// for key, value := range metadata {
+	// 	fmt.Printf("Key: %s, Value: %+v\n", key, value)
+	// }
 
 	sqlDataRequest := &pb.SqlDataRequest{}
 	if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {

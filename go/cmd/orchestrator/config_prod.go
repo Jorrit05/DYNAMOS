@@ -10,7 +10,9 @@ var serviceName = "orchestrator"
 var port = ":8080"
 var grpcAddr = "localhost:50051"
 var apiVersion = "/api/v1"
-var logLevel = zap.DebugLevel
+
+// var logLevel = zap.DebugLevel
+var logLevel = zap.InfoLevel
 var requestTypeConfigLocation = root + "requestType.json"
 var archetypeConfigLocation = root + "archetype.json"
 var microserviceMetadataConfigLocation = root + "microservices.json"
