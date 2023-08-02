@@ -5,9 +5,9 @@ package main
 
 import "go.uber.org/zap"
 
-// var logLevel = zap.DebugLevel
+var logLevel = zap.DebugLevel
 
-var logLevel = zap.InfoLevel
+// var logLevel = zap.InfoLevel
 var serviceName = ""
 var local = false
 var etcdEndpoints = "http://etcd-0.etcd-headless.core.svc.cluster.local:2379,http://etcd-1.etcd-headless.core.svc.cluster.local:2379,http://etcd-2.etcd-headless.core.svc.cluster.local:2379"

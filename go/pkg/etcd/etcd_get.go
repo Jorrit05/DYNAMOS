@@ -28,6 +28,92 @@ func (e *ErrEtcdOperation) Error() string {
 	return fmt.Sprintf("failed to get key %s from etcd: %v", e.Key, e.Err)
 }
 
+func retryWrapper(operation func() error, opts ...Option) (string, error) {
+	var value string
+	// Start with default options
+	retryOpts := DefaultRetryOptions
+
+	// Apply any specified options
+	for _, opt := range opts {
+		opt(&retryOpts)
+	}
+
+	// Create a new exponential backoff
+	backoff := bo.NewExponentialBackOff()
+	backoff.InitialInterval = retryOpts.InitialInterval
+	backoff.MaxInterval = retryOpts.MaxInterval
+	backoff.MaxElapsedTime = retryOpts.MaxElapsedTime
+
+	// Run the operation with backoff
+	err := bo.Retry(operation, backoff)
+
+	if err != nil {
+		logger.Sugar().Errorf("failed retrieving key from etcd: %v", err)
+		return "", err
+	}
+
+	return value, nil
+
+}
+func GetKeysFromPrefix(etcdClient *clientv3.Client, key string, opts ...Option) ([]string, error) {
+	var keys []string
+	// Start with default options
+	retryOpts := DefaultRetryOptions
+
+	// Apply any specified options
+	for _, opt := range opts {
+		opt(&retryOpts)
+	}
+	operation := func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := etcdClient.Get(ctx, key, clientv3.WithPrefix())
+		if err != nil {
+			return &ErrEtcdOperation{Key: key, Err: err}
+			// return fmt.Errorf("failed to get key %s from etcd: %v", key, err)
+		}
+
+		if len(resp.Kvs) == 0 {
+			// If key not found, return an error to trigger a retry
+			return &ErrKeyNotFound{Key: key}
+			// return fmt.Errorf("key %s not found in etcd", key)
+		}
+
+		for _, ev := range resp.Kvs {
+			key := string(ev.Key)
+			// Get last part of key
+			parts := strings.Split(key, "/")
+			value := parts[len(parts)-1]
+			keys = append(keys, value)
+		}
+
+		return nil
+	}
+
+	// Create a new exponential backoff
+	backoff := bo.NewExponentialBackOff()
+	backoff.InitialInterval = retryOpts.InitialInterval
+	backoff.MaxInterval = retryOpts.MaxInterval
+	backoff.MaxElapsedTime = retryOpts.MaxElapsedTime
+
+	// Run the operation with backoff
+	err := bo.Retry(operation, backoff)
+	if err != nil {
+		switch e := err.(type) {
+		case *ErrKeyNotFound:
+			logger.Sugar().Info("No active jobs for this user: %v", e)
+			return []string{}, nil
+
+		default:
+			logger.Sugar().Errorf("failed retrieving key from etcd: %v", e)
+			return []string{}, err
+		}
+	}
+
+	return keys, nil
+}
+
 func GetValueFromEtcd(etcdClient *clientv3.Client, key string, opts ...Option) (string, error) {
 	var value string
 	// Start with default options
@@ -183,12 +269,12 @@ func GetAndUnmarshalJSONMap[T any](etcdClient *clientv3.Client, prefix string) (
 }
 
 // Get all values from a certain prefix, convert these to a list of the given type.
-func GetPrefixListEtcd[T any](client KVGetter, prefix string, target *T) ([]T, error) {
+func GetPrefixListEtcd[T any](client KVGetter, prefix string, target *T) ([]*T, error) {
 	// func GetPrefixListEtcd[T any](client *clientv3.Client, prefix string, target *T) ([]T, error) {
 	ctx := context.Background()
 	resp, err := client.Get(ctx, prefix, clientv3.WithPrefix())
 
-	var targets []T
+	var targets []*T
 	if err != nil {
 		logger.Sugar().Errorw("Failed to get from etcd: %v", err)
 		return nil, err
@@ -200,7 +286,7 @@ func GetPrefixListEtcd[T any](client KVGetter, prefix string, target *T) ([]T, e
 			continue
 		}
 
-		targets = append(targets, *target)
+		targets = append(targets, target)
 		target = nil
 	}
 

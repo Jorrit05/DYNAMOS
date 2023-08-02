@@ -11,4 +11,4 @@ var serviceName = "policyEnforcer"
 
 var etcdEndpoints = "http://localhost:30005"
 
-var grpcAddr = "localhost:50052"
+var grpcAddr = "localhost:50051"

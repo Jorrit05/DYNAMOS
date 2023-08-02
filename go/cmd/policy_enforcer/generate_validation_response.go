@@ -83,7 +83,7 @@ func getValidAgreements(requestApproval *pb.RequestApproval, agreements *[]api.A
 
 		matchedArchetypes, _ := lib.GetMatchedElements(user.AllowedArchetypes, agreement.Archetypes)
 		if len(matchedArchetypes) == 0 {
-			logger.Sugar().Infof("No matching valid archetypes for this user in this agreement (config error): %s", steward)
+			logger.Sugar().Warn("No matching valid archetypes for this user in this agreement (config error): %s", steward)
 			invalidDataproviders = append(invalidDataproviders, steward)
 			continue
 		}

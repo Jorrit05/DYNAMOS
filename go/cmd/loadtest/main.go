@@ -72,7 +72,7 @@ func doDataRequest(attacker *vegeta.Attacker, rate vegeta.ConstantPacer, duratio
 				// nrOfCalls := 1 //getRandomInt(2)
 				// customMetrics.Requests += nrOfCalls
 				// for i := 1; i <= nrOfCalls; i++ {
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(1 * time.Second)
 				err := sendDataRequest(res)
 				if err != nil {
 					logger.Sugar().Warn("error: %v", err)
@@ -108,21 +108,26 @@ func getAttackerAttributes(frequency int, length int) (*vegeta.Attacker, vegeta.
 }
 func main() {
 	// go progressBar()
-	archetypeMap[1] = "computToData"
+	archetypeMap[1] = "computeToData"
 	archetypeMap[2] = "dataThroughTtp"
 
 	metrics := &vegeta.Metrics{}
 	var wg sync.WaitGroup
 	start := time.Now()
-	for i := 1; i <= 15; i++ {
+
+	err := updateArchetype(archetypeMap[2])
+	if err != nil {
+		logger.Sugar().Warnf("update archetype err: %v", err)
+	}
+	for i := 1; i <= 3; i++ {
 
 		logger.Sugar().Debugf("Series: %d", i)
 		// Series 1
-		attacker, rate, duration := getAttackerAttributes(1, 10)
+		attacker, rate, duration := getAttackerAttributes(1, 4)
 
 		doDataRequest(attacker, rate, duration, metrics, &wg)
 
-		// time.Sleep(4 * time.Second)
+		time.Sleep(3 * time.Second)
 		// // logger.Debug("start 2 second sleep")
 
 		// // Series 2
@@ -131,14 +136,19 @@ func main() {
 		// // doDataRequest(attacker, rate, duration, metrics, &wg)
 
 		// // // Series 3
-		err := updateArchetype(archetypeMap[getRandomInt(2)])
-		if err != nil {
-			logger.Sugar().Warnf("update archetype err: %v", err)
-		}
-		time.Sleep(5 * time.Second)
+		// err := updateArchetype(archetypeMap[getRandomInt(2)])
+		// if err != nil {
+		// 	logger.Sugar().Warnf("update archetype err: %v", err)
+		// }
+		// time.Sleep(5 * time.Second)
 
-		// logger.Debug("start 4 second sleep")
-		// time.Sleep(time.Duration(getRandomInt(3)) * time.Second)
+		// err := updateArchetype(archetypeMap[2])
+		// if err != nil {
+		// 	logger.Sugar().Warnf("update archetype err: %v", err)
+		// }
+		// time.Sleep(5 * time.Second)
+		// // logger.Debug("start 4 second sleep")
+		// // time.Sleep(time.Duration(getRandomInt(3)) * time.Second)
 		// attacker, rate, duration = getAttackerAttributes(1, 5)
 
 		// doDataRequest(attacker, rate, duration, metrics, &wg)
@@ -184,7 +194,7 @@ func createDataRequest(res *vegeta.Result) ([]byte, string) {
 		break
 	}
 	endpoint := fmt.Sprintf("http://%s:80/agent/v1/sqlDataRequest/%s", url, target)
-	logger.Info(string(jsonData))
+	// logger.Info(string(jsonData))
 	return jsonData, endpoint
 }
 

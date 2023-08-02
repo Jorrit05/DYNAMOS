@@ -75,8 +75,6 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 				return
 			}
 
-			//TODO: This has a bug I think. When the third party is not online but the agent is.
-			// there will be a valid provider, so the code will go through, but crashes on 'startCompositionRequest'
 			authorizedProviders, err := getAuthorizedProviders(msg)
 			if err != nil {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -96,9 +94,16 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 			compositionRequest.User = &pb.User{}
 			userTargets, ctx, err := startCompositionRequest(validationStruct.localContext, msg, authorizedProviders, c, compositionRequest)
 			if err != nil {
-				logger.Sugar().Errorf("Error starting composition request: %v", err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-				return
+				switch e := err.(type) {
+				case *UnauthorizedProviderError:
+					logger.Sugar().Warn("Unauthorized provider error: %v", e)
+					http.Error(w, e.Error(), http.StatusInternalServerError)
+					return
+				default:
+					logger.Sugar().Errorf("Error starting composition request: %v", err)
+					http.Error(w, "Internal server error", http.StatusInternalServerError)
+					return
+				}
 			}
 
 			createAcceptedDataRequest(ctx, msg, w, userTargets, compositionRequest.JobName)
@@ -113,17 +118,24 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 
 func getAuthorizedProviders(validationResponse *pb.ValidationResponse) (map[string]lib.AgentDetails, error) {
 	authorizedProviders := make(map[string]lib.AgentDetails)
+	// logger.Sugar().Debugf("ValidDataproviders: %v", validationResponse.ValidDataproviders)
+	// logger.Sugar().Debugf("InvalidDataproviders: %v", validationResponse.InvalidDataproviders)
 
 	for key := range validationResponse.ValidDataproviders {
+		logger.Sugar().Debugf("key: %s", key)
 		var agentData lib.AgentDetails
-		json, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/agents/%s", key), &agentData)
+		json, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/agents/online/%s", key), &agentData)
 		if err != nil {
+			logger.Sugar().Warnf("error getAuthorizedProviders: %v", err)
 			return nil, err
 		} else if json == nil {
+			// logger.Sugar().Warnf("no JSON in getAuthorizedProviders: %v, key: %v", json, key)
 			// invalidProviders = append(invalidProviders, key)
 			continue
 		}
 		authorizedProviders[key] = agentData
+		logger.Sugar().Debugf("Added agent: %s", agentData.Name)
 	}
+
 	return authorizedProviders, nil
 }

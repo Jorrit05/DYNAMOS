@@ -12,6 +12,21 @@ import (
 	"github.com/google/uuid"
 )
 
+type Set map[string]struct{}
+
+func NewSet(slice []string) Set {
+	s := make(Set)
+	for _, each := range slice {
+		s[each] = struct{}{}
+	}
+	return s
+}
+
+func (s Set) Has(v string) bool {
+	_, ok := s[v]
+	return ok
+}
+
 // Function expects a valid email address and the length of the desired GUID
 // Example:
 //

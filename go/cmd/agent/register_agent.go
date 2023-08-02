@@ -29,7 +29,7 @@ func registerAgent() {
 		log.Fatal(err)
 	}
 
-	go etcd.PutEtcdWithLease(etcdClient, fmt.Sprintf("/agents/%s", agentConfig.Name), string(configData))
+	go etcd.PutEtcdWithLease(etcdClient, fmt.Sprintf("/agents/online/%s", agentConfig.Name), string(configData))
 }
 
 func updateAgent() {
@@ -43,6 +43,6 @@ func updateAgent() {
 		log.Fatal(err)
 	}
 
-	go etcd.PutEtcdWithLease(etcdClient, fmt.Sprintf("/agents/%s", agentConfig.Name), string(configData))
+	go etcd.PutEtcdWithLease(etcdClient, fmt.Sprintf("/agents/online/%s", agentConfig.Name), string(configData))
 
 }
