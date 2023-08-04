@@ -79,3 +79,9 @@ func (s *server) handleMicroserviceCommunication(msg amqp.Delivery, stream pb.Si
 
 	return s.handleResponse(msg, stream, &pb.MicroserviceCommunication{RequestMetadata: &pb.RequestMetadata{}})
 }
+
+func (s *server) handlePolicyUpdate(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+	logger.Debug("Starting handlePolicyUpdate")
+
+	return s.handleResponse(msg, stream, &pb.PolicyUpdate{RequestMetadata: &pb.RequestMetadata{}})
+}

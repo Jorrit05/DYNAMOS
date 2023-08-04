@@ -78,9 +78,19 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: startCompositionRequest")
 	defer span.End()
 
-	localJobname, err := generateJobName(compositionRequest.JobName)
-	if err != nil {
-		logger.Sugar().Errorf("generateJobName err: %v", err)
+	var err error
+	localJobname := ""
+	value, ok := jobCounter[compositionRequest.JobName]
+	if !ok {
+		logger.Sugar().Warn("NOK")
+
+		localJobname, err = generateJobName(compositionRequest.JobName)
+		if err != nil {
+			logger.Sugar().Errorf("generateJobName err: %v", err)
+		}
+	} else {
+		logger.Sugar().Warnf("value: %v", value)
+		localJobname = compositionRequest.JobName + strings.ToLower(serviceName) + strconv.Itoa(value)
 	}
 
 	compositionRequest.LocalJobName = localJobname
@@ -92,18 +102,18 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 
 	ctx = handleQueue(ctx, compositionRequest.JobName, localJobname, compositionRequest.User.UserName)
 
-	if strings.EqualFold(compositionRequest.Role, "dataProvider") {
-		ctx, err = generateChainAndDeploy(ctx, compositionRequest, localJobname, &pb.SqlDataRequest{})
-		if err != nil {
-			logger.Sugar().Errorf("Error in deploying job: %v", err)
-			return ctx
-		}
-		// logger.Sugar().Warnf("jobName: %v", compositionRequest.JobName)
-		// logger.Sugar().Warnf("actualJobName: %v", localJobname)
-		waitingJobMutex.Lock()
-		waitingJobMap[compositionRequest.JobName] = localJobname
-		waitingJobMutex.Unlock()
-	}
+	// if strings.EqualFold(compositionRequest.Role, "dataProvider") {
+	// ctx, err = generateChainAndDeploy(ctx, compositionRequest, localJobname, &pb.SqlDataRequest{})
+	// if err != nil {
+	// 	logger.Sugar().Errorf("Error in deploying job: %v", err)
+	// 	return ctx
+	// }
+	// logger.Sugar().Warnf("jobName: %v", compositionRequest.JobName)
+	// logger.Sugar().Warnf("actualJobName: %v", localJobname)
+	// waitingJobMutex.Lock()
+	// waitingJobMap[compositionRequest.JobName] = localJobname
+	// waitingJobMutex.Unlock()
+	// }
 	return ctx
 }
 

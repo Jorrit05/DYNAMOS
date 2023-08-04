@@ -17,6 +17,7 @@ service SideCar {
   rpc SendValidationResponse(ValidationResponse) returns  (google.protobuf.Empty) {}
   rpc SendCompositionRequest(CompositionRequest) returns  (google.protobuf.Empty) {}
   rpc SendSqlDataRequest(SqlDataRequest) returns  (google.protobuf.Empty) {}
+  rpc SendPolicyUpdate(PolicyUpdate) returns  (google.protobuf.Empty) {}
   rpc SendTest(SqlDataRequest) returns  (google.protobuf.Empty) {}
   rpc SendMicroserviceComm(MicroserviceCommunication) returns  (google.protobuf.Empty) {}
   rpc CreateQueue(QueueInfo) returns  (google.protobuf.Empty) {}
@@ -77,6 +78,14 @@ message RequestApproval {
   User user = 2;
   repeated string data_providers = 3;
   bool sync_services = 4;
+}
+
+message PolicyUpdate {
+  string type = 1;
+  User user = 2;
+  repeated string data_providers = 3;
+  RequestMetadata request_metadata = 4;
+  ValidationResponse validation_response = 5;
 }
 
 message AcceptedDataRequest  {

@@ -44,7 +44,6 @@ trace.set_tracer_provider(provider)
 
 tracer = trace.get_tracer("query.tracer")
 
-
 # Go into local test code with flag '-t'
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--test", action='store_true')

@@ -18,12 +18,15 @@ import (
 )
 
 var (
-	logger                         = lib.InitLogger(logLevel)
-	etcdClient    *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
-	conn          *grpc.ClientConn
-	mutex         = &sync.Mutex{}
-	receiveMutex  = &sync.Mutex{}
-	validationMap = make(map[string]chan validation)
+	logger                             = lib.InitLogger(logLevel)
+	etcdClient        *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
+	conn              *grpc.ClientConn
+	mutex             = &sync.Mutex{}
+	receiveMutex      = &sync.Mutex{}
+	validationMap     = make(map[string]chan validation)
+	policyUpdateMutex = &sync.Mutex{}
+	policyUpdateMap   = make(map[string]map[string]*pb.CompositionRequest)
+	c                 pb.SideCarClient
 )
 
 type validation struct {
@@ -42,7 +45,7 @@ func main() {
 
 	conn = lib.GetGrpcConnection(grpcAddr)
 	defer conn.Close()
-	c := lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+	c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 
 	// Define a WaitGroup
 	var wg sync.WaitGroup
@@ -80,25 +83,8 @@ func main() {
 	apiMux.Handle("/policyEnforcer", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
 	apiMux.Handle("/policyEnforcer/", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
 
-	apiMux.Handle("/requestapproval", &ochttp.Handler{Handler: requestApprovalHandler(c)})
+	apiMux.Handle("/requestapproval", &ochttp.Handler{Handler: requestApprovalHandler()})
 
-	// apiMux.HandleFunc("/archetypes/", archetypesHandler(etcdClient, "/archetypes"))
-
-	// apiMux.HandleFunc("/requesttypes", requestTypesHandler(etcdClient, "/requestTypes"))
-	// apiMux.HandleFunc("/requestTypes", requestTypesHandler(etcdClient, "/requestTypes"))
-
-	// apiMux.HandleFunc("/requesttypes/", requestTypesHandler(etcdClient, "/requestTypes"))
-	// apiMux.HandleFunc("/requestTypes/", requestTypesHandler(etcdClient, "/requestTypes"))
-
-	// apiMux.HandleFunc("/microservices", microserviceMetadataHandler(etcdClient, "/microservices"))
-	// apiMux.HandleFunc("/microservices/", microserviceMetadataHandler(etcdClient, "/microservices"))
-
-	// apiMux.HandleFunc("/updateEtc", updateEtc)
-
-	// apiMux.HandleFunc("/policyEnforcer", agreementsHandler(etcdClient, "/policyEnforcer"))
-	// apiMux.HandleFunc("/policyEnforcer/", agreementsHandler(etcdClient, "/policyEnforcer"))
-
-	// apiMux.HandleFunc("/requestapproval", requestApprovalHandler(c))
 	logger.Info(apiVersion) // prints /api/v1
 
 	mux.Handle(apiVersion+"/", http.StripPrefix(apiVersion, apiMux))

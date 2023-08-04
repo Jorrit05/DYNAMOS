@@ -15,7 +15,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
+func requestApprovalHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Starting requestApprovalHandler")
@@ -92,7 +92,7 @@ func requestApprovalHandler(c pb.SideCarClient) http.HandlerFunc {
 
 			compositionRequest := &pb.CompositionRequest{}
 			compositionRequest.User = &pb.User{}
-			userTargets, ctx, err := startCompositionRequest(validationStruct.localContext, msg, authorizedProviders, c, compositionRequest)
+			userTargets, ctx, err := startCompositionRequest(validationStruct.localContext, msg, authorizedProviders, compositionRequest)
 			if err != nil {
 				switch e := err.(type) {
 				case *UnauthorizedProviderError:

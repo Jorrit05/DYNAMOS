@@ -174,7 +174,7 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 	}
 
 	for _, dataProvider := range compositionRequest.DataProviders {
-		dataProviderRoutingKey := fmt.Sprintf("/agents/%s", dataProvider)
+		dataProviderRoutingKey := fmt.Sprintf("/agents/online/%s", dataProvider)
 		var agentData lib.AgentDetails
 		_, err := etcd.GetAndUnmarshalJSON(etcdClient, dataProviderRoutingKey, &agentData)
 		if err != nil {

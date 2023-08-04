@@ -101,6 +101,11 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 				logger.Sugar().Errorf("Error handling microserviceCommunication: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
+		case "policyUpdate":
+			if err := s.handlePolicyUpdate(msg, stream); err != nil {
+				logger.Sugar().Errorf("Error handling policyUpdate: %v", err)
+				return status.Error(codes.Internal, err.Error())
+			}
 
 		// Handle other message types...
 		default:

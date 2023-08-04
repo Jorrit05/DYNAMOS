@@ -186,6 +186,27 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 
 }
 
+func (s *server) SendPolicyUpdate(ctx context.Context, in *pb.PolicyUpdate) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal PolicyUpdate failed: %s", err)
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Do other stuff
+	message := amqp.Publishing{
+		CorrelationId: in.RequestMetadata.CorrelationId,
+		Body:          data,
+		Type:          "policyUpdate",
+	}
+
+	logger.Sugar().Debugf("PolicyUpdate destination queue: %s", in.RequestMetadata.DestinationQueue)
+	go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	return &emptypb.Empty{}, nil
+
+}
+
 // TODO: This go function is mostly to get an accurate feel for data transfer speeds.
 // It's probably better to just remove the Go func in the long run
 func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {

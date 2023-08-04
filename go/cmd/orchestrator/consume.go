@@ -38,6 +38,22 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 
 		mutex.Unlock()
+	case "policyUpdate":
+		policyUpdate := &pb.PolicyUpdate{}
+		if err := grpcMsg.Body.UnmarshalTo(policyUpdate); err != nil {
+			logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)
+		}
+		policyUpdateMutex.Lock()
+		// Look up the corresponding channel in the request map
+		jobCompositionRequest, ok := policyUpdateMap[policyUpdate.RequestMetadata.CorrelationId]
+		if ok {
+			delete(policyUpdateMap, policyUpdate.RequestMetadata.CorrelationId)
+			processPolicyUpdate(ctx, jobCompositionRequest, policyUpdate)
+		} else {
+			logger.Sugar().Error("no job information available for this policy update")
+		}
+		policyUpdateMutex.Unlock()
+
 	default:
 		logger.Sugar().Errorf("Unknown message type: %s", grpcMsg.Type)
 		return fmt.Errorf("unknown message type: %s", grpcMsg.Type)

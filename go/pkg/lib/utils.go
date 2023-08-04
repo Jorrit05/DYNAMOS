@@ -30,9 +30,9 @@ func (s Set) Has(v string) bool {
 // Function expects a valid email address and the length of the desired GUID
 // Example:
 //
-// fmt.Println(GeneratePodNameWithGUID("example.two@cloud.com", 8))
+// fmt.Println(GenerateJobName("example.two@cloud.com", 8))
 // prints: example-two-12345678 (some GUID of length 8, prefixed with a hyphen)
-func GeneratePodNameWithGUID(email string, length int) string {
+func GenerateJobName(email string, length int) string {
 	// Extract the part before '@' symbol
 	atIndex := strings.Index(email, "@")
 	if atIndex == -1 {

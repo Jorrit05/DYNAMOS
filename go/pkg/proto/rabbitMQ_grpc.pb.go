@@ -30,6 +30,7 @@ type SideCarClient interface {
 	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendCompositionRequest(ctx context.Context, in *CompositionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendSqlDataRequest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendPolicyUpdate(ctx context.Context, in *PolicyUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -153,6 +154,15 @@ func (c *sideCarClient) SendSqlDataRequest(ctx context.Context, in *SqlDataReque
 	return out, nil
 }
 
+func (c *sideCarClient) SendPolicyUpdate(ctx context.Context, in *PolicyUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendPolicyUpdate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sideCarClient) SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.SideCar/SendTest", in, out, opts...)
@@ -200,6 +210,7 @@ type SideCarServer interface {
 	SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error)
 	SendCompositionRequest(context.Context, *CompositionRequest) (*emptypb.Empty, error)
 	SendSqlDataRequest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
+	SendPolicyUpdate(context.Context, *PolicyUpdate) (*emptypb.Empty, error)
 	SendTest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
 	SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error)
 	CreateQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
@@ -231,6 +242,9 @@ func (UnimplementedSideCarServer) SendCompositionRequest(context.Context, *Compo
 }
 func (UnimplementedSideCarServer) SendSqlDataRequest(context.Context, *SqlDataRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendSqlDataRequest not implemented")
+}
+func (UnimplementedSideCarServer) SendPolicyUpdate(context.Context, *PolicyUpdate) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendPolicyUpdate not implemented")
 }
 func (UnimplementedSideCarServer) SendTest(context.Context, *SqlDataRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendTest not implemented")
@@ -389,6 +403,24 @@ func _SideCar_SendSqlDataRequest_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SideCar_SendPolicyUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PolicyUpdate)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).SendPolicyUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/SendPolicyUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).SendPolicyUpdate(ctx, req.(*PolicyUpdate))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SideCar_SendTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SqlDataRequest)
 	if err := dec(in); err != nil {
@@ -487,6 +519,10 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendSqlDataRequest",
 			Handler:    _SideCar_SendSqlDataRequest_Handler,
+		},
+		{
+			MethodName: "SendPolicyUpdate",
+			Handler:    _SideCar_SendPolicyUpdate_Handler,
 		},
 		{
 			MethodName: "SendTest",

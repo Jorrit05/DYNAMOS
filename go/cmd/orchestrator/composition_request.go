@@ -19,7 +19,7 @@ func (e *UnauthorizedProviderError) Error() string {
 	return fmt.Sprintf("third party '%s' is not online", e.ProviderName)
 }
 
-func startCompositionRequest(ctx context.Context, validationResponse *pb.ValidationResponse, authorizedProviders map[string]lib.AgentDetails, c pb.SideCarClient, compositionRequest *pb.CompositionRequest) (map[string]string, context.Context, error) {
+func startCompositionRequest(ctx context.Context, validationResponse *pb.ValidationResponse, authorizedProviders map[string]lib.AgentDetails, compositionRequest *pb.CompositionRequest) (map[string]string, context.Context, error) {
 	logger.Debug("Entering startCompositionRequest")
 
 	ctx, span := trace.StartSpan(ctx, "startCompositionRequest")
@@ -29,7 +29,6 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 	if err != nil {
 		return nil, ctx, err
 	}
-	logger.Debug("ARCHETYPE: " + archetype)
 
 	var archetypeConfig api.Archetype
 	_, err = etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/archetypes/%s", archetype), &archetypeConfig)
@@ -41,7 +40,7 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 	compositionRequest.DataProviders = []string{}
 	compositionRequest.ArchetypeId = archetype
 	compositionRequest.RequestType = validationResponse.RequestType
-	compositionRequest.JobName = lib.GeneratePodNameWithGUID(validationResponse.User.UserName, 8)
+	compositionRequest.JobName = lib.GenerateJobName(validationResponse.User.UserName, 8)
 
 	// Use to return the proper endpoints to the user
 	userTargets := make(map[string]string)
@@ -146,14 +145,13 @@ func chooseThirdParty(validationResponse *pb.ValidationResponse) (lib.AgentDetai
 
 	// If the intersection is not empty, return the first item
 	var agentData lib.AgentDetails
-	logger.Debug("1")
+
 	json, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/agents/online/%s", intersection[0]), &agentData)
 	if err != nil {
 		return lib.AgentDetails{}, err
 	} else if json == nil {
 		return lib.AgentDetails{}, &UnauthorizedProviderError{ProviderName: intersection[0]}
 	}
-	logger.Debug("2")
 
 	return agentData, nil
 }

@@ -31,7 +31,7 @@ func checkRequestApproval(ctx context.Context, requestApproval *pb.RequestApprov
 		RequestApproved: false,
 	}
 
-	getValidAgreements(requestApproval, &agreements, protoRequest)
+	getValidAgreements(requestApproval.DataProviders, requestApproval.User, &agreements, protoRequest)
 	if len(agreements) == 0 || len(protoRequest.ValidDataproviders) == 0 {
 		logger.Sugar().Info("No agreements exist for this user ")
 		c.SendValidationResponse(ctx, protoRequest)
@@ -53,11 +53,11 @@ func generateAuthToken() *pb.Auth {
 	}
 }
 
-func getValidAgreements(requestApproval *pb.RequestApproval, agreements *[]api.Agreement, protoRequest *pb.ValidationResponse) {
+func getValidAgreements(dataProviders []string, requestUser *pb.User, agreements *[]api.Agreement, protoRequest *pb.ValidationResponse) {
 	var invalidDataproviders []string
 	protoRequest.ValidDataproviders = make(map[string]*pb.DataProvider)
 
-	for _, steward := range requestApproval.DataProviders {
+	for _, steward := range dataProviders {
 		output, err := etcd.GetValueFromEtcd(etcdClient, "/policyEnforcer/agreements/"+steward)
 		if err != nil {
 			logger.Sugar().Errorf("Error retrieving from etcd: %v", err)
@@ -75,7 +75,7 @@ func getValidAgreements(requestApproval *pb.RequestApproval, agreements *[]api.A
 			logger.Sugar().Errorw("%s: error unmarshalling agreement. %v", serviceName, err)
 		}
 
-		user, ok := agreement.Relations[requestApproval.User.UserName]
+		user, ok := agreement.Relations[requestUser.UserName]
 		if !ok {
 			invalidDataproviders = append(invalidDataproviders, steward)
 			continue
@@ -95,7 +95,7 @@ func getValidAgreements(requestApproval *pb.RequestApproval, agreements *[]api.A
 		protoRequest.ValidDataproviders[steward].ComputeProviders, _ = lib.GetMatchedElements(user.AllowedComputeProviders, agreement.ComputeProviders)
 
 		agreement.Relations = map[string]api.Relation{
-			requestApproval.User.UserName: user,
+			requestUser.UserName: user,
 		}
 
 		*agreements = append(*agreements, agreement)
