@@ -218,7 +218,6 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 			// return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		// Do other stuff
 		message := amqp.Publishing{
 			CorrelationId: in.RequestMetadata.CorrelationId,
 			Body:          data,

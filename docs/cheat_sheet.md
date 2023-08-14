@@ -158,10 +158,12 @@ linkerd viz install --set grafana.url=grafana.core.svc.cluster.local:3000 \
   linkerd jaeger install --set grafana.url=grafana.core.svc.cluster.local:3000 \
   | kubectl apply -f -
 
+linkerd jaeger uninstall | kubectl delete -f -
 
   # Ingress
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 <!-- helm install -f "${coreChart}/ingress-values.yaml" nginx oci://ghcr.io/nginxinc/charts/nginx-ingress -n ingress --version 0.18.0 -->
+coreChart=/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/charts/core
 helm install -f "${coreChart}/ingress-values.yaml" nginx ingress-nginx/ingress-nginx -n ingress
 kubectl get svc --namespace ingress nginx

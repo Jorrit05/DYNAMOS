@@ -25,5 +25,10 @@
         "name": "graph",
         "label": "computeProvider",
         "allowedOutputs": []
+    },
+    {
+        "name": "aggregate",
+        "label": "thirdParty",
+        "allowedOutputs": ["algorithm"]
     }
 ]

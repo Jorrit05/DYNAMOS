@@ -11,6 +11,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"github.com/gogo/protobuf/jsonpb"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/trace/propagation"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -109,11 +110,25 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	}
 
 	<-COORDINATOR
+
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
+	if sqlDataRequest.Graph {
+		// jsonString, _ := json.Marshal(msComm.Data)
+		// msComm.Result = jsonString
+
+		m := &jsonpb.Marshaler{}
+		jsonString, _ := m.MarshalToString(msComm.Data)
+		msComm.Result = []byte(jsonString)
+
+		c.SendData(ctx, msComm)
+		close(config.StopServer)
+		return nil
+	}
 	// // Just pass on the data for now...
 	if config.LastService {
 		msComm.Result = getFirstRow(msComm.Data)
 	}
+
 	// Process all data to make this service more realistic.
 	ctx, _ = convertAllData(ctx, msComm.Data)
 

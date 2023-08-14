@@ -82,14 +82,14 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 	localJobname := ""
 	value, ok := jobCounter[compositionRequest.JobName]
 	if !ok {
-		logger.Sugar().Warn("NOK")
+		logger.Sugar().Debug("NOK")
 
 		localJobname, err = generateJobName(compositionRequest.JobName)
 		if err != nil {
 			logger.Sugar().Errorf("generateJobName err: %v", err)
 		}
 	} else {
-		logger.Sugar().Warnf("value: %v", value)
+		logger.Sugar().Debugf("value: %v", value)
 		localJobname = compositionRequest.JobName + strings.ToLower(serviceName) + strconv.Itoa(value)
 	}
 

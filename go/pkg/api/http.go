@@ -72,6 +72,7 @@ type Archetype struct {
 	Name            string `json:"name"`
 	ComputeProvider string `json:"computeProvider"`
 	ResultRecipient string `json:"resultRecipient"`
+	Weight          int    `json:"weight"`
 }
 
 type MicroserviceMetadata struct {
