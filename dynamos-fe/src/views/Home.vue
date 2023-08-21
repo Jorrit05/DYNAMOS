@@ -4,7 +4,8 @@
     <span v-else>Logged in.</span>
     <!-- <div v-else v-on:change="goToProfile()"></div> -->
     <!-- <router-link v-else to="/requestApproval">Go to Form</router-link> -->
-    <!-- <RequestApproval v-else></RequestApproval> -->
+    <RequestApproval></RequestApproval>`
+    <RequestForm></RequestForm>
     <!-- <el-button v-else type="primary" v-on:click="goToProfile">Request Profile Information</el-button> -->
   </div>
 </template>
@@ -13,7 +14,8 @@
 // import { useRouter } from "vue-router";
 import { useIsAuthenticated } from "../composition-api/useIsAuthenticated";
 // import { reactive, onMounted, watch } from 'vue'
-// import RequestApproval from "./RequestApproval.vue";
+import RequestForm from "./RequestForm.vue";
+import RequestApproval from "./RequestApproval.vue";
 
 const isAuthenticated = useIsAuthenticated();
 

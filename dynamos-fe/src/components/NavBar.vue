@@ -4,10 +4,10 @@
             <i class="el-icon-house"></i>
             <router-link to="/">Home</router-link>
         </el-menu-item>
-        <el-menu-item v-if="isAuthenticated" index="RequestApproval">
+        <!-- <el-menu-item v-if="isAuthenticated" index="RequestApproval">
             <i class="el-icon-house"></i>
             <router-link to="/requestApproval">RequestApproval</router-link>
-        </el-menu-item>
+        </el-menu-item> -->
         <el-sub-menu index="pages">
             <template #title>Example Pages</template>
             <el-menu-item index="profile"><router-link to="/profile">Profile protected by Guard</router-link></el-menu-item>
