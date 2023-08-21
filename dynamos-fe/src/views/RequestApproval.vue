@@ -45,12 +45,12 @@ export default {
                 dataProviders: dataProvidersArray,
                 syncServices: true,
             };
-
+            console.log(body)
             try {
                 // Send the API request
                 const response = await axios({
                     method: 'POST',
-                    url: 'http://localhost:8081/requestapproval',
+                    url: 'http://orchestrator.orchestrator.svc.cluster.local:80/api/v1/requestapproval',
                     // data: JSON.stringify(body),
                     data: body,
                     headers: {

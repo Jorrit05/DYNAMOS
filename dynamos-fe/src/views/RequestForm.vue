@@ -29,19 +29,20 @@
     </div>
 </template>
 
+
 <script lang="ts">
 import { ref, computed } from 'vue';
 import axios from 'axios'; // import axios
 import { msalInstance } from "../authConfig";
 
 export default {
+
     setup() {
         const form = ref({
             sqlQuery: "",
             jobId: "",
             urlType: "Surf" || "UVA"
         });
-
 
         async function submitForm() {
 
@@ -59,19 +60,20 @@ export default {
                 //     Geslacht: "Aanst_22, Gebdat"
                 // },
                 user: {
-                    ID: uniqueId,
+                    id: uniqueId,
                     userName: name,
                 },
-                requestMetaData: {
+                requestMetadata: {
                     jobId: form.value.jobId
                 }
             };
 
+            console.log(body)
             try {
                 // Send the API request
                 const response = await axios({
                     method: 'POST',
-                    url: form.value.urlType === 'Surf' ? 'http://surf.surf.svc.cluster.local:8083/agent/v1/sqlDataRequest/surf' : 'http://localhost:8082/agent/v1/sqlDataRequest/uva',
+                    url: form.value.urlType === 'Surf' ? 'http://surf.surf.svc.cluster.local:80/agent/v1/sqlDataRequest/surf' : 'http://uva.uva.svc.cluster.local:80/agent/v1/sqlDataRequest/uva',
                     // data: JSON.stringify(body),
                     data: body,
                     headers: {
@@ -120,7 +122,7 @@ export default {
 }
 
 .form-item > label {
-        width: 30%; 
+        width: 30%;
         /* Waarom werkt dit niet :( */
 }
 </style>
