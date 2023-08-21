@@ -12,6 +12,13 @@
             <el-form-item>
                 <el-button type="primary" native-type="submit">Submit</el-button>
             </el-form-item>
+
+        <!-- Display Response Data -->
+        <div v-if="responseData" class="response-section">
+            <h2>Received Data:</h2>
+            <!-- Sample display; customize based on your response structure -->
+            <pre>{{ JSON.stringify(responseData, null, 2) }}</pre>
+        </div>
         </el-form>
     </div>
 </template>
@@ -21,23 +28,29 @@ import { ref, computed } from 'vue';
 import axios from 'axios'; // import axios
 import { msalInstance } from "../authConfig";
 
+
+const responseData = ref(null);
+const isLoading = ref(false);
+const isError = ref(false);
+
 export default {
     setup() {
         const form = ref({
             dataProviders: ""
         });
 
-
         async function submitForm() {
             const dataProvidersArray = form.value.dataProviders.split(',').map(value => value.trim());
 
+            isLoading.value = true;
+            isError.value = false;
             const account = msalInstance.getActiveAccount();
             const uniqueId = account?.localAccountId;
             const name = account?.username;
 
             // Construct the request body
             const body = {
-                type: "requestApproval",
+                type: "sqlDataRequest",
                 user: {
                     ID: uniqueId,
                     userName: name,
@@ -60,14 +73,21 @@ export default {
                 });
                 // const response = await axios.post('http://localhost:8081/requestapproval', body);
                 console.log(response.data);
+                responseData.value = response.data;
             } catch (error) {
                 console.error(error);
+                isError.value = true;
+            } finally {
+                isLoading.value = false;
             }
         }
 
         return {
             form,
-            submitForm
+            submitForm,
+            responseData,
+            isLoading,
+            isError
         };
     },
 };
@@ -95,5 +115,23 @@ export default {
 
 .approval-form {
     margin-top: 20px;
+}
+.loading-section {
+    font-weight: bold;
+    color: #007BFF;  /* You can adjust the color */
+}
+
+.error-message {
+    color: red;
+    border: 1px solid red;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.response-section {
+    margin-top: 20px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border: 1px solid #dee2e6;
 }
 </style>

@@ -54,7 +54,7 @@ func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.Composit
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
 		return ctx, err
 	}
-
+	logger.Sugar().Debug(msChain)
 	err = deployJob(ctx, msChain, localJobName)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
