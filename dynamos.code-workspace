@@ -38,6 +38,9 @@
 		},
 		{
 			"path": "go/cmd/policy_enforcer"
+		},
+		{
+			"path": "dynamos-fe"
 		}
 	],
 	"settings": {}
