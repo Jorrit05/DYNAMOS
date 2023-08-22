@@ -82,11 +82,23 @@
         </div> -->
         <div v-if="responseData" class="response-section">
     <h2>Received Data:</h2>
-    <ul class="response-list">
+    <!-- <ul class="response-list">
         <li v-for="(item, index) in responseData" :key="index">
             {{ JSON.stringify(item) }}
         </li>
-    </ul>
+    </ul> -->
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th v-for="(header, index) in responseData[0]" :key="index">{{ header }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(row, rowIndex) in responseData.slice(1)" :key="rowIndex">
+          <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell }}</td>
+        </tr>
+      </tbody>
+    </table>
 </div>
     </div>
 </template>
@@ -96,7 +108,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios'; // import axios
 import { msalInstance } from "../authConfig";
-const responseData = ref(null);
+const responseData: any = ref();
 const isLoading = ref(false);
 const isError = ref(false);
 
@@ -176,7 +188,8 @@ export default {
 
 <style scoped>
 .request-approval {
-    max-width: 600px;
+    min-width: 600px;
+    max-width: 85vw;
     margin: 0 auto;
     padding: 20px;
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
@@ -214,5 +227,42 @@ export default {
     word-wrap: break-word; /* Break long words */
     max-width: 100%;
     overflow-x: auto; /* Add horizontal scroll for very long content */
+}
+
+.styled-table {
+    width: 80%;
+    border-collapse: collapse;
+    margin: 25px 30px;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+.styled-table thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 12px 15px;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid #009879;
+}
+
+.styled-table tbody tr.active-row {
+    font-weight: bold;
+    color: #009879;
 }
 </style>
