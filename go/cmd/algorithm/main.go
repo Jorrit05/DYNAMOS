@@ -110,6 +110,7 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	}
 
 	<-COORDINATOR
+	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
 
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
 	if sqlDataRequest.Graph {
@@ -124,15 +125,25 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		close(config.StopServer)
 		return nil
 	}
-	// // Just pass on the data for now...
-	if config.LastService {
-		msComm.Result = getFirstRow(msComm.Data)
+
+	if sqlDataRequest.Algorithm == "average" {
+		// jsonString, _ := json.Marshal(msComm.Data)
+		// msComm.Result = jsonString
+
+		msComm.Result = getAverage(msComm.Data)
+		c.SendData(ctx, msComm)
+		close(config.StopServer)
+		return nil
 	}
 
-	// Process all data to make this service more realistic.
-	ctx, _ = convertAllData(ctx, msComm.Data)
+	// // Just pass on the data for now...
+	// if config.LastService {
+	// 	msComm.Result = getAverage(msComm.Data)
+	// }
 
-	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
+	// Process all data to make this service more realistic.
+	ctx, allResults := convertAllData(ctx, msComm.Data)
+	msComm.Result = allResults
 
 	c.SendData(ctx, msComm)
 	// time.Sleep(2 * time.Second)
@@ -205,4 +216,56 @@ func getFirstRow(data *structpb.Struct) []byte {
 	}
 
 	return jsonData
+}
+
+func getAverage(data *structpb.Struct) []byte {
+
+	gendersField, ok1 := data.GetFields()["Geslacht"]
+	salariesField, ok2 := data.GetFields()["Salschal"]
+
+	if !ok1 || !ok2 {
+		logger.Error("Genders or Salaries field not found")
+		return nil
+	}
+
+	genders := gendersField.GetListValue().GetValues()
+	salaries := salariesField.GetListValue().GetValues()
+
+	var totalMaleSalary, totalFemaleSalary float64
+	maleCount, femaleCount := 0, 0
+
+	for index, gender := range genders {
+		genderStr := gender.GetStringValue()
+		if salaryStr := salaries[index].GetStringValue(); salaryStr != "" {
+			salary, err := strconv.ParseFloat(salaryStr, 64)
+			if err != nil {
+				fmt.Printf("Error parsing salary value: %v\n", err)
+				continue
+			}
+
+			if genderStr == "M" {
+				totalMaleSalary += salary
+				maleCount++
+			} else if genderStr == "V" {
+				totalFemaleSalary += salary
+				femaleCount++
+			}
+		}
+	}
+
+	result := make(map[string]float64)
+	if maleCount != 0 {
+		result["average_male_salary"] = totalMaleSalary / float64(maleCount)
+	}
+	if femaleCount != 0 {
+		result["average_female_salary"] = totalFemaleSalary / float64(femaleCount)
+	}
+
+	jsonResult, err := json.Marshal(result)
+	if err != nil {
+		logger.Sugar().Error(err)
+		return nil
+	}
+
+	return jsonResult
 }

@@ -28,7 +28,11 @@ docker logs --since 5s $(docker ps -q --filter "ancestor=grafana/loki:2.8.0" --f
     "query" : "SELECT `first_name`, `last_name`, `sex`, `person_id` FROM `person` LIMIT 2"
 }
 
+
 # Kubernetes
+
+watch -n1 "kubectl get pods --all-namespaces | grep -E '^(uva|surf) '"
+
 
 kubectl describe pod rabbitmq-575f76fff7-v54pr
 kubectl logs rabbitmq-575f76fff7-v54pr

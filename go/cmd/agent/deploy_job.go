@@ -120,8 +120,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 	firstService := "1"
 	lastService := "0"
 	for i, microservice := range msChain {
-		order := i
-		port = port + order
+		port++
 
 		if i == nrOfServices-1 {
 			lastService = "1"
@@ -205,9 +204,38 @@ func getRequiredMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata
 	return nil
 }
 
-func getOptionalMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata, request *mschain.RequestType, role string) error {
+func getOptionalMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata, request *mschain.RequestType, role string, requestType string) error {
 	//TODO: figure out a way to include enforced microservices
+	logger.Debug("Start getOptionalMicroservices")
+	logger.Sugar().Debug(len(request.OptionalServices))
+	for _, ms := range request.OptionalServices {
+		key := fmt.Sprintf("/agents/%s/requestType/%s/%s ", serviceName, requestType, ms)
+		logger.Sugar().Debug("key: " + key)
+		resp, err := etcdClient.Get(context.Background(), key)
+		if err != nil {
+			logger.Sugar().Errorf("getting to etcd: %v", err)
+			return err
+		}
 
+		if len(resp.Kvs) == 0 {
+			logger.Sugar().Debug("resp.Kvs = 0")
+			continue
+		}
+		var metadataObject mschain.MicroserviceMetadata
+
+		_, err = etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", ms), &metadataObject)
+		if err != nil {
+			return err
+		}
+
+		if strings.EqualFold(metadataObject.Label, role) {
+			*microserviceMetada = append(*microserviceMetada, metadataObject)
+		} else if strings.EqualFold("all", role) {
+			// Only append dataProvider microservices
+			*microserviceMetada = append(*microserviceMetada, metadataObject)
+		}
+
+	}
 	return nil
 }
 func RequestTypeMicroservices(requestType string) (mschain.RequestType, error) {

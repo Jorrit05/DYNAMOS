@@ -152,7 +152,7 @@ func generateMicroserviceChain(compositionRequest *pb.CompositionRequest) ([]msc
 		return nil, err
 	}
 
-	err = getOptionalMicroservices(&msMetadata, &requestType, compositionRequest.Role)
+	err = getOptionalMicroservices(&msMetadata, &requestType, compositionRequest.Role, compositionRequest.RequestType)
 	if err != nil {
 		return nil, err
 	}

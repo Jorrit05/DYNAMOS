@@ -52,4 +52,19 @@ func registerPolicyEnforcerConfiguration() {
 	for _, dataset := range datasets {
 		etcd.SaveStructToEtcd[*pb.Dataset](etcdClient, fmt.Sprintf("/datasets/%s", dataset.Name), dataset)
 	}
+
+	// Load   optional_microservices.json
+	var optionalServices []api.OptionalServices
+
+	lib.UnmarshalJsonFile(optionalMSConfigLocation, &optionalServices)
+
+	for _, services := range optionalServices {
+		for k, msList := range services.Types {
+			for _, ms := range msList {
+				key := fmt.Sprintf("/agents/%s/requestType/%s/%s ", services.DataSteward, k, ms)
+				etcd.PutValueToEtcd(etcdClient, key, ms)
+			}
+		}
+	}
+
 }

@@ -21,6 +21,7 @@ var archetypeConfigLocation = addEtcdDir("archetype.json")
 var microserviceMetadataConfigLocation = addEtcdDir("microservices.json")
 var agreementsConfigLocation = addEtcdDir("agreements.json")
 var dataSetConfigLocation = addEtcdDir("datasets.json")
+var optionalMSConfigLocation = addEtcdDir("optional_microservices.json")
 
 var etcdEndpoints = "http://localhost:30005"
 

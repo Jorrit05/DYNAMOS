@@ -1,37 +1,3 @@
-<!-- <template>
-    <div class="request-approval">
-        <h1 class="title">Data Request</h1>
-        <p class="info">Please enter the required information below:</p>
-
-        <el-form @submit.prevent="submitForm" class="approval-form">
-            <input type="radio" id="surf" value="Surf" v-model="form.urlType" />
-            <label for="one">Surf</label>
-
-            <input type="radio" id="uva" value="UVA" v-model="form.urlType" />
-            <label for="two">UVA</label>
-
-            <br />
-            <br />
-            <br />
-
-            <el-form-item class='form-item' label="SQL Query:">
-                <el-input v-model="form.sqlQuery" placeholder="SELECT * FROM Personen"></el-input>
-            </el-form-item>
-            <el-form-item class='form-item' label="Job ID:">
-                <el-input v-model="form.jobId" placeholder="jorrit-stutterheim-<jobid>"></el-input>
-            </el-form-item>
-
-            <input type="checkbox" id="graph" v-model="form.graph" />
-            <label for="graph">Graph</label>
-
-            Submit button
-            <el-form-item>
-                <el-button type="primary" native-type="submit">Submit</el-button>
-            </el-form-item>
-        </el-form>
-    </div>
-</template> -->
-
 <template>
     <div class="request-approval">
         <h1 class="title">Data Request</h1>
@@ -54,6 +20,10 @@
             <el-form-item class='form-item' label="Job ID:">
                 <el-input v-model="form.jobId" placeholder="jorrit-stutterheim-<jobid>"></el-input>
             </el-form-item>
+            <el-form-item class='form-item' label="Algorithm:">
+                <el-input v-model="form.algorithm" placeholder="average"></el-input>
+            </el-form-item>
+
 
             <input type="checkbox" id="graph" v-model="form.graph" />
             <label for="graph">Graph</label>
@@ -82,12 +52,9 @@
         </div> -->
         <div v-if="responseData" class="response-section">
     <h2>Received Data:</h2>
-    <!-- <ul class="response-list">
-        <li v-for="(item, index) in responseData" :key="index">
-            {{ JSON.stringify(item) }}
-        </li>
-    </ul> -->
-    <table class="styled-table">
+    <div>
+    <!-- Display table if responseData is an array and has data -->
+    <table class="styled-table" v-if="Array.isArray(responseData) && responseData.length">
       <thead>
         <tr>
           <th v-for="(header, index) in responseData[0]" :key="index">{{ header }}</th>
@@ -99,6 +66,19 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Display JSON data if responseData is an object -->
+    <div v-else-if="typeof responseData === 'object'">
+      <div v-for="(value, key) in responseData" :key="key">
+        {{ key }}: {{ value }}
+      </div>
+    </div>
+
+    <!-- Handle other cases (like empty data or other formats) -->
+    <div v-else>
+      No data available.
+    </div>
+  </div>
 </div>
     </div>
 </template>
@@ -119,7 +99,8 @@ export default {
             sqlQuery: "",
             jobId: "",
             urlType: "Surf" || "UVA",
-            graph: false
+            graph: false,
+            algorithm: "average" || ""
         });
 
         const account = msalInstance.getActiveAccount();
@@ -136,7 +117,7 @@ export default {
                 type: "sqlDataRequest",
                 query: form.value.sqlQuery,
                 graph: form.value.graph,
-                algorithm: "average",
+                algorithm: form.value.algorithm,
                 // algorithmColumns: {
                 //     Geslacht: "Aanst_22, Gebdat"
                 // },

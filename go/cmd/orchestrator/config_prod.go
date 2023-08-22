@@ -19,5 +19,6 @@ var archetypeConfigLocation = root + "archetype.json"
 var microserviceMetadataConfigLocation = root + "microservices.json"
 var agreementsConfigLocation = root + "agreements.json"
 var dataSetConfigLocation = root + "datasets.json"
+var optionalMSConfigLocation = root + "optional_microservices.json"
 
 var etcdEndpoints = "http://etcd-0.etcd-headless.core.svc.cluster.local:2379,http://etcd-1.etcd-headless.core.svc.cluster.local:2379,http://etcd-2.etcd-headless.core.svc.cluster.local:2379"

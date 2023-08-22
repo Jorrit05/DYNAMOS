@@ -81,6 +81,11 @@ type MicroserviceMetadata struct {
 	AllowedOutputs []string `json:"allowedOutputs"`
 }
 
+type OptionalServices struct {
+	DataSteward string              `json:"data_steward"`
+	Types       map[string][]string `json:"types"`
+}
+
 type Named interface {
 	GetName() string
 }
