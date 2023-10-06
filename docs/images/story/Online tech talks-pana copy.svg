@@ -15,14 +15,13 @@
 	.st9{fill:#FFFFFF;stroke:#000000;}
 	.st10{font-family:'Helvetica';}
 	.st11{font-size:18px;}
-	.st12{enable-background:new    ;}
-	.st13{fill:#B85450;stroke:#B85450;stroke-width:3;stroke-miterlimit:10;}
-	.st14{fill:#2875E2;}
-	.st15{fill:#FFFFFF;stroke:#000000;stroke-width:3;stroke-miterlimit:10;}
-	.st16{fill:none;stroke:#000000;stroke-width:3;stroke-miterlimit:10;}
-	.st17{fill:none;}
-	.st18{fill:none;stroke:#B85450;stroke-width:3;stroke-miterlimit:10;}
-	.st19{font-size:12px;}
+	.st12{fill:#B85450;stroke:#B85450;stroke-width:3;stroke-miterlimit:10;}
+	.st13{fill:#2875E2;}
+	.st14{fill:#FFFFFF;stroke:#000000;stroke-width:3;stroke-miterlimit:10;}
+	.st15{fill:none;stroke:#000000;stroke-width:3;stroke-miterlimit:10;}
+	.st16{fill:none;}
+	.st17{fill:none;stroke:#B85450;stroke-width:3;stroke-miterlimit:10;}
+	.st18{font-size:12px;}
 </style>
 <g id="freepik--character-1--inject-516">
 	<path class="st0" d="M56.2,192.5h237.2c8.2,0,14.9,6.7,14.9,14.9v168.5c0,8.2-6.7,14.9-14.9,14.9H56.2c-8.2,0-14.9-6.7-14.9-14.9
@@ -73,7 +72,7 @@
 	<path class="st2" d="M156.9,220.1c0.4,0,0.4,2.3,2.5,3.9s4.5,1.3,4.6,1.6c0,0.1-0.5,0.5-1.6,0.5c-1.4,0.1-2.7-0.4-3.8-1.2
 		c-1-0.8-1.7-2-1.9-3.3C156.5,220.7,156.8,220.1,156.9,220.1z"/>
 	<path class="st2" d="M155.7,193.9c-0.2,0.6-2.4,0.4-4.9,0.8s-4.5,1.1-4.9,0.6c-0.2-0.2,0.2-0.8,1-1.4c1.1-0.7,2.3-1.2,3.6-1.4
-		c1.3-0.2,2.6-0.1,3.8,0.3C155.3,193.1,155.7,193.6,155.7,193.9z"/>
+		s2.6-0.1,3.8,0.3C155.3,193.1,155.7,193.6,155.7,193.9z"/>
 	<path class="st2" d="M175.1,194.4c-0.4,0.5-1.9,0-3.6,0.1s-3.3,0.4-3.6-0.1c-0.2-0.2,0.1-0.7,0.7-1.2c0.9-0.6,1.9-0.9,2.9-0.9
 		s2.1,0.3,2.9,0.9C175,193.6,175.3,194.1,175.1,194.4z"/>
 	<path class="st2" d="M189.1,191.8c-0.6-2.4-2.1-4.5-4.1-5.9c-1.1-0.7-2.4-1.2-3.5-2c-2.2-1.8-2.8-5-4.2-7.5c-1.8-3.3-5.2-5.6-8.9-6
@@ -203,7 +202,7 @@
 		L367.3,199.5z"/>
 	<circle class="st0" cx="345.2" cy="101.2" r="2.1"/>
 	<path class="st3" d="M345.2,103.8c-1.4,0-2.6-1.2-2.6-2.6s1.2-2.6,2.6-2.6s2.6,1.2,2.6,2.6l0,0
-		C347.8,102.6,346.7,103.8,345.2,103.8z M345.2,99.6c-0.9,0-1.6,0.7-1.6,1.6c0,0.9,0.7,1.6,1.6,1.6s1.6-0.7,1.6-1.6l0,0
+		C347.8,102.6,346.7,103.8,345.2,103.8z M345.2,99.6c-0.9,0-1.6,0.7-1.6,1.6s0.7,1.6,1.6,1.6s1.6-0.7,1.6-1.6l0,0
 		C346.8,100.3,346.1,99.6,345.2,99.6z"/>
 	<path class="st3" d="M312.6,140.6c-0.3,0-0.5-0.2-0.5-0.5c0-0.2,0-0.4,2.2-5.7c0.3-0.6,0.2-1.3-0.2-1.9l-4.4-6.8
 		c-0.8-1.2-0.6-2.7,0.3-3.7l11.7-12.4c1-1.1,2.6-1.3,3.8-0.5l6.6,4.2c0.5,0.3,1.2,0.4,1.8,0.2l5.2-1.9c0.6-0.2,1.1-0.7,1.3-1.4
@@ -236,7 +235,7 @@
 		l0.3-0.3c0,15.9,0,31,0,44.7l-0.2-0.2l51.7,0.1l14.9,0.1h4h1L82.9,282.1l-0.3-0.1h-1h-3.9l-14.8,0.1L11,282.3h-0.2v-0.2
 		c0-13.8,0-28.9,0-44.7v-0.3H11l71.9,0.1h0.2v0.2c0,13.7-0.1,24.9-0.1,32.7c0,3.9,0,6.9,0,8.9c0,1,0,1.8,0,2.3
 		S82.9,282.1,82.9,282.1z"/>
-	<path class="st2" d="M29.3,281.9c-0.2,0-0.3-9.8-0.3-22s0.1-22,0.3-22s0.3,9.8,0.3,22S29.4,281.9,29.3,281.9z"/>
+	<path class="st2" d="M29.3,281.9c-0.2,0-0.3-9.8-0.3-22s0.1-22,0.3-22s0.3,9.8,0.3,22C29.6,272.1,29.4,281.9,29.3,281.9z"/>
 	<path class="st2" d="M47.8,282.8c-0.1,0-0.3-10.2-0.3-22.7s0.1-22.7,0.3-22.7s0.3,10.2,0.3,22.7S47.9,282.8,47.8,282.8z"/>
 	<path class="st2" d="M65.8,282.8c-0.1,0-0.3-10.2-0.3-22.7s0.1-22.7,0.3-22.7s0.3,10.2,0.3,22.7S66,282.8,65.8,282.8z"/>
 	<path class="st2" d="M82.8,260.3c0,0.1-16.1,0.3-35.9,0.3S11,260.4,11,260.3s16.1-0.3,35.9-0.3S82.8,260.1,82.8,260.3z"/>
@@ -252,7 +251,8 @@
 	</g>
 	<ellipse pointer-events="all" class="st9" cx="626.7" cy="461.5" rx="60" ry="40"/>
 	<g transform="translate(-0.5 -0.5)">
-		<text transform="matrix(1 0 0 1 567.1907 457.9953)" class="st12"><tspan x="0" y="0" class="st10 st11">       Policy</tspan><tspan x="0" y="21.6" class="st10 st11">      Enforcer</tspan></text>
+		<text transform="matrix(1 0 0 1 567.1907 457.9953)" class="st10 st11">       Policy</text>
+		<text transform="matrix(1 0 0 1 567.1907 479.5953)" class="st10 st11">      Enforcer</text>
 	</g>
 	<path pointer-events="none" class="st9" d="M572.1-95.1h358.2c27,0,48.9,21.9,48.9,48.9V182c0,27-21.9,48.9-48.9,48.9H572.1
 		c-27,0-48.9-21.9-48.9-48.9V-46.2C523.2-73.2,545.1-95.1,572.1-95.1z"/>
@@ -263,28 +263,28 @@
 	<path pointer-events="none" class="st9" d="M593.6-76.5h358.2c27,0,48.9,21.9,48.9,48.9v228.2c0,27-21.9,48.9-48.9,48.9H593.6
 		c-27,0-48.9-21.9-48.9-48.9V-27.6C544.7-54.6,566.6-76.5,593.6-76.5z"/>
 	<g transform="translate(-0.5 -0.5)">
-		<path pointer-events="none" class="st13" d="M581.6,130.9l-5.9,9.7l-0.2-5.4l-6.1-1.2L581.6,130.9z"/>
+		<path pointer-events="none" class="st12" d="M581.6,130.9l-5.9,9.7l-0.2-5.4l-6.1-1.2L581.6,130.9z"/>
 		<text transform="matrix(1 0 0 1 611.1668 -50.465)" class="st10 st11">Data stewards</text>
 	</g>
 	<path pointer-events="none" d="M977.9,69.7h-40.7c-0.7,0-1.2,0.6-1.2,1.2v37.5c0,0.7,0.5,1.2,1.2,1.2h40.7c0.7,0,1.2-0.6,1.2-1.2
 		V71C979.1,70.3,978.5,69.7,977.9,69.7z M938.4,107.2v-35h38.2v35H938.4z M937.1,67.9h40.8c0.5,0,0.9-0.3,1.1-0.7
 		c0.2-0.4,0.2-0.9-0.1-1.3l-7.2-9.6c-0.2-0.3-0.6-0.5-1-0.5h-26.3c-0.4,0-0.7,0.2-1,0.5l-7.2,9.6c-0.3,0.4-0.3,0.9-0.1,1.3
 		C936.2,67.6,936.7,67.9,937.1,67.9z M945,58.3h25l5.4,7.2h-35.9L945,58.3z M951.9,81.9l-1.7-1.8c2-1.9,4.6-3,7.3-3
-		c2.8,0,5.4,1.1,7.3,3l-1.7,1.8c-1.5-1.5-3.5-2.3-5.6-2.3C955.4,79.6,953.4,80.4,951.9,81.9z M955.5,95.5l-0.6,2.4
-		c-4.6-1.2-7.9-5.4-7.9-10.1c0-1,0.2-2.1,0.5-3l2.3,0.7c-0.2,0.7-0.3,1.5-0.3,2.3C949.4,91.3,951.9,94.6,955.5,95.5z M967.5,84.6
-		c0.3,1,0.5,2,0.5,3c0,4.8-3.2,9-7.9,10.1l-0.6-2.4c3.5-0.9,6-4.1,6-7.8c0-0.8-0.1-1.6-0.3-2.3L967.5,84.6z M951.6,87.7
-		c0,2.8,2,5.2,4.7,5.7v8.6h2.4v-8.6c2.6-0.6,4.6-2.9,4.6-5.7c0-0.7-0.2-1.4-0.4-2l8-4.6l-1.2-2.1l-8,4.6c-1.1-1.1-2.5-1.8-4.2-1.8
-		c-1.7,0-3.1,0.7-4.2,1.8l-8-4.6l-1.2,2.1l8,4.6C951.8,86.3,951.6,87,951.6,87.7z M957.5,84.3c1.9,0,3.4,1.5,3.4,3.4
-		c0,1.9-1.5,3.4-3.4,3.4c-1.9,0-3.4-1.5-3.4-3.4C954.1,85.8,955.6,84.3,957.5,84.3z"/>
+		c2.8,0,5.4,1.1,7.3,3l-1.7,1.8c-1.5-1.5-3.5-2.3-5.6-2.3S953.4,80.4,951.9,81.9z M955.5,95.5l-0.6,2.4c-4.6-1.2-7.9-5.4-7.9-10.1
+		c0-1,0.2-2.1,0.5-3l2.3,0.7c-0.2,0.7-0.3,1.5-0.3,2.3C949.4,91.3,951.9,94.6,955.5,95.5z M967.5,84.6c0.3,1,0.5,2,0.5,3
+		c0,4.8-3.2,9-7.9,10.1l-0.6-2.4c3.5-0.9,6-4.1,6-7.8c0-0.8-0.1-1.6-0.3-2.3L967.5,84.6z M951.6,87.7c0,2.8,2,5.2,4.7,5.7v8.6h2.4
+		v-8.6c2.6-0.6,4.6-2.9,4.6-5.7c0-0.7-0.2-1.4-0.4-2l8-4.6l-1.2-2.1l-8,4.6c-1.1-1.1-2.5-1.8-4.2-1.8s-3.1,0.7-4.2,1.8l-8-4.6
+		l-1.2,2.1l8,4.6C951.8,86.3,951.6,87,951.6,87.7z M957.5,84.3c1.9,0,3.4,1.5,3.4,3.4s-1.5,3.4-3.4,3.4s-3.4-1.5-3.4-3.4
+		S955.6,84.3,957.5,84.3z"/>
 	<g transform="translate(-0.5 -0.5)">
-		<text transform="matrix(1 0 0 1 933.3397 128.535)" class="st10 st19" style="fill:#232F3E;">Data pod</text>
+		<text transform="matrix(1 0 0 1 933.3397 128.535)" class="st10 st18" style="fill:#232F3E;">Data pod</text>
 	</g>
 	<ellipse pointer-events="none" class="st9" cx="629.4" cy="84.2" rx="74.1" ry="53"/>
 	<g transform="translate(-0.5 -0.5)">
 		<text transform="matrix(1 0 0 1 561.6506 89.535)" class="st10 st11">Distributed agent</text>
 	</g>
 	<g transform="translate(-0.5 -0.5)">
-		<text transform="matrix(1 0 0 1 761.0203 120.535)" class="st10 st19">Microservices</text>
+		<text transform="matrix(1 0 0 1 761.0203 120.535)" class="st10 st18">Microservices</text>
 	</g>
 	<path pointer-events="none" class="st7" d="M834,82.4l91.7,0.3"/>
 	<path pointer-events="none" class="st8" d="M827.3,82.3l9-4.5l-2.3,4.5l2.2,4.5L827.3,82.3z"/>
@@ -295,13 +295,13 @@
 	<path pointer-events="none" class="st0" d="M797.2,57c-0.5,0-0.9,0.1-1.3,0.4L777.8,66c-1,0.5-1.6,1.3-1.9,2.3l-4.5,19.4
 		c-0.2,0.9,0,1.9,0.5,2.6c0.1,0.1,0.2,0.2,0.2,0.3l12.5,15.5c0.7,0.8,1.7,1.3,2.7,1.3h20.1c1,0,2.1-0.5,2.7-1.3l12.5-15.6
 		c0.6-0.8,0.9-1.9,0.7-2.9l-4.5-19.4c-0.2-1-0.9-1.9-1.9-2.3l-18.1-8.6C798.4,57.1,797.8,57,797.2,57z"/>
-	<path pointer-events="none" class="st14" d="M797.2,58.6c-0.4,0-0.9,0.1-1.2,0.3L779,67c-0.9,0.4-1.5,1.2-1.8,2.2L773,87.4
+	<path pointer-events="none" class="st13" d="M797.2,58.6c-0.4,0-0.9,0.1-1.2,0.3L779,67c-0.9,0.4-1.5,1.2-1.8,2.2L773,87.4
 		c-0.2,0.8,0,1.7,0.4,2.5c0.1,0.1,0.1,0.2,0.2,0.3l11.8,14.6c0.6,0.8,1.6,1.2,2.5,1.2h18.9c1,0,1.9-0.5,2.5-1.2l11.8-14.6
 		c0.6-0.8,0.8-1.8,0.6-2.7l-4.2-18.2c-0.2-0.9-0.9-1.8-1.8-2.2l-17-8.1C798.3,58.6,797.8,58.5,797.2,58.6z"/>
 	<path pointer-events="none" class="st0" d="M812.7,73.2v16.3l-14.2,7.9l-0.1-19.9L812.7,73.2z M782.1,73.2v16.3l14.2,7.9l0.1-19.9
 		L782.1,73.2z M782.1,71.5l15.3-4.4l15.3,4.4L797.4,76L782.1,71.5z"/>
-	<path pointer-events="none" class="st15" d="M791.7,288.8c0-17.3,70-17.3,70,0v60c0,17.3-70,17.3-70,0V288.8z"/>
-	<path pointer-events="none" class="st16" d="M791.7,288.8c0,13,70,13,70,0 M791.7,295.3c0,13,70,13,70,0 M791.7,301.8
+	<path pointer-events="none" class="st14" d="M791.7,288.8c0-17.3,70-17.3,70,0v60c0,17.3-70,17.3-70,0V288.8z"/>
+	<path pointer-events="none" class="st15" d="M791.7,288.8c0,13,70,13,70,0 M791.7,295.3c0,13,70,13,70,0 M791.7,301.8
 		c0,13,70,13,70,0"/>
 	<g transform="translate(-0.5 -0.5)">
 		<text transform="matrix(1 0 0 1 788.841 380.535)" class="st10" style="font-size:15px;">Data store</text>
@@ -316,22 +316,26 @@
 	<path pointer-events="none" class="st8" d="M628.9,140.6l4.4,9.1l-4.5-2.3l-4.5,2.2L628.9,140.6z"/>
 </g>
 <g>
-	<rect x="359.4" y="231.7" pointer-events="all" class="st17" width="78" height="78"/>
+	<rect x="359.4" y="231.7" pointer-events="all" class="st16" width="78" height="78"/>
 	<path pointer-events="none" class="st7" d="M39.4,26.7h39.9"/>
 	<path pointer-events="none" class="st8" d="M86,26.7l-9,4.5l2.2-4.5L77,22.2L86,26.7z"/>
-	<path pointer-events="none" class="st18" d="M39.4,69.7h39.9"/>
-	<path pointer-events="none" class="st13" d="M86,69.7l-9,4.5l2.2-4.5L77,65.2L86,69.7z"/>
+	<path pointer-events="none" class="st17" d="M39.4,69.7h39.9"/>
+	<path pointer-events="none" class="st12" d="M86,69.7l-9,4.5l2.2-4.5L77,65.2L86,69.7z"/>
 	<g transform="translate(-0.5 -0.5)">
-		<text transform="matrix(1 0 0 1 95.724 31.6721)" class="st12"><tspan x="0" y="0" class="st10 st19">D</tspan><tspan x="9.4" y="0" class="st10 st19">YNAMOS internal </tspan><tspan x="0" y="14.4" class="st10 st19">communication</tspan></text>
+		<text transform="matrix(1 0 0 1 95.724 31.6721)" class="st10 st18">D</text>
+		<text transform="matrix(1 0 0 1 105.124 31.6721)" class="st10 st18">YNAMOS internal </text>
+		<text transform="matrix(1 0 0 1 95.724 46.0721)" class="st10 st18">communication</text>
 	</g>
 	<g transform="translate(-0.5 -0.5)">
-		<text transform="matrix(1 0 0 1 95.3766 75.6721)" class="st12"><tspan x="0" y="0" class="st10 st19">User initiated </tspan><tspan x="0" y="14.4" class="st10 st19">communication</tspan></text>
+		<text transform="matrix(1 0 0 1 95.3766 75.6721)" class="st10 st18">User initiated </text>
+		<text transform="matrix(1 0 0 1 95.3766 90.0721)" class="st10 st18">communication</text>
 	</g>
-	<path pointer-events="none" class="st18" d="M313.5,318.7h242.8"/>
-	<path pointer-events="none" class="st13" d="M564.1,318.7l-8,4.5l2.2-4.5l-3.2-4.5L564.1,318.7z"/>
+	<path pointer-events="none" class="st17" d="M313.5,318.7h242.8"/>
+	<path pointer-events="none" class="st12" d="M564.1,318.7l-8,4.5l2.2-4.5l-3.2-4.5L564.1,318.7z"/>
 	
-		<rect x="326.2" y="176.5" pointer-events="all" transform="matrix(0.8173 -0.5763 0.5763 0.8173 -55.3059 256.6088)" class="st17" width="101.6" height="78"/>
-	<path pointer-events="none" class="st18" d="M314.2,318.5l258.6-182.3"/>
-	<path pointer-events="none" class="st13" d="M581.1,130.4l-5.9,9.7l-0.2-5.4l-6.1-1.2L581.1,130.4z"/>
+		<rect x="326.2" y="176.5" pointer-events="all" transform="matrix(0.8173 -0.5763 0.5763 0.8173 -55.2751 256.6349)" class="st16" width="101.6" height="78"/>
+	<path pointer-events="none" class="st17" d="M314.2,318.5l258.6-182.3"/>
+	<path pointer-events="none" class="st12" d="M581.1,130.4l-5.9,9.7l-0.2-5.4l-6.1-1.2L581.1,130.4z"/>
+	<path pointer-events="none" class="st12" d="M303.8,318.5l9-4.5l-2.2,4.5l2.2,4.5L303.8,318.5z"/>
 </g>
 </svg>
