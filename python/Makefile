@@ -1,5 +1,6 @@
 targets := query
-datasets := "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/datasets/"
+# datasets := "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/datasets/"
+datasets := "../configuration/datasets/"
 
 .PHONY: proto $(targets)
 
