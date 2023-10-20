@@ -8,6 +8,8 @@ metadata:
     "linkerd.io/inject" : enabled
     # "config.linkerd.io/trace-collector": collector.linkerd-jaeger:14268
 
+---
+
 apiVersion: v1
 kind: Secret
 metadata:

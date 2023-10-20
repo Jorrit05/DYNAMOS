@@ -1,5 +1,3 @@
-#@ load("@ytt:data", "data")
-
 Namespace: core
 tracingEndpoint: collector.linkerd-jaeger:55678
 
@@ -14,11 +12,13 @@ rabbitmq:
     RABBITMQ_DEFAULT_PASS: "guest"
     RABBITMQ_LOGS: "-"
 
-volumes:
-  config:
-    hostPath: #@ data.values.base_path + "/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
-  definitions:
-    hostPath: #@ data.values.base_path + "/DYNAMOS/configuration/k8s_service_files/definitions.json"
+hostPath: default
+
+# volumes:
+#   config:
+#     hostPath: #@ data.values.base_path + "/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
+#   definitions:
+#     hostPath: #@ data.values.base_path + "/DYNAMOS/configuration/k8s_service_files/definitions.json"
 
 etcd:
   nodeName: 0

@@ -56,8 +56,7 @@ spec:
             claimName: rabbitmq-log-pvc
       - name: rabbitmq-definitions
         hostPath:
-          path: "{{ .Values.volumes.definitions.hostPath }}"
+          path: "{{ .Values.hostPath }}/DYNAMOS/configuration/k8s_service_files/definitions.json"
       - name: rabbitmq-config
         hostPath:
-          path: "{{ .Values.volumes.config.hostPath }}"
-
+          path: "{{ .Values.hostPath }}/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
