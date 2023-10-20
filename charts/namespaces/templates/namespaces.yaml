@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: core
+  annotations:
+    "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"
+    "linkerd.io/inject" : enabled
+    # "config.linkerd.io/trace-collector": collector.linkerd-jaeger:14268
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-secret
+  namespace: core
+type: Opaque
+data:
+  password: {{ .Values.secret.password | quote }}
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name:  orchestrator
+  annotations:
+    "helm.sh/resource-policy": keep
+    "linkerd.io/inject" : enabled
+    "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
+
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-secret
+  namespace: orchestrator
+type: Opaque
+data:
+  password: {{ .Values.secret.password | quote }}
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: uva
+  annotations:
+    "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"
+    "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-secret
+  namespace: uva
+type: Opaque
+data:
+  password: {{ .Values.secret.password | quote }}
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vu
+  annotations:
+    "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"
+    "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
+
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-secret
+  namespace: vu
+type: Opaque
+data:
+  password: {{ .Values.secret.password | quote }}
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: surf
+  annotations:
+    "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"
+    "linkerd.io/inject" : disabled
+    "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-secret
+  namespace: surf
+type: Opaque
+data:
+  password: {{ .Values.secret.password | quote }}
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name:  ingress
+  annotations:
+    "helm.sh/resource-policy": keep
+    # "linkerd.io/inject" : enabled
+    # "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-secret
+  namespace: ingress
+type: Opaque
+data:
+  password: {{ .Values.secret.password | quote }}

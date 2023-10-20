@@ -1,3 +1,5 @@
+#@ load("@ytt:data", "data")
+
 Namespace: core
 tracingEndpoint: collector.linkerd-jaeger:55678
 
@@ -14,10 +16,9 @@ rabbitmq:
 
 volumes:
   config:
-    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
+    hostPath: #@ data.values.base_path + "/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
   definitions:
-    hostPath: "/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/definitions.json"
-
+    hostPath: #@ data.values.base_path + "/DYNAMOS/configuration/k8s_service_files/definitions.json"
 
 etcd:
   nodeName: 0
