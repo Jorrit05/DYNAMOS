@@ -17,5 +17,5 @@ $(targets): prepare proto
 
 all: $(targets)
 
-.PHONY: all $(targets) prepare proto sidecar algorithm test anonymize
+.PHONY: $(targets) prepare proto sidecar algorithm test anonymize
 
