@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: policy-enforcer
-        image: policy_enforcer:latest
+        image: jorrit05/dynamos-policy-enforcer:0.1
         imagePullPolicy: IfNotPresent
         env:
         - name: OC_AGENT_HOST
