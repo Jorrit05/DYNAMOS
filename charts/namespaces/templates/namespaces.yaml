@@ -11,17 +11,6 @@ metadata:
 ---
 
 apiVersion: v1
-kind: Secret
-metadata:
-  name: rabbitmq-secret
-  namespace: core
-type: Opaque
-data:
-  password: {{ .Values.secret.password | quote }}
-
----
-
-apiVersion: v1
 kind: Namespace
 metadata:
   name:  orchestrator
