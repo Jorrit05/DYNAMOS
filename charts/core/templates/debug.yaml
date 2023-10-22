@@ -1,29 +1,28 @@
-# debug-pod.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: debug
-  # namespace: {{ .Values.Namespace }}
-  namespace:  customer-centerdemo
-spec:
-  containers:
-  - name: debug
-    image: busybox
-    command: ['sleep', '3600']
-    stdin: true
-    tty: true
+# # debug-pod.yaml
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: debug
+#   namespace: {{ .Values.Namespace }}
+# spec:
+#   containers:
+#   - name: debug
+#     image: busybox
+#     command: ['sleep', '3600']
+#     stdin: true
+#     tty: true
 
-# debug-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: debug-service
-  namespace: customer-centerdemo
-spec:
-  type: ClusterIP
-  selector:
-    name: debug
-  ports:
-  - protocol: TCP, ICMP
-    port: 80
-    targetPort: 80 # Or whichever port your application in the debug pod is running on
+# # debug-service.yaml
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: debug-service
+#   namespace: customer-centerdemo
+# spec:
+#   type: ClusterIP
+#   selector:
+#     name: debug
+#   ports:
+#   - protocol: TCP, ICMP
+#     port: 80
+#     targetPort: 80 # Or whichever port your application in the debug pod is running on
