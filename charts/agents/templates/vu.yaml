@@ -16,7 +16,7 @@ spec:
       serviceAccountName: job-creator-vu
       containers:
       - name: vu
-        image: agent:latest
+        image: jorrit05/dynamos-agent:0.1
         imagePullPolicy: IfNotPresent
         env:
         - name: DATA_STEWARD_NAME
@@ -24,7 +24,7 @@ spec:
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
       - name: sidecar
-        image: sidecar:latest
+        image: jorrit05/dynamos-sidecar:0.1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3005

@@ -28,7 +28,7 @@ spec:
         #     memory: "256Mi"
 
       - name: sidecar
-        image: sidecar:latest
+        image: jorrit05/dynamos-sidecar:0.1
         imagePullPolicy: IfNotPresent
         env:
         - name: AMQ_PASSWORD
