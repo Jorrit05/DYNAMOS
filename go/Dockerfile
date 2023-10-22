@@ -8,7 +8,7 @@ WORKDIR /app/cmd/$NAME
 RUN mkdir /app/pkg
 RUN mkdir /app/etcd
 
-COPY *.go .
+COPY *.go ./
 
 # Copy go.mod and go.sum files into the container
 COPY go.mod /app
