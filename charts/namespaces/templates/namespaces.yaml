@@ -25,7 +25,7 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: rabbitmq-secret
+  name: rabbit
   namespace: orchestrator
 type: Opaque
 data:
@@ -47,7 +47,7 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: rabbitmq-secret
+  name: rabbit
   namespace: uva
 type: Opaque
 data:
@@ -70,7 +70,7 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: rabbitmq-secret
+  name: rabbit
   namespace: vu
 type: Opaque
 data:
@@ -93,7 +93,7 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: rabbitmq-secret
+  name: rabbit
   namespace: surf
 type: Opaque
 data:
@@ -115,7 +115,7 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: rabbitmq-secret
+  name: rabbit
   namespace: ingress
 type: Opaque
 data:
