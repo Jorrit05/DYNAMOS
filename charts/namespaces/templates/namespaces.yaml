@@ -29,7 +29,7 @@ metadata:
   namespace: orchestrator
 type: Opaque
 data:
-  password: {{ .Values.secret.password | quote }}
+  password: {{ .Values.secret.password | b64enc | quote }}
 
 ---
 
@@ -51,7 +51,7 @@ metadata:
   namespace: uva
 type: Opaque
 data:
-  password: {{ .Values.secret.password | quote }}
+  password: {{ .Values.secret.password | b64enc | quote }}
 
 ---
 
@@ -74,7 +74,7 @@ metadata:
   namespace: vu
 type: Opaque
 data:
-  password: {{ .Values.secret.password | quote }}
+  password: {{ .Values.secret.password | b64enc | quote }}
 
 ---
 
@@ -97,7 +97,7 @@ metadata:
   namespace: surf
 type: Opaque
 data:
-  password: {{ .Values.secret.password | quote }}
+  password: {{ .Values.secret.password | b64enc | quote }}
 
 ---
 
@@ -119,4 +119,4 @@ metadata:
   namespace: ingress
 type: Opaque
 data:
-  password: {{ .Values.secret.password | quote }}
+  password: {{ .Values.secret.password | b64enc | quote }}
