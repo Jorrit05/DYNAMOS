@@ -47,7 +47,7 @@ spec:
       volumes:
       - name: etcd-startup
         hostPath:
-          path: {{ .Values.hostPath }}/configuration/etcd_launch_files
+          path: {{ .Values.hostPath }}/DYNAMOS/configuration/etcd_launch_files
 
 ---
 apiVersion: v1

@@ -47,7 +47,7 @@ spec:
       volumes:
         - name: grafana-dashboards
           hostPath:
-            path:  {{ .Values.hostPath }}/configuration/grafana
+            path:  {{ .Values.hostPath }}/DYNAMOS/configuration/grafana
         - name: grafana-entrypoint
           configMap:
             name: grafana-entrypoint
