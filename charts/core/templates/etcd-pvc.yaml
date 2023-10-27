@@ -18,10 +18,11 @@ kind: Job
 metadata:
   name: init-etcd-pvc
   namespace: orchestrator
-  annotations:
-    "linkerd.io/inject" : disabled
 spec:
   template:
+    metadata:
+      annotations:
+        "linkerd.io/inject": "disabled"
     spec:
       containers:
       - name: init
