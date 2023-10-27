@@ -55,8 +55,8 @@ spec:
         persistentVolumeClaim:
             claimName: rabbitmq-log-pvc
       - name: rabbitmq-definitions
-        hostPath:
-          path: "{{ .Values.hostPath }}/DYNAMOS/configuration/k8s_service_files/definitions.json"
+        persistentVolumeClaim:
+          claimName: rabbit-pvc
       - name: rabbitmq-config
-        hostPath:
-          path: "{{ .Values.hostPath }}/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
+        persistentVolumeClaim:
+          claimName: rabbit-pvc

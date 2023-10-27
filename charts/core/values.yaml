@@ -14,12 +14,6 @@ rabbitmq:
 
 hostPath: default
 
-# volumes:
-#   config:
-#     hostPath: #@ data.values.base_path + "/DYNAMOS/configuration/k8s_service_files/rabbitmq.conf"
-#   definitions:
-#     hostPath: #@ data.values.base_path + "/DYNAMOS/configuration/k8s_service_files/definitions.json"
-
 etcd:
   nodeName: 0
   replicaCount: 3

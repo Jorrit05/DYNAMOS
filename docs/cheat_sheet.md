@@ -49,9 +49,6 @@ kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand
 
 kubectl get secret "rabbit" -o json | jq -r ".[\"data\"][\"password\"]" | base64 -d
 
-kubectl get secret "sql" -o json | jq -r ".[\"data\"][\"db_root_password\"]" | base64 -d
-kubectl get secret "sql" -o json | jq -r ".[\"data\"][\"db_dba_password\"]" | base64 -d
-
 kubectl exec -it $(kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}') -- /bin/bash
 kubectl get services -n core
 
@@ -113,8 +110,6 @@ https://github.com/argoproj/argo-workflows/releases/tag/v3.4.8
 # Prometheus
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-
-<!-- helm install -f /Users/jorrit/Documents/uva/thesis/DYNAMOS/configuration/k8s_service_files/prometheus.yaml prometheus prometheus-community/prometheus -->
 
 
 # Python
