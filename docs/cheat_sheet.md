@@ -114,7 +114,7 @@ https://github.com/argoproj/argo-workflows/releases/tag/v3.4.8
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-<!-- helm install -f /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/k8s_service_files/prometheus.yaml prometheus prometheus-community/prometheus -->
+<!-- helm install -f /Users/jorrit/Documents/uva/thesis/DYNAMOS/configuration/k8s_service_files/prometheus.yaml prometheus prometheus-community/prometheus -->
 
 
 # Python
@@ -168,6 +168,6 @@ linkerd jaeger uninstall | kubectl delete -f -
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 <!-- helm install -f "${coreChart}/ingress-values.yaml" nginx oci://ghcr.io/nginxinc/charts/nginx-ingress -n ingress --version 0.18.0 -->
-coreChart=/Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/charts/core
+coreChart=/Users/jorrit/Documents/uva/thesis/DYNAMOS/charts/core
 helm install -f "${coreChart}/ingress-values.yaml" nginx ingress-nginx/ingress-nginx -n ingress
 kubectl get svc --namespace ingress nginx

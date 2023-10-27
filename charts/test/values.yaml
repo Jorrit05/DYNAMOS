@@ -1,5 +1,4 @@
 Namespace: core
-Namespace: core
 
 loki:
   dns: loki.core.svc.cluster.local

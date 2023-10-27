@@ -47,7 +47,7 @@ spec:
       volumes:
         - name: grafana-dashboards
           hostPath:
-            path: /Users/jorrit/Documents/master-software-engineering/thesis/DYNAMOS/configuration/grafana
+            path:  {{ .Values.hostPath }}/configuration/grafana
         - name: grafana-entrypoint
           configMap:
             name: grafana-entrypoint
