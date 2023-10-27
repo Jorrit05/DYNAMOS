@@ -46,8 +46,8 @@ spec:
           value: {{ .Values.tracingEndpoint }}
       volumes:
       - name: etcd-startup
-        hostPath:
-          path: {{ .Values.hostPath }}/DYNAMOS/configuration/etcd_launch_files
+        persistentVolumeClaim:
+          claimName: etcd-pvc
 
 ---
 apiVersion: v1
