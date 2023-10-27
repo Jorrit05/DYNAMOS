@@ -16,11 +16,11 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: init-etcd-pvc
+  name: init-rabbit-pvc
   namespace: core
 spec:
   template:
-    metadata:  # Add this metadata block
+    metadata:
       annotations:
         "linkerd.io/inject": "disabled"
     spec:
