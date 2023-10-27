@@ -4,6 +4,5 @@ DYNAMOS: Dynamically Adaptive Microservice-based OS. A Middleware for Data Excha
 
 This repository contains the code for the DYNAMOS proof of concept. Installation instructions and more details can be found in the thesis.
 
-- The full thesis can be found in [docs/thesis](./docs/thesis)
-- A simple screen recording of a demo can be downloaded [here](https://myartifactsjorrit.blob.core.windows.net/thesis-demo/demo-thesis.mov),
-it unfortunately does not provide a voice-over yet
+More info, a demo video and the thesis can be found on the website of [C. de Laat](https://delaat.net/sc/sc23/index.html)
+The video unfortunately does not provide a voice-over yet
