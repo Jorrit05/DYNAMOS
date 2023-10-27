@@ -2,6 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: etcd-pvc
+  namespace: orchestrator
 spec:
   accessModes:
   - ReadWriteOnce
@@ -14,7 +15,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: init-etcd-pvc
-  namespace: {{ .Values.Namespace }}
+  namespace: orchestrator
 spec:
   template:
     spec:
