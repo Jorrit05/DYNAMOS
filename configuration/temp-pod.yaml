@@ -4,11 +4,8 @@ kind: Pod
 metadata:
   name: temp-pod
   namespace: core
-spec:
-  template:
-    metadata:
-      annotations:
-        "linkerd.io/inject": "disabled"
+  annotations:
+    "linkerd.io/inject": "disabled"
   containers:
   - name: temp-container
     image: busybox
