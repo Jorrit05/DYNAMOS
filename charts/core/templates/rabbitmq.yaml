@@ -47,7 +47,7 @@ spec:
         - name: rabbitmq-log
           mountPath: /var/log/rabbitmq
         - name: rabbitmq-config
-          mountPath: /mnt # /etc/rabbitmq/conf.d/11-custom.conf
+          mountPath: /mnt
       volumes:
       - name: rabbitmq-data
         persistentVolumeClaim:
@@ -55,32 +55,6 @@ spec:
       - name: rabbitmq-log
         persistentVolumeClaim:
             claimName: rabbitmq-log-pvc
-      # - name: rabbitmq-definitions
-      #   hostPath:
-      #     path: "{{ .Values.hostPath }}/DYNAMOS/configuration/k8s_service_files/definitions.json"
       - name: rabbitmq-config
         persistentVolumeClaim:
           claimName: rabbit-pvc
-        # volumeMounts:
-        # - name: rabbitmq-data
-        #   mountPath: /var/lib/rabbitmq
-        # - name: rabbitmq-log
-        #   mountPath: /var/log/rabbitmq
-        # - name: rabbitmq-config
-        #   mountPath: /etc/rabbitmq/conf.d
-        # - name: rabbitmq-definitions
-        #   mountPath: /opt
-
-        # volumes:
-        # - name: rabbitmq-data
-        #   persistentVolumeClaim:
-        #       claimName: rabbitmq-data-pvc
-        # - name: rabbitmq-log
-        #   persistentVolumeClaim:
-        #       claimName: rabbitmq-log-pvc
-        # - name: rabbitmq-definitions
-        #   persistentVolumeClaim:
-        #     claimName: rabbit-pvc
-        # - name: rabbitmq-config
-        #   persistentVolumeClaim:
-        #     claimName: rabbit-pvc
