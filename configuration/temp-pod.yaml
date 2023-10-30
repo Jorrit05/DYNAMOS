@@ -1,0 +1,19 @@
+# temp-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: temp-pod
+  namespace: core
+spec:
+  containers:
+  - name: temp-container
+    image: busybox
+    command: [ "sh", "-c", "--" ]
+    args: [ "while true; do sleep 30; done;" ]
+    volumeMounts:
+    - name: pvc-to-fill
+      mountPath: /mnt
+  volumes:
+  - name: pvc-to-fill
+    persistentVolumeClaim:
+      claimName: rabbit-pvc
