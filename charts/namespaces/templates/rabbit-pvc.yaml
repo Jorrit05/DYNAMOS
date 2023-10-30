@@ -11,37 +11,3 @@ spec:
   resources:
     requests:
       storage: 20Mi
-
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: init-rabbit-pvc
-  namespace: core
-spec:
-  template:
-    metadata:
-      annotations:
-        "linkerd.io/inject": "disabled"
-    spec:
-      containers:
-      - name: init
-        image: curlimages/curl
-        command:
-          - /bin/sh
-          - -c
-          - |
-            base_url="https://raw.githubusercontent.com/Jorrit05/DYNAMOS/main/configuration/k8s_service_files"
-            files="definitions_example.json rabbitmq.conf"
-
-            for file in $files; do
-              curl -o /k8s_service_files/$file $base_url/$file
-            done
-        volumeMounts:
-        - name: pvc-volume
-          mountPath: /k8s_service_files
-      restartPolicy: OnFailure
-      volumes:
-      - name: pvc-volume
-        persistentVolumeClaim:
-          claimName: rabbit-pvc

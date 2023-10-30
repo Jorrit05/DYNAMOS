@@ -22,6 +22,10 @@ spec:
         - containerPort: 5672
         - containerPort: 15672
         - containerPort: 15692
+        command:
+          - /bin/sh
+          - -c
+          - cp /mnt/definitions.json /opt/ && cp /mnt/rabbitmq.conf /etc/rabbitmq/conf.d/ && docker-entrypoint.sh rabbitmq-server
         env:
         - name: RABBITMQ_ERLANG_COOKIE
           value: "{{ .Values.rabbitmq.env.RABBITMQ_ERLANG_COOKIE }}"
@@ -43,9 +47,7 @@ spec:
         - name: rabbitmq-log
           mountPath: /var/log/rabbitmq
         - name: rabbitmq-config
-          mountPath: /etc/rabbitmq/conf.d/11-custom.conf
-        - name: rabbitmq-config
-          mountPath: /opt/definitions.json
+          mountPath: /mnt # /etc/rabbitmq/conf.d/11-custom.conf
       volumes:
       - name: rabbitmq-data
         persistentVolumeClaim:

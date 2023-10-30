@@ -86,4 +86,3 @@ spec:
             name: orchestrator
             port:
               number: 8080
-

@@ -6,6 +6,7 @@ metadata:
   namespace: core
   annotations:
     "linkerd.io/inject": "disabled"
+spec:
   containers:
   - name: temp-container
     image: busybox
