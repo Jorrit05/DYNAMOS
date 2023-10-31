@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -128,9 +129,11 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 
 		logger.Sugar().Debugw("job info:", "name: ", microservice.Name, "Port: ", port)
 
+		microserviceTag := getMicroserviceTag(microservice.Name)
+
 		container := v1.Container{
 			Name:            microservice.Name,
-			Image:           fmt.Sprintf("%s:latest", microservice.Name),
+			Image:           fmt.Sprintf("%s:%s", microservice.Name, microserviceTag),
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Env: []v1.EnvVar{
 				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
@@ -260,4 +263,14 @@ func replaceLastCharacter(name string, replaceWith int) string {
 	nameSlice = append(nameSlice, runeSlice...)
 
 	return string(nameSlice)
+}
+
+func getMicroserviceTag(msName string) string {
+	tag := os.Getenv(fmt.Sprintf("%s_TAG", strings.ToUpper(msName)))
+
+	if tag != "" {
+		return tag
+	}
+
+	return "latest"
 }

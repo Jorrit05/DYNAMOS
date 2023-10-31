@@ -54,3 +54,7 @@ spec:
           storage: 1Gi
 
 
+# #  k get services -A
+# NAMESPACE        NAME                                  TYPE           CLUSTER-IP        EXTERNAL-IP       PORT(S)                                                          AGE
+# core             etcd                                  NodePort       192.168.195.195   <none>            2379:30005/TCP,2380:13248/TCP                                    4h22m
+# core             etcd-headless                         ClusterIP      None              <none>            2379/TCP,2380/TCP                                                4h22m

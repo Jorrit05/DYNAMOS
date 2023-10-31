@@ -52,6 +52,11 @@ class SideCarStub(object):
                 request_serializer=rabbitMQ__pb2.SqlDataRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
+        self.SendPolicyUpdate = channel.unary_unary(
+                '/proto.SideCar/SendPolicyUpdate',
+                request_serializer=rabbitMQ__pb2.PolicyUpdate.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
         self.SendTest = channel.unary_unary(
                 '/proto.SideCar/SendTest',
                 request_serializer=rabbitMQ__pb2.SqlDataRequest.SerializeToString,
@@ -120,6 +125,12 @@ class SideCarServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendPolicyUpdate(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def SendTest(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -180,6 +191,11 @@ def add_SideCarServicer_to_server(servicer, server):
             'SendSqlDataRequest': grpc.unary_unary_rpc_method_handler(
                     servicer.SendSqlDataRequest,
                     request_deserializer=rabbitMQ__pb2.SqlDataRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'SendPolicyUpdate': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendPolicyUpdate,
+                    request_deserializer=rabbitMQ__pb2.PolicyUpdate.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'SendTest': grpc.unary_unary_rpc_method_handler(
@@ -328,6 +344,23 @@ class SideCar(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/proto.SideCar/SendSqlDataRequest',
             rabbitMQ__pb2.SqlDataRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SendPolicyUpdate(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/proto.SideCar/SendPolicyUpdate',
+            rabbitMQ__pb2.PolicyUpdate.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
