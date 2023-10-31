@@ -34,7 +34,7 @@
 #         - name: ORDER
 #           value: -1
 #       - name: sidecar
-#         image: jorrit05/dynamos-sidecar:0.1
+#         image: jorrit05/dynamos-sidecar:latest
 #         imagePullPolicy: IfNotPresent
 #         ports:
 #         - containerPort: 3005

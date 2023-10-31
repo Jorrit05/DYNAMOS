@@ -10,6 +10,7 @@ import (
 )
 
 func registerPolicyEnforcerConfiguration() {
+	logger.Debug("Start registerPolicyEnforcerConfiguration")
 	// Load request types
 	var requestsTypes []api.RequestType
 	lib.UnmarshalJsonFile(requestTypeConfigLocation, &requestsTypes)

@@ -2,7 +2,7 @@
     {
         "data_steward": "UVA",
         "types": {
-            "sqlDataRequest" :["anonymize"]
+            "sqlDataRequest" :["dynamos-anonymize"]
         }
     }
 ]

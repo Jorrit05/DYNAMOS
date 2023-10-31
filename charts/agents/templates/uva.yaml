@@ -18,7 +18,7 @@ spec:
       serviceAccountName: job-creator-uva
       containers:
       - name: uva
-        image: jorrit05/dynamos-agent:0.1
+        image: jorrit05/dynamos-agent:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -33,7 +33,7 @@ spec:
         #   limits:
         #     memory: "256Mi"
       - name: sidecar
-        image: jorrit05/dynamos-sidecar:0.1
+        image: jorrit05/dynamos-sidecar:latest
         imagePullPolicy: IfNotPresent
         env:
         - name: AMQ_PASSWORD
