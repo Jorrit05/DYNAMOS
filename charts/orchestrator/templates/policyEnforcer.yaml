@@ -17,7 +17,7 @@ spec:
       containers:
       - name: policy-enforcer
         image: jorrit05/dynamos-policy-enforcer:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
@@ -29,7 +29,7 @@ spec:
 
       - name: sidecar
         image: jorrit05/dynamos-sidecar:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: AMQ_PASSWORD
           valueFrom:

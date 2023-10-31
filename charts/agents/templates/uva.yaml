@@ -19,7 +19,7 @@ spec:
       containers:
       - name: uva
         image: jorrit05/dynamos-agent:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
@@ -34,7 +34,7 @@ spec:
         #     memory: "256Mi"
       - name: sidecar
         image: jorrit05/dynamos-sidecar:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: AMQ_PASSWORD
           valueFrom:

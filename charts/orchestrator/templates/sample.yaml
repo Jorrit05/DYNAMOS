@@ -17,25 +17,25 @@
 #       containers:
 #       - name: query-service
 #         image: query-service:latest
-#         imagePullPolicy: IfNotPresent
+#         imagePullPolicy: Always
 #         env:
 #         - name: ORDER
 #           value: 1
 #       - name: anonymize-service
 #         image: anonymize-service:latest
-#         imagePullPolicy: IfNotPresent
+#         imagePullPolicy: Always
 #         env:
 #         - name: ORDER
 #           value: 2
 #       - name: algorithm-service
 #         image: algorithm-service:latest
-#         imagePullPolicy: IfNotPresent
+#         imagePullPolicy: Always
 #         env:
 #         - name: ORDER
 #           value: -1
 #       - name: sidecar
 #         image: jorrit05/dynamos-sidecar:latest
-#         imagePullPolicy: IfNotPresent
+#         imagePullPolicy: Always
 #         ports:
 #         - containerPort: 3005
 #         env:

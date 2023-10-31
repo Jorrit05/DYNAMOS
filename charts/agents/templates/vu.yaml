@@ -17,7 +17,7 @@ spec:
       containers:
       - name: vu
         image: jorrit05/dynamos-agent:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: DATA_STEWARD_NAME
           value: VU
@@ -25,7 +25,7 @@ spec:
           value: {{ .Values.tracingEndpoint }}
       - name: sidecar
         image: jorrit05/dynamos-sidecar:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 3005
         env:

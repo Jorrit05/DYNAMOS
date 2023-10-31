@@ -171,7 +171,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 func addSidecar() v1.Container {
 	sidecarName := os.Getenv("SIDECAR_NAME")
 
-	if sidecarName != "" {
+	if sidecarName == "" {
 		sidecarName = "jorrit05/dynamos-sidecar"
 	}
 

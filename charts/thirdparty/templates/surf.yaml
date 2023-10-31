@@ -19,7 +19,7 @@ spec:
       containers:
       - name: surf
         image: jorrit05/dynamos-agent:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
@@ -29,7 +29,7 @@ spec:
           value: {{ .Values.tracingEndpoint }}
       - name: sidecar
         image: jorrit05/dynamos-sidecar:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: AMQ_PASSWORD
           valueFrom:
