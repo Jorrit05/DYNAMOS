@@ -136,9 +136,12 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 			repositoryName = "jorrit05"
 		}
 
+		fullImage := fmt.Sprintf("%s/%s:%s", repositoryName, microservice.Name, microserviceTag)
+		logger.Sugar().Debugf("FullImage name: %s", fullImage)
+
 		container := v1.Container{
 			Name:            microservice.Name,
-			Image:           fmt.Sprintf("%s/%s:%s", repositoryName, microservice.Name, microserviceTag),
+			Image:           fullImage,
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Env: []v1.EnvVar{
 				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
@@ -174,9 +177,12 @@ func addSidecar() v1.Container {
 
 	sidecarTag := getMicroserviceTag(sidecarName)
 
+	fullImage := fmt.Sprintf("%s:%s", sidecarName, sidecarTag)
+	logger.Sugar().Debugf("FullImage sidecar name: %s", fullImage)
+
 	return v1.Container{
 		Name:            sidecarName,
-		Image:           fmt.Sprintf("%s:%s", sidecarName, sidecarTag),
+		Image:           fullImage,
 		ImagePullPolicy: v1.PullIfNotPresent,
 		Env: []v1.EnvVar{
 			{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
