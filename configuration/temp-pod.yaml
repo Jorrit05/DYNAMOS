@@ -19,3 +19,26 @@ spec:
   - name: pvc-to-fill
     persistentVolumeClaim:
       claimName: rabbit-pvc
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: temp-pod-orch
+  namespace: orchestrator
+  annotations:
+    "linkerd.io/inject": "disabled"
+spec:
+  containers:
+  - name: temp-container
+    image: busybox
+    command: [ "sh", "-c", "--" ]
+    args: [ "while true; do sleep 30; done;" ]
+    volumeMounts:
+    - name: pvc-to-fill
+      mountPath: /mnt
+  volumes:
+  - name: pvc-to-fill
+    persistentVolumeClaim:
+      claimName: etcd-pvc
