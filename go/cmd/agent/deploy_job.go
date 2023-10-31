@@ -161,11 +161,17 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 }
 
 func addSidecar() v1.Container {
-	name := "sidecar"
+	sidecarName := os.Getenv("SIDECAR_NAME")
+
+	if sidecarName != "" {
+		sidecarName = "dynamos-sidecar"
+	}
+
+	sidecarTag := getMicroserviceTag(sidecarName)
 
 	return v1.Container{
-		Name:            name,
-		Image:           fmt.Sprintf("%s:latest", name),
+		Name:            sidecarName,
+		Image:           fmt.Sprintf("%s:%s", sidecarName, sidecarTag),
 		ImagePullPolicy: v1.PullIfNotPresent,
 		Env: []v1.EnvVar{
 			{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
