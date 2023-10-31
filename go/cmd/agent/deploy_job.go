@@ -172,13 +172,18 @@ func addSidecar() v1.Container {
 	sidecarName := os.Getenv("SIDECAR_NAME")
 
 	if sidecarName == "" {
-		sidecarName = "jorrit05/dynamos-sidecar"
+		sidecarName = "dynamos-sidecar"
+	}
+
+	repositoryName := os.Getenv("SIDECAR_REPOSITORY_NAME")
+	if repositoryName == "" {
+		repositoryName = "jorrit05"
 	}
 
 	sidecarTag := getMicroserviceTag(sidecarName)
 
-	fullImage := fmt.Sprintf("%s:%s", sidecarName, sidecarTag)
-	logger.Sugar().Debugf("FullImage sidecar name: %s", fullImage)
+	fullImage := fmt.Sprintf("%s/%s:%s", repositoryName, sidecarName, sidecarTag)
+	logger.Sugar().Debugf("Sidecar name: %s", fullImage)
 
 	return v1.Container{
 		Name:            sidecarName,
