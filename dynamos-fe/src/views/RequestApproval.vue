@@ -44,10 +44,13 @@ export default {
 
             isLoading.value = true;
             isError.value = false;
-            const account = msalInstance.getActiveAccount();
-            const uniqueId = account?.localAccountId;
-            const name = account?.username;
+            // const account = msalInstance.getActiveAccount();
+            // const uniqueId = account?.localAccountId;
+            // const name = account?.username;
 
+            const account = "jorrit.stutterheim@cloudnation.nl";
+            const uniqueId = "124314ou3uo424";
+            const name = "Jorrit Stutterheim";
             // Construct the request body
             const body = {
                 type: "sqlDataRequest",
