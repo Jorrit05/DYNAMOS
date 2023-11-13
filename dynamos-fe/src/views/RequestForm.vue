@@ -103,9 +103,13 @@ export default {
             algorithm: "average" || ""
         });
 
-        const account = msalInstance.getActiveAccount();
-        const uniqueId = account?.localAccountId;
-        const name = account?.username;
+        // const account = msalInstance.getActiveAccount();
+        // const uniqueId = account?.localAccountId;
+        // const name = account?.username;
+
+        const account = "jorrit.stutterheim@cloudnation.nl";
+        const uniqueId = "124314ou3uo424";
+        const name = "jorrit.stutterheim@cloudnation.nl";
 
         async function submitForm() {
             isLoading.value = true;

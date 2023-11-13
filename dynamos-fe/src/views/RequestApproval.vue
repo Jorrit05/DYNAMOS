@@ -50,7 +50,7 @@ export default {
 
             const account = "jorrit.stutterheim@cloudnation.nl";
             const uniqueId = "124314ou3uo424";
-            const name = "Jorrit Stutterheim";
+            const name = "jorrit.stutterheim@cloudnation.nl";
             // Construct the request body
             const body = {
                 type: "sqlDataRequest",
