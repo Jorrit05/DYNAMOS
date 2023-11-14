@@ -13,26 +13,45 @@
                 <el-button type="primary" native-type="submit">Submit</el-button>
             </el-form-item>
 
-        <!-- Display Response Data -->
-        <div v-if="responseData" class="response-section">
-            <h2>Received Data:</h2>
-            <!-- Sample display; customize based on your response structure -->
-            <pre>{{ JSON.stringify(responseData, null, 2) }}</pre>
-        </div>
+            <!-- Display Response Data -->
+            <div v-if="responseData" class="response-section">
+                <h2>Response Data</h2>
+                <div>
+                    <strong>Job ID:</strong>
+                    <p>{{ responseData.job_id }}</p>
+                </div>
+                <div>
+                    <strong>Authorized Providers:</strong>
+                    <ul>
+                        <li v-for="(value, key) in responseData.authorized_providers" :key="key">
+                            {{ key }}: {{ value }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div v-if="isError" class="error-section">
+                <h2>Error:</h2>
+                <pre>{{ isError }}</pre>
+            </div>
+
         </el-form>
     </div>
 </template>
 
 <script lang="ts">
 import { ref, computed } from 'vue';
-import axios from 'axios'; // import axios
 import { msalInstance } from "../authConfig";
+import axios, { AxiosError } from 'axios';
 
+interface ResponseData {
+    authorized_providers: Record<string, string>;
+    job_id: string;
+}
 
-const responseData = ref(null);
+const responseData = ref<ResponseData | null>(null);
 const isLoading = ref(false);
-const isError = ref(false);
-
+const isError = ref<string | null>(null);
+let errorKey = 0;
 export default {
     setup() {
         const form = ref({
@@ -43,7 +62,6 @@ export default {
             const dataProvidersArray = form.value.dataProviders.split(',').map(value => value.trim());
 
             isLoading.value = true;
-            isError.value = false;
             // const account = msalInstance.getActiveAccount();
             // const uniqueId = account?.localAccountId;
             // const name = account?.username;
@@ -62,25 +80,48 @@ export default {
                 syncServices: true,
             };
             console.log(body)
+
             try {
                 // Send the API request
                 const response = await axios({
                     method: 'POST',
                     url: 'http://orchestrator.orchestrator.svc.cluster.local:80/api/v1/requestapproval',
-                    // data: JSON.stringify(body),
                     data: body,
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
                     },
                 });
-                // const response = await axios.post('http://localhost:8081/requestapproval', body);
                 console.log(response.data);
-                responseData.value = response.data;
-            } catch (error) {
-                console.error(error);
-                isError.value = true;
-            } finally {
+                // Extract only authorized_providers and job_id from the response
+                const { authorized_providers, job_id } = response.data;
+                responseData.value = { authorized_providers, job_id };
+            } catch (error: unknown) {
+
+                if (axios.isAxiosError(error)) {
+                    // Now TypeScript knows this is an AxiosError
+
+                    const axiosError = error as AxiosError;
+                    if (axiosError.response) {
+                        console.error(`Server Response Error: ${axiosError.response.status} - ${axiosError.response.data}`);
+                        // let str = axiosError.response.data;
+                        isError.value = axiosError.message || 'An unexpected error occurred';
+                        console.log("Error message set:", isError.value);
+
+                    } else {
+                        isError.value = axiosError.message || 'An unexpected error occurred';
+                    }
+                } else {
+                    console.log("4")
+                    // Handle non-Axios errors
+                    if (error instanceof Error) {
+                        isError.value = error.message || 'An unexpected error occurred';
+                    } else {
+                        isError.value = 'An unknown error occurred';
+                    }
+                }
+            }
+            finally {
                 isLoading.value = false;
             }
         }
@@ -119,9 +160,11 @@ export default {
 .approval-form {
     margin-top: 20px;
 }
+
 .loading-section {
     font-weight: bold;
-    color: #007BFF;  /* You can adjust the color */
+    color: #007BFF;
+    /* You can adjust the color */
 }
 
 .error-message {
