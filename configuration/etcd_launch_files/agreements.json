@@ -4,7 +4,7 @@
         "relations": {
             "jorrit.stutterheim@cloudnation.nl" : {
                 "ID" : "GUID",
-                "requestTypes" : ["sqlDataRequest"],
+                "requestTypes" : ["sqlDataRequest", "genericRequest"],
                 "dataSets" : ["wageGap"],
                 "allowedArchetypes" : ["dataThroughTtp", "computeToData"],
                 "allowedComputeProviders" : ["SURF"]
@@ -18,7 +18,7 @@
         "relations": {
             "jorrit.stutterheim@cloudnation.nl" : {
                 "ID" : "GUID",
-                "requestTypes" : ["sqlDataRequest"],
+                "requestTypes" : ["sqlDataRequest", "genericRequest"],
                 "dataSets" : ["wageGap"],
                 "allowedArchetypes" : ["dataThroughTtp"],
                 "allowedComputeProviders" : ["SURF"]

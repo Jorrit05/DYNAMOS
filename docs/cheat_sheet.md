@@ -7,9 +7,9 @@ docker network create --driver overlay unl_1
 docker network create --driver overlay unl_2
 docker network create --driver overlay third_party
 
-openssl rand -base64 12 | docker secret create db_root_password -
-openssl rand -base64 12 | docker secret create db_dba_password -
-openssl rand -base64 12 | docker secret create rabbitmq_user -
+openssl rand -hex 12 | docker secret create db_root_password -
+openssl rand -hex 12 | docker secret create db_dba_password -
+openssl rand -hex 12 | docker secret create rabbitmq_user -
 (Get hashed pw by logging into rabbit container and "rabbitmqctl hash_password  <PW>", I think there was another way through the api/definitions. But forgot..
 Perhaps starting the service, creating the user manually, copying the hash from the api/definitions.. big brain time)
 

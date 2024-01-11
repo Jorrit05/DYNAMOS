@@ -9,5 +9,12 @@
             "dynamos-anonymize",
             "dynamos-graph"
         ]
+    },
+    {
+        "name": "genericRequest",
+        "requiredServices": [
+        ],
+        "optionalServices": [
+        ]
     }
 ]
