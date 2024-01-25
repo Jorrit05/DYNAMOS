@@ -21,18 +21,15 @@ var (
 	logger                                = lib.InitLogger(logLevel)
 	etcdClient           *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
 	conn                 *grpc.ClientConn
-	mutex                = &sync.Mutex{}
 	receiveMutex         = &sync.Mutex{}
-	validationMap        = make(map[string]chan validation)
-	policyUpdateMutex    = &sync.Mutex{}
-	policyUpdateMap      = make(map[string]map[string]*pb.CompositionRequest)
+	requestApprovalMap   = make(map[string]chan validation)
 	requestApprovalMutex = &sync.Mutex{}
-	requestApprovalMap   = make(map[string]map[string]*pb.RequestApproval)
+	policyUpdateMap      = make(map[string]map[string]*pb.CompositionRequest)
 	c                    pb.SideCarClient
 )
 
 type validation struct {
-	response     *pb.ValidationResponse
+	response     *pb.AcceptedDataRequest
 	localContext context.Context
 }
 
@@ -58,7 +55,6 @@ func main() {
 		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
 	}()
 
-	go registerPolicyEnforcerConfiguration()
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
@@ -66,27 +62,8 @@ func main() {
 	mux := http.NewServeMux()
 
 	apiMux := http.NewServeMux()
-	// apiMux.HandleFunc("/archetypes", ochttp.Handler{Handler: http.HandlerFunc(archetypesHandler(etcdClient, "/archetypes"))})
-	// apiMux.Handle("/archetypes", ochttp.Handler{Handler: http.HandlerFunc(archetypesHandler(etcdClient, "/archetypes"))})
-	apiMux.Handle("/archetypes", &ochttp.Handler{Handler: archetypesHandler(etcdClient, "/archetypes")})
-	apiMux.Handle("/archetypes/", &ochttp.Handler{Handler: archetypesHandler(etcdClient, "/archetypes")})
-
-	apiMux.Handle("/requesttypes", &ochttp.Handler{Handler: requestTypesHandler(etcdClient, "/requestTypes")})
-	apiMux.Handle("/requestTypes", &ochttp.Handler{Handler: requestTypesHandler(etcdClient, "/requestTypes")})
-
-	apiMux.Handle("/requesttypes/", &ochttp.Handler{Handler: requestTypesHandler(etcdClient, "/requestTypes")})
-	apiMux.Handle("/requestTypes/", &ochttp.Handler{Handler: requestTypesHandler(etcdClient, "/requestTypes")})
-
-	apiMux.Handle("/microservices", &ochttp.Handler{Handler: microserviceMetadataHandler(etcdClient, "/microservices")})
-	apiMux.Handle("/microservices/", &ochttp.Handler{Handler: microserviceMetadataHandler(etcdClient, "/microservices")})
-
-	apiMux.Handle("/updateEtc", &ochttp.Handler{Handler: updateEtc()})
-
-	apiMux.Handle("/policyEnforcer", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
-	apiMux.Handle("/policyEnforcer/", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
-
-	// TODO Replace with rabbitMQ receive
-	apiMux.Handle("/requestapproval", &ochttp.Handler{Handler: requestApprovalHandler()})
+	apiMux.Handle("/requestApproval", &ochttp.Handler{Handler: requestHandler()})
+	apiMux.Handle("/getAvailableProviders", &ochttp.Handler{Handler: availableProvidersHandler()})
 
 	logger.Info(apiVersion) // prints /api/v1
 

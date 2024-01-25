@@ -1,0 +1,48 @@
+# # orchestrator deployment
+# apiVersion: apps/v1
+# kind: Pod
+# metadata:
+#   name: user-jorrit
+#   namespace: VU
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: orchestrator
+#   template:
+#     metadata:
+#       labels:
+#         app: orchestrator
+#     spec:
+#       containers:
+#       - name: query-service
+#         image: query-service:latest
+#         imagePullPolicy: Always
+#         env:
+#         - name: ORDER
+#           value: 1
+#       - name: anonymize-service
+#         image: anonymize-service:latest
+#         imagePullPolicy: Always
+#         env:
+#         - name: ORDER
+#           value: 2
+#       - name: algorithm-service
+#         image: algorithm-service:latest
+#         imagePullPolicy: Always
+#         env:
+#         - name: ORDER
+#           value: -1
+#       - name: sidecar
+#         image: jorrit05/dynamos-sidecar:latest
+#         imagePullPolicy: Always
+#         ports:
+#         - containerPort: 3005
+#         env:
+#         - name: AMQ_PASSWORD
+#           valueFrom:
+#             secretKeyRef:
+#               name: rabbit
+#               key: password
+#         - name: AMQ_USER
+#           value: normal_user

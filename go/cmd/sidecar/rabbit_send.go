@@ -246,3 +246,41 @@ func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.
 	go send(ctx, message, "no existss", etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
 }
+
+// Weird name but its the request to the orchestrator, not the request from the orchestor to the policy enforcer
+func (s *server) SendRequestApprovalRequest(ctx context.Context, in *pb.RequestApproval) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal SendRequestApprovalRequest failed: %s", err)
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Do other stuff
+	message := amqp.Publishing{
+		Body: data,
+		Type: "requestApprovalRequest",
+	}
+
+	go send(ctx, message, "orchestrator-in")
+	return &emptypb.Empty{}, nil
+
+}
+
+func (s *server) SendRequestApprovalResponse(ctx context.Context, in *pb.AcceptedDataRequest) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal SendRequestApprovalResponse failed: %s", err)
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Do other stuff
+	message := amqp.Publishing{
+		Body: data,
+		Type: "requestApprovalResponse",
+	}
+
+	go send(ctx, message, "api-gateway-in")
+	return &emptypb.Empty{}, nil
+}

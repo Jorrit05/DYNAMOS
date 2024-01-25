@@ -54,6 +54,22 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 		policyUpdateMutex.Unlock()
 
+	case "requestApprovalRequest":
+		requestApproval := &pb.RequestApproval{}
+		if err := grpcMsg.Body.UnmarshalTo(requestApproval); err != nil {
+			logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)
+		}
+		requestApprovalMutex.Lock()
+		// Look up the corresponding channel in the request map
+		approvalRequest, ok := requestApprovalMap[requestApproval.User.Id]
+		if ok {
+			handleRequestApproval(ctx, approvalRequest, requestApproval)
+			delete(requestApprovalMap, requestApproval.User.Id)
+		} else {
+			logger.Sugar().Error("no job information available for this policy update")
+		}
+		requestApprovalMutex.Unlock()
+
 	default:
 		logger.Sugar().Errorf("Unknown message type: %s", grpcMsg.Type)
 		return fmt.Errorf("unknown message type: %s", grpcMsg.Type)
