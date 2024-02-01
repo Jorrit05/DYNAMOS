@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -40,8 +41,34 @@ func deleteJobInfo(userName string) {
 	}
 }
 
+func getAvailableAgents() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Get the value from etcd.
+	resp, err := etcdClient.Get(ctx, "/agents/online", clientv3.WithPrefix())
+	if err != nil {
+		// logger.Sugar().Errorf("failed to get value from etcd: %v", err)
+		fmt.Printf("failed to get value from etcd: %v", err)
+	}
+
+	// Initialize an empty map to store the unmarshaled structs.
+	result := make(map[string]lib.AgentDetails)
+	// Iterate through the key-value pairs and unmarshal the values into structs.
+	for _, kv := range resp.Kvs {
+		var target lib.AgentDetails
+		err = json.Unmarshal(kv.Value, &target)
+		if err != nil {
+			// return nil, fmt.Errorf("failed to unmarshal JSON for key %s: %v", key, err)
+		}
+		result[string(target.Name)] = target
+	}
+
+	fmt.Printf("result: %v", result)
+}
 func main() {
-	deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
+	// deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
+	getAvailableAgents()
 	// conn = lib.GetGrpcConnection(grpcAddr)
 
 	// c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
@@ -60,12 +87,12 @@ func main() {
 
 }
 
-func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
-	logger.Debug("Start handleIncomingMessages")
-	switch grpcMsg.Type {
-	case "requestApproval":
-		sendMicroserviceComm(c)
+// func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
+// 	logger.Debug("Start handleIncomingMessages")
+// 	switch grpcMsg.Type {
+// 	case "requestApproval":
+// 		sendMicroserviceComm(c)
 
-	}
-	return nil
-}
+// 	}
+// 	return nil
+// }
