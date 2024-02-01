@@ -1,32 +1,8 @@
-docker stack deploy -c stack/logging.yaml -c stack/rabbitmq.yaml -c stack/etcd.yaml  core
-
-docker service ps --no-trunc <ID>
-
-docker network create --driver overlay core_network
-docker network create --driver overlay unl_1
-docker network create --driver overlay unl_2
-docker network create --driver overlay third_party
-
 openssl rand -hex 12 | docker secret create db_root_password -
 openssl rand -hex 12 | docker secret create db_dba_password -
 openssl rand -hex 12 | docker secret create rabbitmq_user -
 (Get hashed pw by logging into rabbit container and "rabbitmqctl hash_password  <PW>", I think there was another way through the api/definitions. But forgot..
 Perhaps starting the service, creating the user manually, copying the hash from the api/definitions.. big brain time)
-
-docker exec -it $(docker ps -f name=apps_db -q) mysql -u root -p
-docker exec -it $(docker ps -f name=apps_db -q) mongo -u root -p example
-docker exec -it $(docker ps -f name=service_service -q) /bin/sh
-
-docker exec -it $(docker ps -f name=apps_db -q) cat /run/secrets/db_root_password
-
-docker exec -it $(docker ps -f name=mongo -q) cat /run/secrets/db_root_password
-docker exec -it $(docker ps -f name=apps_randomize_service -q) cat /run/secrets/rabbitmq_user
-
-docker logs --since 5s $(docker ps -q --filter "ancestor=grafana/loki:2.8.0" --filter "status=restarting")
-
-{
-    "query" : "SELECT `first_name`, `last_name`, `sex`, `person_id` FROM `person` LIMIT 2"
-}
 
 
 # Kubernetes
@@ -56,25 +32,6 @@ kubectl get secret "rabbit" -o json | jq -r ".[\"data\"][\"password\"]" | base64
 
 kubectl exec -it $(kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}') -- /bin/bash
 kubectl get services -n core
-
-# Istio
-
-kubectl label namespace default istio-injection=enabled
-kubectl label namespace uva istio-injection=enabled
-kubectl label namespace vu istio-injection=enabled
-kubectl label namespace core istio-injection=enabled
-kubectl label namespace orchestrator istio-injection=enabled
-kubectl label namespace argo istio-injection=enabled
-
-istioctl install --set profile=default -y
-
-
-kubectl label namespace core istio-injection-
-kubectl label namespace uva istio-injection-
-kubectl label namespace vu istio-injection-
-kubectl label namespace orchestrator istio-injection-
-kubectl label namespace argo istio-injection-
-
 
 # SQL
 
@@ -168,6 +125,6 @@ linkerd jaeger uninstall | kubectl delete -f -
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 <!-- helm install -f "${coreChart}/ingress-values.yaml" nginx oci://ghcr.io/nginxinc/charts/nginx-ingress -n ingress --version 0.18.0 -->
-coreChart=/Users/jorrit/Documents/uva/thesis/DYNAMOS/charts/core
+coreChart=/Users/jorrit/Documents/uva/DYNAMOS/charts/core
 helm install -f "${coreChart}/ingress-values.yaml" nginx ingress-nginx/ingress-nginx -n ingress
 kubectl get svc --namespace ingress nginx
