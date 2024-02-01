@@ -41,7 +41,8 @@ func deleteJobInfo(userName string) {
 }
 
 func main() {
-	deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
+	fmt.Println(name)
+	// deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
 	// conn = lib.GetGrpcConnection(grpcAddr)
 
 	// c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})

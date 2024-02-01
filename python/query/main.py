@@ -56,12 +56,16 @@ def load_and_query_csv(file_path_prefix, query):
     table_names = re.findall(r'FROM (\w+)', query) + re.findall(r'JOIN (\w+)', query)
     # Create a dictionary to hold DataFrames, keyed by table name
     dfs = {}
+    DATA_STEWARD_NAME = os.getenv("DATA_STEWARD_NAME")
+    if DATA_STEWARD_NAME == "":
+        logger.error(f"DATA_STEWARD_NAME not set.")
+
 
     for table_name in table_names:
         try:
-            dfs[table_name] = pd.read_csv(f"{file_path_prefix}{table_name}.csv", delimiter=';')
+            dfs[table_name] = pd.read_csv(f"{file_path_prefix}{table_name}_{DATA_STEWARD_NAME}.csv", delimiter=';')
         except FileNotFoundError:
-            logger.error(f"CSV file for table {table_name} not found.")
+            logger.error(f"CSV file for table {table_name}_{DATA_STEWARD_NAME} not found.")
             return None
 
     # Use pandasql's sqldf function to execute the SQL query

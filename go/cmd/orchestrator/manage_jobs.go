@@ -28,6 +28,7 @@ func deleteJobInfo(jobNames []string, userName string, changedAgreementName stri
 	var agents *lib.AgentDetails
 	key := "/agents/online/"
 	activeAgents, err := etcd.GetPrefixListEtcd(etcdClient, key, agents)
+
 	if err != nil {
 		logger.Sugar().Warnf("error get agents: %v", err)
 	}
