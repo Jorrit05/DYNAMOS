@@ -12,7 +12,7 @@ $(targets):
 	cp -r $(datasets) ./$@
 
 	(trap 'rm -f ./$@/Dockerfile; rm -rf ./$@/grpc_lib; rm -rf ./$@/datasets;' EXIT;  \
-	docker build --build-arg NAME='$@' -t $@ ./$@/)
+	docker build --build-arg NAME='$@' -t jorrit05/dynamos-$@ ./$@/)
 
 
 all: all $(targets) $(proto)

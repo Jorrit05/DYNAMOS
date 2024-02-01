@@ -73,19 +73,30 @@ https://github.com/argoproj/argo-workflows/releases/tag/v3.4.8
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-
-# Python
+# Testing locally:
+Send hardcode message from cmd/test
+## Python Query
+queue
+export DATA_STEWARD_NAME="test"
 export DESIGNATED_GRPC_PORT="50053"
-export SIDECAR_PORT="50052"
+export SIDECAR_PORT="50051"
 export FIRST="1"
+export LAST="0"
+export JOB_NAME="test"
+
+# aggregate
+export DESIGNATED_GRPC_PORT="50054"
+export SIDECAR_PORT="50051"
+export FIRST="0"
 export LAST="1"
-export JOB_NAME=""
+
 
 # Algorithm
 export DESIGNATED_GRPC_PORT="50054"
-export SIDECAR_PORT="50052"
+export SIDECAR_PORT="50051"
 export FIRST="0"
 export LAST="1"
+
 
 
 # LInkerD
