@@ -41,22 +41,22 @@ func deleteJobInfo(userName string) {
 }
 
 func main() {
-	deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
-	// conn = lib.GetGrpcConnection(grpcAddr)
+	// deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
+	conn = lib.GetGrpcConnection(grpcAddr)
 
-	// c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+	c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
 
-	// // Define a WaitGroup
-	// var wg sync.WaitGroup
-	// wg.Add(1)
+	// Define a WaitGroup
+	var wg sync.WaitGroup
+	wg.Add(1)
 
-	// go func() {
-	// 	lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second, receiveMutex)
+	go func() {
+		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second, receiveMutex)
 
-	// 	wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
-	// }()
+		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
+	}()
 
-	// wg.Wait()
+	wg.Wait()
 
 }
 
@@ -64,8 +64,14 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 	logger.Debug("Start handleIncomingMessages")
 	switch grpcMsg.Type {
 	case "requestApproval":
+		logger.Debug("Start requestApproval")
+
+		sendMicroserviceComm(c)
+	default:
+		logger.Sugar().Warnf("Uknown Type: %s", grpcMsg.Type)
 		sendMicroserviceComm(c)
 
 	}
+
 	return nil
 }

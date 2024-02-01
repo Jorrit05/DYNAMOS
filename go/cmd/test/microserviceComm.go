@@ -11,21 +11,21 @@ import (
 func sendMicroserviceComm(c pb.SideCarClient) (context.Context, error) {
 	ctx := context.Background()
 	data := []byte(`{
-	    "type": "sqlDataRequest",
-	    "query" : "SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 10000",
-	    "graph" : true,
-	    "algorithm" : "average",
-	    "algorithmColumns" : {
-	        "Geslacht" : "Aanst_22, Gebdat"
-	    },
-	    "user": {
-	        "id": "1234",
-	        "userName": "jorrit.stutterheim@cloudnation.nl"
-	    },
-	    "requestMetadata": {
-	        "jobId": "jorrit-stutterheim-df93c9d0"
-	    }
-	}`)
+    "type": "sqlDataRequest",
+    "query" : "SELECT p.Geslacht, s.Salschal FROM Personen p JOIN Aanstellingen s ON p.Unieknr = s.Unieknr",
+    "graph" : false,
+    "algorithm" : "average",
+    "algorithmColumns" : {
+        "Geslacht" : "Aanst_22, Gebdat"
+    },
+    "user": {
+        "id": "1234",
+        "userName": "jorrit.stutterheim@cloudnation.nl"
+    },
+    "requestMetadata": {
+        "jobId": "test"
+    }
+}`)
 
 	var sqlDataRequest *pb.SqlDataRequest
 	err := json.Unmarshal(data, &sqlDataRequest)
@@ -37,7 +37,7 @@ func sendMicroserviceComm(c pb.SideCarClient) (context.Context, error) {
 	msComm.RequestMetadata = &pb.RequestMetadata{}
 
 	msComm.Type = "microserviceCommunication"
-	msComm.RequestMetadata.DestinationQueue = "Test"
+	msComm.RequestMetadata.DestinationQueue = "test"
 	msComm.RequestMetadata.ReturnAddress = serviceName
 	msComm.RequestType = "sqlDataRequest"
 
@@ -49,7 +49,7 @@ func sendMicroserviceComm(c pb.SideCarClient) (context.Context, error) {
 
 	msComm.OriginalRequest = any
 	msComm.RequestMetadata.CorrelationId = "correlationId"
-
+	logger.Sugar().Debugf("msComm.RequestMetadata.DestinationQueue: %v", msComm.RequestMetadata.DestinationQueue)
 	c.SendMicroserviceComm(ctx, msComm)
 
 	return ctx, nil
