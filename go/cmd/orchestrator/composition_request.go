@@ -43,18 +43,18 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 	compositionRequest.JobName = lib.GenerateJobName(validationResponse.User.UserName, 8)
 
 	// Save the ActiveJob to etcd
-	var activeJob = &pb.ActiveJob{
-		JobId:               compositionRequest.JobName,
-		Type:                validationResponse.RequestType,
-		User:                validationResponse.User,
-		Archetype:           archetype,
-		AuthorizedProviders: make(map[string]string),
-	}
-	for name, agent := range authorizedProviders {
-		activeJob.AuthorizedProviders[name] = agent.Dns
-	}
+	// var activeJob = &pb.ActiveJob{
+	// 	JobId:               compositionRequest.JobName,
+	// 	Type:                validationResponse.RequestType,
+	// 	User:                validationResponse.User,
+	// 	Archetype:           archetype,
+	// 	AuthorizedProviders: make(map[string]string),
+	// }
+	// for name, agent := range authorizedProviders {
+	// 	activeJob.AuthorizedProviders[name] = agent.Dns
+	// }
 
-	etcd.SaveStructToEtcd(etcdClient, fmt.Sprintf("/activeJobs/%s/%s", validationResponse.User.Id, compositionRequest.JobName), activeJob)
+	// etcd.SaveStructToEtcd(etcdClient, fmt.Sprintf("/activeJobs/%s/%s", validationResponse.User.Id, compositionRequest.JobName), activeJob)
 
 	// Use to return the proper endpoints to the user
 	userTargets := make(map[string]string)
