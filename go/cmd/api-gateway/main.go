@@ -33,10 +33,18 @@ type validation struct {
 	localContext context.Context
 }
 
+// Sequence of steps:
+// 1. StartWebSocketServer (in a separate goroutine)
+//   - This function starts a websocket server that listens for incoming messages from the frontend
+//
+// 2. Initialize gRPC connection
+// 3. Initialize sidecar messaging
+// 4. Start consuming messages from the sidecar
+// 5. Start HTTP server (in a separate goroutine)
+//   - This function starts an HTTP server that listens for incoming requests from the 'public' API
 func main() {
 	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
-	StartWebSocketServer()
 
 	_, err := lib.InitTracer(serviceName)
 	if err != nil {
@@ -65,6 +73,7 @@ func main() {
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/requestApproval", &ochttp.Handler{Handler: requestHandler()})
 	apiMux.Handle("/getAvailableProviders", &ochttp.Handler{Handler: availableProvidersHandler()})
+	apiMux.Handle("/ws", &ochttp.Handler{Handler: handleWebSocket()})
 
 	logger.Info(apiVersion) // prints /api/v1
 

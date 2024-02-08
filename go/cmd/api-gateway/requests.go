@@ -14,10 +14,6 @@ import (
 	"go.opencensus.io/trace"
 )
 
-const orchestratorURL = "http://orchestrator.orchestrator.svc.cluster.local:80/"
-const apiEndpoint = orchestratorURL + "api/v1/"
-const requestApprovalEndpoint = "requestApproval"
-
 func requestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Starting requestApprovalHandler")

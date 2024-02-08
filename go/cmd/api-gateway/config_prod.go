@@ -5,7 +5,7 @@ package main
 
 import "go.uber.org/zap"
 
-var serviceName = "orchestrator"
+var serviceName = "api-gateway"
 var port = ":8080"
 var grpcAddr = "localhost:50051"
 var apiVersion = "/api/v1"
