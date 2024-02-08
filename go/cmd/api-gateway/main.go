@@ -36,6 +36,7 @@ type validation struct {
 func main() {
 	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
+	StartWebSocketServer()
 
 	_, err := lib.InitTracer(serviceName)
 	if err != nil {

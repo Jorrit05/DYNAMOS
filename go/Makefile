@@ -1,4 +1,4 @@
-targets := sidecar policy_enforcer orchestrator agent algorithm test anonymize
+targets := sidecar policy_enforcer orchestrator agent algorithm test anonymize api-gateway
 
 prepare:
 	go mod tidy
@@ -17,5 +17,5 @@ $(targets): prepare
 
 all: $(targets)
 
-.PHONY: $(targets) prepare proto sidecar algorithm test anonymize
+.PHONY: $(targets) prepare proto sidecar algorithm test anonymize 
 

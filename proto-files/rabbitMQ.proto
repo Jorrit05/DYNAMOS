@@ -22,6 +22,8 @@ service SideCar {
   rpc SendMicroserviceComm(MicroserviceCommunication) returns  (google.protobuf.Empty) {}
   rpc CreateQueue(QueueInfo) returns  (google.protobuf.Empty) {}
   rpc DeleteQueue(QueueInfo) returns  (google.protobuf.Empty) {}
+  rpc SendRequestApprovalResponse(AcceptedDataRequest) returns (google.protobuf.Empty) {}
+  rpc SendRequestApprovalRequest(RequestApproval) returns (google.protobuf.Empty) {}
 }
 
 message InitRequest {
