@@ -248,6 +248,7 @@ func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.
 }
 
 // Weird name but its the request to the orchestrator, not the request from the orchestor to the policy enforcer
+// TODO: Replace with SendRequestApproval (it already exists and we need to find a way to send to different services)
 func (s *server) SendRequestApprovalRequest(ctx context.Context, in *pb.RequestApproval) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
@@ -256,10 +257,9 @@ func (s *server) SendRequestApprovalRequest(ctx context.Context, in *pb.RequestA
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// Do other stuff
 	message := amqp.Publishing{
 		Body: data,
-		Type: "requestApprovalRequest",
+		Type: "requestApproval",
 	}
 
 	go send(ctx, message, "orchestrator-in")
@@ -267,7 +267,7 @@ func (s *server) SendRequestApprovalRequest(ctx context.Context, in *pb.RequestA
 
 }
 
-func (s *server) SendRequestApprovalResponse(ctx context.Context, in *pb.AcceptedDataRequest) (*emptypb.Empty, error) {
+func (s *server) SendRequestApprovalResponse(ctx context.Context, in *pb.RequestApprovalResponse) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal SendRequestApprovalResponse failed: %s", err)

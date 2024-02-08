@@ -366,7 +366,7 @@ func handleRequestApproval(ctx context.Context, approvalRequestHash map[string]*
 			}
 		}
 
-		result := &pb.AcceptedDataRequest{}
+		result := &pb.RequestApprovalResponse{}
 
 		result.Auth = &pb.Auth{}
 		result.User = &pb.User{}

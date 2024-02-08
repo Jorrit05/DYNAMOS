@@ -54,7 +54,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 		policyUpdateMutex.Unlock()
 
-	case "requestApprovalRequest":
+	case "requestApproval":
 		requestApproval := &pb.RequestApproval{}
 		if err := grpcMsg.Body.UnmarshalTo(requestApproval); err != nil {
 			logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)

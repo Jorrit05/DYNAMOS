@@ -8,6 +8,9 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 )
 
+// This function handles incoming messages from the sidecar
+// We currently expect the following messages:
+// - requestApprovalResponse: a response to a requestApproval from the orchestrator
 func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 	logger.Debug("start api gateway handleIncomingMessages")
 	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: handleIncomingMessages", grpcMsg.Traces)
