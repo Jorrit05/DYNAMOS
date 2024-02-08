@@ -63,7 +63,9 @@ def load_and_query_csv(file_path_prefix, query):
 
     for table_name in table_names:
         try:
-            dfs[table_name] = pd.read_csv(f"{file_path_prefix}{table_name}_{DATA_STEWARD_NAME}.csv", delimiter=';')
+            file_name = f"{file_path_prefix}{table_name}_{DATA_STEWARD_NAME}.csv"
+            logger.debug(f"Loading file {file_name}")
+            dfs[table_name] = pd.read_csv(file_name, delimiter=';')
         except FileNotFoundError:
             logger.error(f"CSV file for table {table_name}_{DATA_STEWARD_NAME} not found.")
             return None
@@ -209,7 +211,7 @@ def main():
     if int(os.getenv("FIRST")) > 0:
         # logger.debug("First service")
         job_name = os.getenv("JOB_NAME")
-        rabbitClient = RabbitClient(config, job_name, job_name, handle_incoming_request)
+        rabbitClient = RabbitClient(config, job_name, job_name, handle_incoming_request, True)
         rabbitClient.start_consuming(job_name, 10, 2)
     else:
         #TODO: Setup listener service for Python

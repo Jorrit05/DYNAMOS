@@ -2,34 +2,65 @@
     {
         "name": "VU",
         "relations": {
-            "jorrit.stutterheim@cloudnation.nl" : {
-                "ID" : "GUID",
-                "requestTypes" : ["sqlDataRequest", "genericRequest"],
-                "dataSets" : ["wageGap"],
-                "allowedArchetypes" : ["dataThroughTtp", "computeToData"],
-                "allowedComputeProviders" : ["SURF"]
+            "jorrit.stutterheim@cloudnation.nl": {
+                "ID": "GUID",
+                "requestTypes": [
+                    "sqlDataRequest",
+                    "genericRequest"
+                ],
+                "dataSets": [
+                    "wageGap"
+                ],
+                "allowedArchetypes": [
+                    "computeToData"
+                ],
+                "allowedComputeProviders": [
+                    "SURF"
+                ]
             }
         },
-        "computeProviders" : ["SURF", "otherCompany"],
-        "archetypes" : ["computeToData", "dataThroughTtp",  "reproducableScience"]
+        "computeProviders": [
+            "SURF",
+            "otherCompany"
+        ],
+        "archetypes": [
+            "computeToData",
+            "dataThroughTtp",
+            "reproducableScience"
+        ]
     },
     {
         "name": "UVA",
         "relations": {
-            "jorrit.stutterheim@cloudnation.nl" : {
-                "ID" : "GUID",
-                "requestTypes" : ["sqlDataRequest", "genericRequest"],
-                "dataSets" : ["wageGap"],
-                "allowedArchetypes" : ["dataThroughTtp"],
-                "allowedComputeProviders" : ["SURF"]
+            "jorrit.stutterheim@cloudnation.nl": {
+                "ID": "GUID",
+                "requestTypes": [
+                    "sqlDataRequest",
+                    "genericRequest"
+                ],
+                "dataSets": [
+                    "wageGap"
+                ],
+                "allowedArchetypes": [
+                    "computeToData"
+                ],
+                "allowedComputeProviders": [
+                    "SURF"
+                ]
             }
         },
-        "computeProviders" : ["SURF", "otherCompany"],
-        "archetypes" : ["computeToData", "dataThroughTtp",  "reproducableScience"]
+        "computeProviders": [
+            "SURF",
+            "otherCompany"
+        ],
+        "archetypes": [
+            "computeToData",
+            "dataThroughTtp",
+            "reproducableScience"
+        ]
     },
     {
         "name": "RUG",
-        "relations": {
-        }
+        "relations": {}
     }
 ]

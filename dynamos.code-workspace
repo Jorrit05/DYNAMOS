@@ -1,6 +1,9 @@
 {
 	"folders": [
 		{
+			"path": "go/cmd/aggregate"
+		},
+		{
 			"path": "go/cmd/orchestrator"
 		},
 		{

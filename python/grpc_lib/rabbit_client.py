@@ -8,19 +8,19 @@ from grpc_lib import SecureChannel
 
 
 class RabbitClient(SecureChannel):
-    def __init__(self, config, service_name, routing_key, callback=None):
+    def __init__(self, config, service_name, routing_key, callback=None, queue_auto_delete=False):
         super().__init__(config, os.getenv("SIDECAR_PORT"))
         self.sidecar = rabbit.SideCarStub(self.channel)
         self.callback = callback
         self.stop_consuming = False
-        self.initialize_rabbit(service_name, routing_key)
+        self.initialize_rabbit(service_name, routing_key, queue_auto_delete)
 
-    def initialize_rabbit(self, service_name, routing_key):
+    def initialize_rabbit(self, service_name, routing_key, queue_auto_delete=False):
         try:
             service_request = rabbitTypes.InitRequest()
             service_request.service_name = service_name
             service_request.routing_key = routing_key
-            service_request.queue_auto_delete = False
+            service_request.queue_auto_delete = queue_auto_delete
             self.sidecar.InitRabbitMq(service_request)
             self.logger.debug("Rabbit service started successfully")
         except grpc.RpcError as e:

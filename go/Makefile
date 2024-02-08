@@ -1,6 +1,5 @@
 targets := sidecar policy_enforcer orchestrator agent algorithm test anonymize
 
-
 prepare:
 	go mod tidy
 	go mod download
