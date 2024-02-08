@@ -129,12 +129,8 @@ metadata:
   name:  api-gateway
   annotations:
     "helm.sh/resource-policy": keep
-    "app.kubernetes.io/managed-by": "Helm"
-    "meta.helm.sh/release-name": "api-gateway"
-    "meta.helm.sh/release-namespace": "default"
     "linkerd.io/inject" : enabled
     "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
-
 
 ---
 
