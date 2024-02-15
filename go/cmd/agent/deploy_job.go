@@ -144,6 +144,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 			Image:           fullImage,
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Env: []v1.EnvVar{
+				{Name: "DATA_STEWARD_NAME", Value: strings.ToUpper(dataStewardName)},
 				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
 				{Name: "FIRST", Value: firstService},
 				{Name: "LAST", Value: lastService},

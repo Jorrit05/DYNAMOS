@@ -223,7 +223,7 @@ func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCo
 			Body:          data,
 			Type:          in.Type,
 		}
-
+		logger.Sugar().Debugf("SendMicroserviceComm destination queue: %s", in.RequestMetadata.DestinationQueue)
 		go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
 	}(in)
 	return &emptypb.Empty{}, nil
