@@ -89,5 +89,5 @@ func (s *server) handlePolicyUpdate(msg amqp.Delivery, stream pb.SideCar_Consume
 func (s *server) handleRequestApprovalToApiResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
 	logger.Debug("Starting handlePolicyUpdate")
 
-	return s.handleResponse(msg, stream, &pb.AcceptedDataRequest{})
+	return s.handleResponse(msg, stream, &pb.RequestApprovalResponse{})
 }

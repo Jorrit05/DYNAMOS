@@ -29,7 +29,7 @@ var (
 )
 
 type validation struct {
-	response     *pb.AcceptedDataRequest
+	response     *pb.RequestApprovalResponse
 	localContext context.Context
 }
 

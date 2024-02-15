@@ -14,7 +14,7 @@ func createAcceptedDataRequest(ctx context.Context, validationResponse *pb.Valid
 	ctx, span := trace.StartSpan(ctx, "createAcceptedDataRequest")
 	defer span.End()
 
-	result := &pb.AcceptedDataRequest{}
+	result := &pb.RequestApprovalResponse{}
 
 	result.Auth = &pb.Auth{}
 	result.User = &pb.User{}

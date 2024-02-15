@@ -99,14 +99,6 @@ message PolicyUpdate {
   ValidationResponse validation_response = 5;
 }
 
-message AcceptedDataRequest  {
-  string type = 1;
-  User user = 2;
-  Auth auth = 3;
-  map<string, string> authorized_providers = 4;
-  string job_id = 5;
-}
-
 message CompositionRequest {
     string archetype_id = 1;
     string request_type = 2;

@@ -24,16 +24,16 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 	switch grpcMsg.Type {
 	case "requestApprovalResponse":
 		// Return the approval response to the client
-		acceptedDataRequest := &pb.AcceptedDataRequest{}
-		if err := grpcMsg.Body.UnmarshalTo(acceptedDataRequest); err != nil {
+		requestApprovalResponse := &pb.RequestApprovalResponse{}
+		if err := grpcMsg.Body.UnmarshalTo(requestApprovalResponse); err != nil {
 			logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)
 		}
 		requestApprovalMutex.Lock()
 		// Look up the corresponding channel in the request map
-		approvalRequest, ok := requestApprovalMap[acceptedDataRequest.User.Id]
+		approvalRequest, ok := requestApprovalMap[requestApprovalResponse.User.Id]
 		if ok {
-			approvalRequest <- validation{response: acceptedDataRequest, localContext: ctx}
-			delete(requestApprovalMap, acceptedDataRequest.User.Id)
+			approvalRequest <- validation{response: requestApprovalResponse, localContext: ctx}
+			delete(requestApprovalMap, requestApprovalResponse.User.Id)
 		} else {
 			logger.Sugar().Error("no job information available for this policy update")
 		}
