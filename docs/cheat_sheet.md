@@ -20,15 +20,17 @@ kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n
 kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n uva
 kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n vu
 kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n surf
+kubectl create secret generic rabbit --from-literal=password=K5vKN2bXI25R+1Jd -n api-gateway
 
 kubectl delete secret rabbit -n orchestrator
 kubectl delete secret rabbit -n uva
 kubectl delete secret rabbit -n vu
 kubectl delete secret rabbit -n surf
+kubectl delete secret rabbit -n api-gateway
 
 kubectl create secret generic sql --from-literal=db_root_password=$(openssl rand -base64 12) --from-literal=db_dba_password=$(openssl rand -base64 12) -n core
 
-kubectl get secret "rabbit" -o json | jq -r ".[\"data\"][\"password\"]" | base64 -d
+kubectl get secret "rabbit" -n api-gateway -o json | jq -r ".[\"data\"][\"password\"]" | base64 -d
 
 kubectl exec -it $(kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}') -- /bin/bash
 kubectl get services -n core
