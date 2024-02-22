@@ -12,8 +12,6 @@ $(targets): prepare
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
 	docker build --build-arg NAME='$@' -t jorrit05/dynamos-$@ ./cmd/$@/)
-	docker push jorrit05/dynamos-$@
-
 
 all: $(targets)
 
