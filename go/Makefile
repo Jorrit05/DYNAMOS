@@ -1,4 +1,5 @@
 targets := sidecar policy_enforcer orchestrator agent algorithm test anonymize
+branch_name := $(shell git rev-parse --abbrev-ref HEAD)
 
 prepare:
 	go mod tidy
@@ -11,9 +12,9 @@ $(targets): prepare proto
 	cp Dockerfile go.mod go.sum ./cmd/$@
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
-	docker build --build-arg NAME='$@' -t jorrit05/dynamos-$@ ./cmd/$@/)
-	docker push jorrit05/dynamos-$@
-
+	docker build --build-arg NAME='$@' -t jorrit05/dynamos-$@:$(branch_name) -t jorrit05/dynamos-$@:latest ./cmd/$@/)
+	docker push jorrit05/dynamos-$@:$(branch_name)
+	docker push jorrit05/dynamos-$@:latest
 
 all: $(targets)
 

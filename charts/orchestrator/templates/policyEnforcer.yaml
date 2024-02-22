@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: policy-enforcer
-        image: jorrit05/dynamos-policy-enforcer:latest
+        image: jorrit05/dynamos-policy-enforcer:{{ .Values.branchNameTag }}
         imagePullPolicy: Always
         env:
         - name: OC_AGENT_HOST
@@ -28,7 +28,7 @@ spec:
         #     memory: "256Mi"
 
       - name: sidecar
-        image: jorrit05/dynamos-sidecar:latest
+        image: jorrit05/dynamos-sidecar:{{ .Values.branchNameTag }}
         imagePullPolicy: Always
         env:
         - name: AMQ_PASSWORD
