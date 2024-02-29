@@ -1,4 +1,4 @@
-targets := sidecar policy-enforcer orchestrator agent algorithm test anonymize api-gateway
+targets := sidecar policy-enforcer orchestrator agent algorithm test anonymize api-gateway aggregate
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
 api_targets := sidecar orchestrator api-gateway
 

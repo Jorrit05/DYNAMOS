@@ -16,10 +16,10 @@ kubectl cp ./k8s_service_files/rabbitmq.conf temp-pod:/mnt/ -n core
 tar -czvf etcd_files.tar.gz -C ./etcd_launch_files/ .
 
 # Copy the tarball to the pod
-kubectl cp etcd_files.tar.gz temp-pod:/mnt -n orchestrator
+kubectl cp etcd_files.tar.gz temp-pod-orch:/mnt -n orchestrator
 
 # Untar the files inside the pod (optional, if you want to unpack the files inside the pod)
-kubectl exec -n orchestrator temp-pod -- tar -xzvf /mnt/etcd_files.tar.gz -C /mnt
+kubectl exec -n orchestrator temp-pod-orch -- tar -xzvf /mnt/etcd_files.tar.gz -C /mnt
 
 # Delete the temporary pod
 kubectl delete -f temp-pod.yaml

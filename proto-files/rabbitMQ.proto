@@ -115,9 +115,9 @@ message CompositionRequest {
 message SqlDataRequest {
   string type = 1;
   string query = 2;
-  bool graph = 3;
-  string algorithm = 4;
-  map<string, string> algorithm_columns = 5;
-  User user = 6;
-  RequestMetadata request_metadata = 7;
+  string algorithm = 3;
+  map<string, string> algorithm_columns = 4;
+  User user = 5;
+  RequestMetadata request_metadata = 6;
+  map<string, bool> options = 7;
 }

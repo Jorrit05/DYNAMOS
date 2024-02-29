@@ -63,9 +63,9 @@ type Agreement struct {
 }
 
 type RequestType struct {
-	Name             string   `json:"name"`
-	RequiredServices []string `json:"requiredServices"`
-	OptionalServices []string `json:"optionalServices"`
+	Name             string            `json:"name"`
+	RequiredServices []string          `json:"requiredServices"`
+	OptionalServices map[string]string `json:"optionalServices"`
 }
 
 type Archetype struct {
