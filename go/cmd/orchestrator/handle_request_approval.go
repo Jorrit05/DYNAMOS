@@ -129,7 +129,7 @@ func getAuthorizedProviders(validationResponse *pb.ValidationResponse) (map[stri
 			logger.Sugar().Warnf("error getAuthorizedProviders: %v", err)
 			return nil, err
 		} else if json == nil {
-			// logger.Sugar().Warnf("no JSON in getAuthorizedProviders: %v, key: %v", json, key)
+			logger.Sugar().Warnf("no JSON in getAuthorizedProviders, key: %v", key)
 			// invalidProviders = append(invalidProviders, key)
 			continue
 		}
