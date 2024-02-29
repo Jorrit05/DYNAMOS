@@ -26,11 +26,12 @@ type SQLDataRequest struct {
 }
 
 type RequestApproval struct {
-	Type          string   `json:"type"`
-	DataProviders []string `json:"dataProviders"`
-	Graph         bool     `json:"graph"`
-	SyncServices  bool     `json:"syncServices"`
-	User          User     `json:"user"`
+	Type             string   `json:"type"`
+	DataProviders    []string `json:"dataProviders"`
+	Graph            bool     `json:"graph"`
+	SyncServices     bool     `json:"syncServices"`
+	User             User     `json:"user"`
+	DestinationQueue string   `json:"destinationQueue"`
 }
 
 type User struct {

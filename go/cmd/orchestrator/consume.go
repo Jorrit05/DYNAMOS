@@ -20,25 +20,16 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 
 	switch grpcMsg.Type {
 	case "validationResponse":
+		// validationResponse is the flow where a policy Enforcer approved or denied a request
 		validationResponse := &pb.ValidationResponse{}
 		if err := grpcMsg.Body.UnmarshalTo(validationResponse); err != nil {
 			logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)
 		}
 		mutex.Lock()
-		// Look up the corresponding channel in the request map
-		validationChannel, ok := validationMap[validationResponse.User.Id]
-
-		if ok {
-			logger.Sugar().Info("Sending validation to channel")
-			// Send a signal on the channel to indicate that the response is ready
-			validationChannel <- validation{response: validationResponse, localContext: ctx}
-			delete(validationMap, validationResponse.User.Id)
-		} else {
-			logger.Sugar().Errorw("unknown validation response", "GUID", validationResponse.User.Id)
-		}
-
+		handleRequestApproval(ctx, validationResponse)
 		mutex.Unlock()
 	case "policyUpdate":
+		// policyUpdate is the flow where a contract is changed, and jobs need to be updated
 		policyUpdate := &pb.PolicyUpdate{}
 		if err := grpcMsg.Body.UnmarshalTo(policyUpdate); err != nil {
 			logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)
@@ -53,22 +44,6 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 			logger.Sugar().Error("no job information available for this policy update")
 		}
 		policyUpdateMutex.Unlock()
-
-	case "requestApproval":
-		requestApproval := &pb.RequestApproval{}
-		if err := grpcMsg.Body.UnmarshalTo(requestApproval); err != nil {
-			logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)
-		}
-		requestApprovalMutex.Lock()
-		// Look up the corresponding channel in the request map
-		approvalRequest, ok := requestApprovalMap[requestApproval.User.Id]
-		if ok {
-			handleRequestApproval(ctx, approvalRequest, requestApproval)
-			delete(requestApprovalMap, requestApproval.User.Id)
-		} else {
-			logger.Sugar().Error("no job information available for this policy update")
-		}
-		requestApprovalMutex.Unlock()
 
 	default:
 		logger.Sugar().Errorf("Unknown message type: %s", grpcMsg.Type)

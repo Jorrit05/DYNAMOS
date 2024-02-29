@@ -85,9 +85,6 @@ func main() {
 	apiMux.Handle("/policyEnforcer", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
 	apiMux.Handle("/policyEnforcer/", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
 
-	// TODO Replace with rabbitMQ receive
-	apiMux.Handle("/requestapproval", &ochttp.Handler{Handler: requestApprovalHandler()})
-
 	logger.Info(apiVersion) // prints /api/v1
 
 	mux.Handle(apiVersion+"/", http.StripPrefix(apiVersion, apiMux))

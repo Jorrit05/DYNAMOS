@@ -122,9 +122,8 @@ func (s *server) SendRequestApproval(ctx context.Context, in *pb.RequestApproval
 		Type: "requestApproval",
 	}
 
-	go send(ctx, message, "policyEnforcer-in")
+	go send(ctx, message, in.DestinationQueue)
 	return &emptypb.Empty{}, nil
-
 }
 
 func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationResponse) (*emptypb.Empty, error) {
@@ -247,26 +246,6 @@ func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.
 	return &emptypb.Empty{}, nil
 }
 
-// Weird name but its the request to the orchestrator, not the request from the orchestor to the policy enforcer
-// TODO: Replace with SendRequestApproval (it already exists and we need to find a way to send to different services)
-func (s *server) SendRequestApprovalRequest(ctx context.Context, in *pb.RequestApproval) (*emptypb.Empty, error) {
-	data, err := proto.Marshal(in)
-	if err != nil {
-		logger.Sugar().Errorf("Marshal SendRequestApprovalRequest failed: %s", err)
-
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	message := amqp.Publishing{
-		Body: data,
-		Type: "requestApproval",
-	}
-
-	go send(ctx, message, "orchestrator-in")
-	return &emptypb.Empty{}, nil
-
-}
-
 func (s *server) SendRequestApprovalResponse(ctx context.Context, in *pb.RequestApprovalResponse) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
@@ -281,6 +260,6 @@ func (s *server) SendRequestApprovalResponse(ctx context.Context, in *pb.Request
 		Type: "requestApprovalResponse",
 	}
 
-	go send(ctx, message, "api-gateway-in")
+	go send(ctx, message, in.RequestMetadata.DestinationQueue)
 	return &emptypb.Empty{}, nil
 }

@@ -13,7 +13,7 @@ var apiVersion = "/api/v1"
 
 // var logLevel = zap.DebugLevel
 
-var logLevel = zap.InfoLevel
+var logLevel = zap.DebugLevel
 var requestTypeConfigLocation = root + "requestType.json"
 var archetypeConfigLocation = root + "archetype.json"
 var microserviceMetadataConfigLocation = root + "microservices.json"

@@ -90,6 +90,7 @@ message RequestApprovalResponse  {
   map<string, string> authorized_providers = 4;
   string job_id = 5;
   string error = 6;
+  RequestMetadata request_metadata = 7;
 }
 
 message PolicyUpdate {

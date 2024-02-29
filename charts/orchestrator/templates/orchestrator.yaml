@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
       - name: orchestrator
-        image: jorrit05/dynamos-orchestrator:latest
-        imagePullPolicy: IfNotPresent
+        image: jorrit05/dynamos-orchestrator:{{ .Values.branchNameTag }}
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:

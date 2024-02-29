@@ -43,8 +43,9 @@ func requestHandler() http.HandlerFunc {
 				Id:       reqApproval.User.Id,
 				UserName: reqApproval.User.UserName,
 			},
-			DataProviders: reqApproval.DataProviders,
-			SyncServices:  reqApproval.SyncServices,
+			DataProviders:    reqApproval.DataProviders,
+			SyncServices:     reqApproval.SyncServices,
+			DestinationQueue: "policyEnforcer-in",
 		}
 
 		go func() {
