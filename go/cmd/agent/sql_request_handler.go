@@ -19,6 +19,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// Getting the SQL request through HTTP. This means the request is coming from the user. So it can be either a computeToData or DataThroughTtp request.
+// Based on the role we have, it will be handled as one or the other.
 func sqlDataRequestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Entering sqlDataRequestHandler")
@@ -122,6 +124,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 	}
 }
 
+// handleSqlAll means we do all work for this request, not third part involved (computeToData archeType)
 func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.CompositionRequest, sqlDataRequest *pb.SqlDataRequest, correlationId string) (context.Context, error) {
 	// Create msChain and deploy job.
 
@@ -129,7 +132,7 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 	defer span.End()
 
 	var err error
-	ctx, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest)
+	ctx, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest.Options)
 	if err != nil {
 		logger.Sugar().Errorf("error deploying job: %v", err)
 		return ctx, err
@@ -163,6 +166,8 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 	return ctx, nil
 }
 
+// handleSqlComputeProvider means we have a computeProvider role only (dataThroughTtp archeType)
+// We are responsible for forwarding the request to all dataProviders.
 func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRequest *pb.CompositionRequest, sqlDataRequest *pb.SqlDataRequest, correlationId string) (context.Context, error) {
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: handleSqlComputeProvider")
 	defer span.End()
@@ -202,7 +207,7 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 
 	// TODO: Parse SQL request for extra compute services
 	var err error
-	ctx, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest)
+	ctx, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest.Options)
 	if err != nil {
 		logger.Sugar().Errorf("error deploying job: %v", err)
 	}

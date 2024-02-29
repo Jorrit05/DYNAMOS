@@ -10,3 +10,10 @@
 #     command: ['sleep', '3600']
 #     stdin: true
 #     tty: true
+#     volumeMounts:
+#     - name: etcd-startup
+#       mountPath: /app/etcd
+#   volumes:
+#     - name: etcd-startup
+#       persistentVolumeClaim:
+#         claimName: etcd-pvc

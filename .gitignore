@@ -13,6 +13,7 @@ log.txt
 __pycache__
 # TEMP
 definitions.json
+definitions.bak
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out

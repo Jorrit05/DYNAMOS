@@ -42,15 +42,13 @@ func getKubeConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.CompositionRequest, localJobName string, sqlDataRequest *pb.SqlDataRequest) (context.Context, error) {
+func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.CompositionRequest, localJobName string, options map[string]bool) (context.Context, error) {
 	logger.Debug("Starting generateChainAndDeploy")
 
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: generateChainAndDeploy")
 	defer span.End()
 
-	// TODO: Parse SQL request for extra compute services
-
-	msChain, err := generateMicroserviceChain(compositionRequest)
+	msChain, err := generateMicroserviceChain(compositionRequest, options)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
 		return ctx, err
@@ -210,7 +208,7 @@ func addSidecar() v1.Container {
 }
 
 func getRequiredMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata, request *mschain.RequestType, role string) error {
-
+	logger.Sugar().Debug("started getRequiredMicroservices")
 	for _, ms := range request.RequiredServices {
 		var metadataObject mschain.MicroserviceMetadata
 
@@ -230,38 +228,55 @@ func getRequiredMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata
 	return nil
 }
 
-func getOptionalMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata, request *mschain.RequestType, role string, requestType string) error {
-	//TODO: figure out a way to include enforced microservices
+func getOptionalMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata, request *mschain.RequestType, role string, requestType string, options map[string]bool) error {
+	//TODO: include enforced microservices
 	logger.Debug("Start getOptionalMicroservices")
 	logger.Sugar().Debug(len(request.OptionalServices))
-	for _, ms := range request.OptionalServices {
-		key := fmt.Sprintf("/agents/%s/requestType/%s/%s ", serviceName, requestType, ms)
-		logger.Sugar().Debug("key: " + key)
-		resp, err := etcdClient.Get(context.Background(), key)
-		if err != nil {
-			logger.Sugar().Errorf("getting to etcd: %v", err)
-			return err
-		}
 
-		if len(resp.Kvs) == 0 {
-			logger.Sugar().Debug("resp.Kvs = 0")
-			continue
-		}
-		var metadataObject mschain.MicroserviceMetadata
+	// Parse options for optional microservices
+	for option, boolVal := range options {
+		logger.Sugar().Debugf("Option: %s boolVal: %b", option, boolVal)
 
-		_, err = etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", ms), &metadataObject)
-		if err != nil {
-			return err
-		}
+		if boolVal {
+			// Possibly add microservice to the list
+			for msName, optionKey := range request.OptionalServices {
+				if strings.EqualFold(option, optionKey) {
+					// Add microservice to the list
 
-		if strings.EqualFold(metadataObject.Label, role) {
-			*microserviceMetada = append(*microserviceMetada, metadataObject)
-		} else if strings.EqualFold("all", role) {
-			// Only append dataProvider microservices
-			*microserviceMetada = append(*microserviceMetada, metadataObject)
-		}
+					// --- This part is checking the optional_microservices.json configuration. Intended for allowing agents to forcibly add microservices
+					// lets ignore this for now.
+					// key := fmt.Sprintf("/agents/%s/requestType/%s/%s ", serviceName, requestType, msName)
+					// logger.Sugar().Debug("key: " + key)
+					// resp, err := etcdClient.Get(context.Background(), key)
+					// if err != nil {
+					// 	logger.Sugar().Errorf("getting to etcd: %v", err)
+					// 	return err
+					// }
 
+					// if len(resp.Kvs) == 0 {
+					// 	logger.Sugar().Debug("resp.Kvs = 0, microservice ")
+					// 	continue
+					// }
+					// ---------------------------------------------------------------------------------------------------------------------------------------
+
+					var metadataObject mschain.MicroserviceMetadata
+
+					_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", msName), &metadataObject)
+					if err != nil {
+						return err
+					}
+
+					if strings.EqualFold(metadataObject.Label, role) {
+						*microserviceMetada = append(*microserviceMetada, metadataObject)
+					} else if strings.EqualFold("all", role) {
+						// Only append dataProvider microservices
+						*microserviceMetada = append(*microserviceMetada, metadataObject)
+					}
+				}
+			}
+		}
 	}
+
 	return nil
 }
 func RequestTypeMicroservices(requestType string) (mschain.RequestType, error) {

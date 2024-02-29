@@ -3,32 +3,43 @@
         "name": "dynamos-query",
         "label": "dataProvider",
         "allowedOutputs": [
+            "dynamos-aggregate",
             "dynamos-algorithm",
             "dynamos-anonymize"
-        ]
+        ],
+        "invalidArchetypes": []
     },
     {
         "name": "dynamos-anonymize",
         "label": "dataProvider",
         "allowedOutputs": [
+            "dynamos-aggregate",
             "dynamos-algorithm"
-        ]
+        ],
+        "invalidArchetypes": []
     },
     {
         "name": "dynamos-algorithm",
         "label": "computeProvider",
         "allowedOutputs": [
             "dynamos-graph"
-        ]
+        ],
+        "invalidArchetypes": []
     },
     {
         "name": "dynamos-graph",
         "label": "computeProvider",
-        "allowedOutputs": []
+        "allowedOutputs": [],
+        "invalidArchetypes": []
     },
     {
         "name": "dynamos-aggregate",
-        "label": "thirdParty",
-        "allowedOutputs": ["dynamos-algorithm"]
+        "label": "computeProvider",
+        "allowedOutputs": [
+            "dynamos-algorithm"
+        ],
+        "invalidArchetypes": [
+            "computeToData"
+        ]
     }
 ]

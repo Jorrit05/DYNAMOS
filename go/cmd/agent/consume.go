@@ -17,8 +17,6 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 	}
 	defer span.End()
 
-	// logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
-	// lib.PrettyPrintSpanContext(span.SpanContext())
 	switch grpcMsg.Type {
 	case "compositionRequest":
 		logger.Debug("Received compositionRequest")
@@ -32,6 +30,8 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 	case "microserviceCommunication":
 		handleMicroserviceCommunication(ctx, grpcMsg)
 	case "sqlDataRequest":
+		// handleSqlRequestDataProvider
+		// Receive sqlDataRequest through RabbitMQ, means we received the request from the computeProvider
 		// Implicitly this means I am only a dataProvider
 		logger.Debug("Received sqlDataRequest from Rabbit (third party)")
 
@@ -42,8 +42,9 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 
 		waitingJobMutex.Lock()
+		defer waitingJobMutex.Unlock()
+
 		actualJobName, ok := waitingJobMap[sqlDataRequest.RequestMetadata.JobName]
-		// mutex moved to ensure requests can closely follow eachother.
 
 		ttpMutex.Lock()
 		thirdPartyMap[sqlDataRequest.RequestMetadata.CorrelationId] = sqlDataRequest.RequestMetadata.ReturnAddress
@@ -59,15 +60,11 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 
 		any, err := anypb.New(sqlDataRequest)
 		if err != nil {
-			waitingJobMutex.Unlock()
 			logger.Sugar().Error(err)
 			return err
 		}
 
 		msComm.OriginalRequest = any
-
-		// logger.Sugar().Warnf("jobName: %v", sqlDataRequest.RequestMetadata.JobName)
-		// logger.Sugar().Warnf("actualJobName: %v", actualJobName)
 
 		key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, actualJobName)
 		value := actualJobName
@@ -85,17 +82,16 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 			logger.Sugar().Infof("No waiting job found for: %v", sqlDataRequest.RequestMetadata.JobName)
 			compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
 			if err != nil {
-				waitingJobMutex.Unlock()
+
 				logger.Sugar().Errorf("Error getting matching composition request: %v", err)
 				return err
 			}
 			msComm.RequestMetadata.DestinationQueue = compositionRequest.LocalJobName
 			key = fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, compositionRequest.LocalJobName)
 			value = compositionRequest.LocalJobName
-			generateChainAndDeploy(ctx, compositionRequest, compositionRequest.LocalJobName, sqlDataRequest)
+			generateChainAndDeploy(ctx, compositionRequest, compositionRequest.LocalJobName, sqlDataRequest.Options)
 			c.SendMicroserviceComm(ctx, msComm)
 		}
-		waitingJobMutex.Unlock()
 
 		logger.Sugar().Warnf("key: %v", key)
 		logger.Sugar().Warnf("value: %v", value)

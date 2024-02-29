@@ -1,8 +1,16 @@
 [
     {
         "name": "wageGap",
-        "type" : "csv",
+        "type": "csv",
         "delimiter": ";",
-        "tables": ["Aanstellingen", "Personen"]
+        "tables": [
+            "Aanstellingen",
+            "Personen"
+        ],
+        "sensitive_columns": {
+            "Aanstellingen": [
+                ""
+            ]
+        }
     }
 ]

@@ -1,9 +1,12 @@
-targets := sidecar policy_enforcer orchestrator agent algorithm test anonymize
+targets := sidecar policy-enforcer orchestrator agent algorithm test anonymize aggregate
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
 
 prepare:
 	go mod tidy
 	go mod download
+
+aleandro:
+	docker run -v /Users/jorrit/Documents/uva/DYNAMOS:/data proto /bin/sh -c "cd /data/go && make proto"
 
 proto:
 	protoc -I ../proto-files --go_out=./pkg/proto --go_opt=paths=source_relative --go-grpc_out=./pkg/proto --go-grpc_opt=paths=source_relative ../proto-files/*.proto

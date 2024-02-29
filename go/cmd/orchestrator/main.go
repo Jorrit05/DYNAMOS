@@ -83,6 +83,7 @@ func main() {
 	apiMux.Handle("/policyEnforcer", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
 	apiMux.Handle("/policyEnforcer/", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
 
+	apiMux.Handle("/requestApproval", &ochttp.Handler{Handler: requestApprovalHandler()})
 	apiMux.Handle("/requestapproval", &ochttp.Handler{Handler: requestApprovalHandler()})
 
 	logger.Info(apiVersion) // prints /api/v1

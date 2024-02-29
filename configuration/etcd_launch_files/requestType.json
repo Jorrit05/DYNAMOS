@@ -5,16 +5,15 @@
             "dynamos-query",
             "dynamos-algorithm"
         ],
-        "optionalServices": [
-            "dynamos-anonymize",
-            "dynamos-graph"
-        ]
+        "optionalServices": {
+            "dynamos-anonymize": "anonymize",
+            "dynamos-graph": "graph",
+            "dynamos-aggregate": "aggregate"
+        }
     },
     {
         "name": "genericRequest",
-        "requiredServices": [
-        ],
-        "optionalServices": [
-        ]
+        "requiredServices": [],
+        "optionalServices": {}
     }
 ]
