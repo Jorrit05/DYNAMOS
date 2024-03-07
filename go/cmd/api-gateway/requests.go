@@ -114,7 +114,6 @@ func availableProvidersHandler() http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		w.Write(jsonResponse)
-		return
 	}
 }
 
