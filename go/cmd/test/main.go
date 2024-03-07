@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -41,6 +43,17 @@ func deleteJobInfo(userName string) {
 }
 
 func main() {
+
+	var archeTypes = &api.Archetype{}
+
+	archeTypess, _ := etcd.GetPrefixListEtcd(etcdClient, "/archetypes", archeTypes)
+
+	fmt.Println(archeTypess)
+	for _, archeType := range archeTypess {
+		fmt.Println(archeType)
+	}
+	fmt.Println(len(archeTypess))
+	os.Exit(0)
 	// deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
 	conn = lib.GetGrpcConnection(grpcAddr)
 

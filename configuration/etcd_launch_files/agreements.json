@@ -12,7 +12,8 @@
                     "wageGap"
                 ],
                 "allowedArchetypes": [
-                    "computeToData"
+                    "computeToData",
+                    "dataThroughTtp"
                 ],
                 "allowedComputeProviders": [
                     "SURF"
@@ -42,7 +43,8 @@
                     "wageGap"
                 ],
                 "allowedArchetypes": [
-                    "computeToData"
+                    "computeToData",
+                    "dataThroughTtp"
                 ],
                 "allowedComputeProviders": [
                     "SURF"

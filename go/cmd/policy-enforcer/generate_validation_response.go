@@ -29,6 +29,7 @@ func checkRequestApproval(ctx context.Context, requestApproval *pb.RequestApprov
 			UserName: requestApproval.User.UserName,
 		},
 		RequestApproved: false,
+		ValidArchetypes: &pb.UserArchetypes{Archetypes: make(map[string]*pb.UserAllowedArchetypes)},
 	}
 
 	getValidAgreements(requestApproval.DataProviders, requestApproval.User, &agreements, protoRequest)
@@ -87,6 +88,9 @@ func getValidAgreements(dataProviders []string, requestUser *pb.User, agreements
 			invalidDataproviders = append(invalidDataproviders, steward)
 			continue
 		}
+		protoRequest.ValidArchetypes.UserName = requestUser.UserName
+		protoRequest.ValidArchetypes.Archetypes[steward] = &pb.UserAllowedArchetypes{Archetypes: matchedArchetypes}
+
 		// Initalize after checking valid archetypes.
 		protoRequest.ValidDataproviders[steward] = &pb.DataProvider{}
 		// Check if user allowed archetypes are actually supported archetypes in this agreement

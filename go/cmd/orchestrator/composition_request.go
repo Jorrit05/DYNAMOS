@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
@@ -25,7 +26,7 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 	ctx, span := trace.StartSpan(ctx, "startCompositionRequest")
 	defer span.End()
 
-	archetype, err := chooseArchetype(validationResponse.ValidDataproviders, authorizedProviders)
+	archetype, err := chooseArchetype(validationResponse, authorizedProviders)
 	if err != nil {
 		return nil, ctx, err
 	}
@@ -96,51 +97,122 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 	return userTargets, ctx, nil
 }
 
-// Just returns one of the entries that match. No logic behind it.
-// TODO: Make smarter
-func chooseArchetype(validDataproviders map[string]*pb.DataProvider, authorizedDataProviders map[string]lib.AgentDetails) (string, error) {
-	logger.Sugar().Debug("starting chooseArchetype")
-	intersection := make(map[string]bool)
+// Simple sorting to return the archetype with the least weight
+func pickArchetypeBasedOnWeight() (*api.Archetype, error) {
+	var target = &api.Archetype{}
 
-	for k, _ := range validDataproviders {
+	// Assuming GetPrefixListEtcd returns a slice of Archetype and an error
+	archeTypes, err := etcd.GetPrefixListEtcd(etcdClient, "/archetypes", target)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(archeTypes) == 0 {
+		return nil, fmt.Errorf("No archetypes available")
+	}
+
+	lightest := archeTypes[0]
+
+	// Iterate to find the one with the lowest weight
+	for _, archeType := range archeTypes {
+		if archeType.Weight < lightest.Weight {
+			lightest = archeType
+		}
+	}
+
+	return lightest, nil
+}
+
+// TODO: Make smarter
+func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataProviders map[string]lib.AgentDetails) (string, error) {
+	logger.Sugar().Debug("starting chooseArchetype")
+
+	for k, _ := range validationResponse.ValidDataproviders {
 		logger.Sugar().Debug("validDataprovider: %s ", k)
 	}
 
-	first := true
-	for dataProviderName, dataProvider := range validDataproviders {
-		_, ok := authorizedDataProviders[dataProviderName]
-		if !ok {
-			logger.Sugar().Debugf("dataprovider %s not authorized, probably offline", dataProviderName)
-			continue
-		}
+	options := map[string]bool{"aggregate": true, "other": false}
 
-		if first {
-			for _, archType := range dataProvider.Archetypes {
-				intersection[archType] = true
-			}
-			first = false
-		} else {
-			newIntersection := make(map[string]bool)
-			for _, archType := range dataProvider.Archetypes {
-				if intersection[archType] {
-					newIntersection[archType] = true
+	// This ranges over the options. And selects an archetype based on the options.
+	for option, value := range options {
+		switch option {
+		case "aggregate":
+			// If aggregate is enabled, it will select the 'dataThroughTtp' archetype, if this is allowed on all the authorizedDataProviders
+			if value {
+				allowed := true
+				for provider, _ := range authorizedDataProviders {
+					if !slices.Contains(validationResponse.ValidArchetypes.Archetypes[provider].Archetypes, "dataThroughTtp") {
+						allowed = false
+					}
+				}
+
+				if allowed {
+					return "dataThroughTtp", nil
 				}
 			}
-			intersection = newIntersection
 		}
 	}
 
-	if len(intersection) == 0 {
-		return "", fmt.Errorf("no common archetypes found")
+	//Below is messy, up for refactoring and making it smarter
+	archeType, err := pickArchetypeBasedOnWeight()
+	if err != nil {
+		return "", err
+	}
+	allowed := true
+	for provider, _ := range authorizedDataProviders {
+		if !slices.Contains(validationResponse.ValidArchetypes.Archetypes[provider].Archetypes, archeType.Name) {
+			allowed = false
+		}
+	}
+	if allowed {
+		return archeType.Name, nil
 	}
 
-	// return the first common archetype
-	for key := range intersection {
-		return key, nil
+	for provider, _ := range authorizedDataProviders {
+		someArchetype := validationResponse.ValidArchetypes.Archetypes[provider].Archetypes[0]
+		if someArchetype != "" {
+			return someArchetype, nil
+		}
 	}
 
 	return "", fmt.Errorf("unexpected error: could not retrieve an archetype from the intersection")
 }
+
+// first := true
+// for dataProviderName, dataProvider := range validationResponse.ValidDataproviders {
+// 	_, ok := authorizedDataProviders[dataProviderName]
+// 	if !ok {
+// 		logger.Sugar().Debugf("dataprovider %s not authorized, probably offline", dataProviderName)
+// 		continue
+// 	}
+
+// 	if first {
+// 		for _, archType := range dataProvider.Archetypes {
+// 			intersection[archType] = true
+// 		}
+// 		first = false
+// 	} else {
+// 		newIntersection := make(map[string]bool)
+// 		for _, archType := range dataProvider.Archetypes {
+// 			if intersection[archType] {
+// 				newIntersection[archType] = true
+// 			}
+// 		}
+// 		intersection = newIntersection
+// 	}
+// }
+
+// if len(intersection) == 0 {
+// 	return "", fmt.Errorf("no common archetypes found")
+// }
+
+// // return the first common archetype
+// for key := range intersection {
+// 	return key, nil
+// }
+
+// 	return "", fmt.Errorf("unexpected error: could not retrieve an archetype from the intersection")
+// }
 
 func chooseThirdParty(validationResponse *pb.ValidationResponse) (lib.AgentDetails, error) {
 
