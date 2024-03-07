@@ -17,7 +17,7 @@ spec:
       containers:
       - name: api-gateway
         image: jorrit05/dynamos-api-gateway:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
