@@ -43,17 +43,17 @@ type SideCarClient interface {
 	InitRabbitMq(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	Consume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ConsumeClient, error)
 	ChainConsume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ChainConsumeClient, error)
-	SendRequestApproval(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*empty.Empty, error)
-	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*empty.Empty, error)
-	SendCompositionRequest(ctx context.Context, in *CompositionRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	SendSqlDataRequest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	SendPolicyUpdate(ctx context.Context, in *PolicyUpdate, opts ...grpc.CallOption) (*empty.Empty, error)
-	SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*empty.Empty, error)
-	CreateQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*empty.Empty, error)
-	DeleteQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*empty.Empty, error)
-	SendRequestApprovalResponse(ctx context.Context, in *RequestApprovalResponse, opts ...grpc.CallOption) (*empty.Empty, error)
-	SendRequestApprovalRequest(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*empty.Empty, error)
+	SendRequestApproval(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendValidationResponse(ctx context.Context, in *ValidationResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendCompositionRequest(ctx context.Context, in *CompositionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendSqlDataRequest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendPolicyUpdate(ctx context.Context, in *PolicyUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendTest(ctx context.Context, in *SqlDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendRequestApprovalResponse(ctx context.Context, in *RequestApprovalResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendRequestApprovalRequest(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sideCarClient struct {
@@ -236,6 +236,24 @@ func (c *sideCarClient) SendRequestApprovalRequest(ctx context.Context, in *Requ
 	return out, nil
 }
 
+func (c *sideCarClient) SendRequestApprovalResponse(ctx context.Context, in *RequestApprovalResponse, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendRequestApprovalResponse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sideCarClient) SendRequestApprovalRequest(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendRequestApprovalRequest", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SideCarServer is the server API for SideCar service.
 // All implementations must embed UnimplementedSideCarServer
 // for forward compatibility
@@ -243,17 +261,17 @@ type SideCarServer interface {
 	InitRabbitMq(context.Context, *InitRequest) (*empty.Empty, error)
 	Consume(*ConsumeRequest, SideCar_ConsumeServer) error
 	ChainConsume(*ConsumeRequest, SideCar_ChainConsumeServer) error
-	SendRequestApproval(context.Context, *RequestApproval) (*empty.Empty, error)
-	SendValidationResponse(context.Context, *ValidationResponse) (*empty.Empty, error)
-	SendCompositionRequest(context.Context, *CompositionRequest) (*empty.Empty, error)
-	SendSqlDataRequest(context.Context, *SqlDataRequest) (*empty.Empty, error)
-	SendPolicyUpdate(context.Context, *PolicyUpdate) (*empty.Empty, error)
-	SendTest(context.Context, *SqlDataRequest) (*empty.Empty, error)
-	SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*empty.Empty, error)
-	CreateQueue(context.Context, *QueueInfo) (*empty.Empty, error)
-	DeleteQueue(context.Context, *QueueInfo) (*empty.Empty, error)
-	SendRequestApprovalResponse(context.Context, *RequestApprovalResponse) (*empty.Empty, error)
-	SendRequestApprovalRequest(context.Context, *RequestApproval) (*empty.Empty, error)
+	SendRequestApproval(context.Context, *RequestApproval) (*emptypb.Empty, error)
+	SendValidationResponse(context.Context, *ValidationResponse) (*emptypb.Empty, error)
+	SendCompositionRequest(context.Context, *CompositionRequest) (*emptypb.Empty, error)
+	SendSqlDataRequest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
+	SendPolicyUpdate(context.Context, *PolicyUpdate) (*emptypb.Empty, error)
+	SendTest(context.Context, *SqlDataRequest) (*emptypb.Empty, error)
+	SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error)
+	CreateQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
+	DeleteQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
+	SendRequestApprovalResponse(context.Context, *RequestApprovalResponse) (*emptypb.Empty, error)
+	SendRequestApprovalRequest(context.Context, *RequestApproval) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSideCarServer()
 }
 
@@ -297,10 +315,10 @@ func (UnimplementedSideCarServer) CreateQueue(context.Context, *QueueInfo) (*emp
 func (UnimplementedSideCarServer) DeleteQueue(context.Context, *QueueInfo) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteQueue not implemented")
 }
-func (UnimplementedSideCarServer) SendRequestApprovalResponse(context.Context, *RequestApprovalResponse) (*empty.Empty, error) {
+func (UnimplementedSideCarServer) SendRequestApprovalResponse(context.Context, *RequestApprovalResponse) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendRequestApprovalResponse not implemented")
 }
-func (UnimplementedSideCarServer) SendRequestApprovalRequest(context.Context, *RequestApproval) (*empty.Empty, error) {
+func (UnimplementedSideCarServer) SendRequestApprovalRequest(context.Context, *RequestApproval) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendRequestApprovalRequest not implemented")
 }
 func (UnimplementedSideCarServer) mustEmbedUnimplementedSideCarServer() {}
@@ -548,7 +566,7 @@ func _SideCar_SendRequestApprovalResponse_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: SideCar_SendRequestApprovalResponse_FullMethodName,
+		FullMethod: "/proto.SideCar/SendRequestApprovalResponse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SideCarServer).SendRequestApprovalResponse(ctx, req.(*RequestApprovalResponse))
@@ -566,7 +584,7 @@ func _SideCar_SendRequestApprovalRequest_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: SideCar_SendRequestApprovalRequest_FullMethodName,
+		FullMethod: "/proto.SideCar/SendRequestApprovalRequest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SideCarServer).SendRequestApprovalRequest(ctx, req.(*RequestApproval))

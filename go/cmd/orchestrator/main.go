@@ -18,17 +18,13 @@ import (
 )
 
 var (
-	logger                                = lib.InitLogger(logLevel)
-	etcdClient           *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
-	conn                 *grpc.ClientConn
-	mutex                = &sync.Mutex{}
-	receiveMutex         = &sync.Mutex{}
-	validationMap        = make(map[string]chan validation)
-	policyUpdateMutex    = &sync.Mutex{}
-	policyUpdateMap      = make(map[string]map[string]*pb.CompositionRequest)
-	requestApprovalMutex = &sync.Mutex{}
-	requestApprovalMap   = make(map[string]map[string]*pb.RequestApproval)
-	c                    pb.SideCarClient
+	logger                             = lib.InitLogger(logLevel)
+	etcdClient        *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
+	conn              *grpc.ClientConn
+	receiveMutex      = &sync.Mutex{}
+	policyUpdateMutex = &sync.Mutex{}
+	policyUpdateMap   = make(map[string]map[string]*pb.CompositionRequest)
+	c                 pb.SideCarClient
 )
 
 type validation struct {
