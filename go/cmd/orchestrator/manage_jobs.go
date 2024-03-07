@@ -158,7 +158,13 @@ func evaluateArchetypeInActiveJobs(jobNames []string, agreement *api.Agreement, 
 func processPolicyUpdate(ctx context.Context, agentsWithThisJob map[string]*pb.CompositionRequest, policyUpdate *pb.PolicyUpdate) {
 	logger.Sugar().Debugf("processPolicyUpdate")
 
-	archetype, err := chooseArchetype(policyUpdate.ValidationResponse.ValidDataproviders)
+	// TODO: Kinda threw this in without testing..
+	authorizedProviders, err := getAuthorizedProviders(policyUpdate.ValidationResponse)
+	if err != nil {
+		logger.Sugar().Errorf("error getAuthorizedProviders : %v", err)
+	}
+
+	archetype, err := chooseArchetype(policyUpdate.ValidationResponse.ValidDataproviders, authorizedProviders)
 	if err != nil {
 		logger.Sugar().Errorf("error choosing archetype: %v", err)
 	}

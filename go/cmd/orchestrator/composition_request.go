@@ -25,7 +25,7 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 	ctx, span := trace.StartSpan(ctx, "startCompositionRequest")
 	defer span.End()
 
-	archetype, err := chooseArchetype(validationResponse.ValidDataproviders)
+	archetype, err := chooseArchetype(validationResponse.ValidDataproviders, authorizedProviders)
 	if err != nil {
 		return nil, ctx, err
 	}
@@ -98,11 +98,22 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 
 // Just returns one of the entries that match. No logic behind it.
 // TODO: Make smarter
-func chooseArchetype(validDataproviders map[string]*pb.DataProvider) (string, error) {
+func chooseArchetype(validDataproviders map[string]*pb.DataProvider, authorizedDataProviders map[string]lib.AgentDetails) (string, error) {
+	logger.Sugar().Debug("starting chooseArchetype")
 	intersection := make(map[string]bool)
 
+	for k, _ := range validDataproviders {
+		logger.Sugar().Debug("validDataprovider: %s ", k)
+	}
+
 	first := true
-	for _, dataProvider := range validDataproviders {
+	for dataProviderName, dataProvider := range validDataproviders {
+		_, ok := authorizedDataProviders[dataProviderName]
+		if !ok {
+			logger.Sugar().Debugf("dataprovider %s not authorized, probably offline", dataProviderName)
+			continue
+		}
+
 		if first {
 			for _, archType := range dataProvider.Archetypes {
 				intersection[archType] = true
