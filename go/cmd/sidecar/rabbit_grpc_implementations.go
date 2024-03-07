@@ -106,7 +106,11 @@ func (s *server) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer)
 				logger.Sugar().Errorf("Error handling policyUpdate: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
-
+		case "requestApprovalResponse":
+			if err := s.handleRequestApprovalToApiResponse(msg, stream); err != nil {
+				logger.Sugar().Errorf("Error handling requestApprovalResponse: %v", err)
+				return status.Error(codes.Internal, err.Error())
+			}
 		// Handle other message types...
 		default:
 			logger.Sugar().Errorf("Unknown message type: %s", msg.Type)

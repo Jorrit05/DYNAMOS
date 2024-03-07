@@ -4,6 +4,9 @@
 			"path": "go/cmd/aggregate"
 		},
 		{
+			"path": "go/cmd/api-gateway"
+		},
+		{
 			"path": "go/cmd/orchestrator"
 		},
 		{
@@ -40,7 +43,7 @@
 			"path": "go/cmd/algorithm"
 		},
 		{
-			"path": "go/cmd/policy_enforcer"
+			"path": "go/cmd/policy-enforcer"
 		},
 		{
 			"path": "dynamos-fe"

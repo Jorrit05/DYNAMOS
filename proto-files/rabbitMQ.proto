@@ -22,6 +22,8 @@ service SideCar {
   rpc SendMicroserviceComm(MicroserviceCommunication) returns  (google.protobuf.Empty) {}
   rpc CreateQueue(QueueInfo) returns  (google.protobuf.Empty) {}
   rpc DeleteQueue(QueueInfo) returns  (google.protobuf.Empty) {}
+  rpc SendRequestApprovalResponse(RequestApprovalResponse) returns (google.protobuf.Empty) {}
+  rpc SendRequestApprovalRequest(RequestApproval) returns (google.protobuf.Empty) {}
 }
 
 message InitRequest {
@@ -78,6 +80,17 @@ message RequestApproval {
   User user = 2;
   repeated string data_providers = 3;
   bool sync_services = 4;
+  string destination_queue = 5;
+}
+
+message RequestApprovalResponse  {
+  string type = 1;
+  User user = 2;
+  Auth auth = 3;
+  map<string, string> authorized_providers = 4;
+  string job_id = 5;
+  string error = 6;
+  RequestMetadata request_metadata = 7;
 }
 
 message PolicyUpdate {
@@ -86,14 +99,6 @@ message PolicyUpdate {
   repeated string data_providers = 3;
   RequestMetadata request_metadata = 4;
   ValidationResponse validation_response = 5;
-}
-
-message AcceptedDataRequest  {
-  string type = 1;
-  User user = 2;
-  Auth auth = 3;
-  map<string, string> authorized_providers = 4;
-  string job_id = 5;
 }
 
 message CompositionRequest {

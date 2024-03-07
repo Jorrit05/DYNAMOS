@@ -315,3 +315,51 @@ func getJobAcrossAgents(ctx context.Context, targetMap map[string]*pb.Compositio
 
 	return ctx
 }
+
+func handleRequestApproval(ctx context.Context, validationResponse *pb.ValidationResponse) {
+	result := &pb.RequestApprovalResponse{Type: "requestApprovalResponse", RequestMetadata: &pb.RequestMetadata{DestinationQueue: "api-gateway-in"}}
+
+	authorizedProviders, err := getAuthorizedProviders(validationResponse)
+	if err != nil {
+		result.Error = err.Error()
+		c.SendRequestApprovalResponse(ctx, result)
+		return
+	}
+
+	if len(authorizedProviders) == 0 {
+		// TODO Respond with the following to the rabbitmq queue
+		// []byte("Request was processed, but no agreements or available dataproviders have been found")
+		result.Error = "Request was processed, but no agreements or available dataproviders have been found"
+		c.SendRequestApprovalResponse(ctx, result)
+		return
+	}
+
+	// TODO: Might be able to improve processing by converting functions to go routines
+	// Seems a bit tricky though due to the response writer.
+
+	compositionRequest := &pb.CompositionRequest{}
+	compositionRequest.User = &pb.User{}
+	userTargets, ctx, err := startCompositionRequest(ctx, validationResponse, authorizedProviders, compositionRequest)
+	if err != nil {
+		switch e := err.(type) {
+		case *UnauthorizedProviderError:
+			logger.Sugar().Warn("Unauthorized provider error: %v", e)
+			return
+		default:
+			logger.Sugar().Errorf("Error starting composition request: %v", err)
+			return
+		}
+	}
+
+	result.Auth = &pb.Auth{}
+	result.User = &pb.User{}
+
+	result.Auth = validationResponse.Auth
+	result.User = validationResponse.User
+
+	result.AuthorizedProviders = make(map[string]string)
+	result.AuthorizedProviders = userTargets
+	result.JobId = compositionRequest.JobName
+
+	c.SendRequestApprovalResponse(ctx, result)
+}

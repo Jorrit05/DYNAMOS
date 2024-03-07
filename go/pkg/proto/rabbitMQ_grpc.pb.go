@@ -35,6 +35,8 @@ type SideCarClient interface {
 	SendMicroserviceComm(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteQueue(ctx context.Context, in *QueueInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendRequestApprovalResponse(ctx context.Context, in *RequestApprovalResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendRequestApprovalRequest(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sideCarClient struct {
@@ -199,6 +201,24 @@ func (c *sideCarClient) DeleteQueue(ctx context.Context, in *QueueInfo, opts ...
 	return out, nil
 }
 
+func (c *sideCarClient) SendRequestApprovalResponse(ctx context.Context, in *RequestApprovalResponse, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendRequestApprovalResponse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sideCarClient) SendRequestApprovalRequest(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/proto.SideCar/SendRequestApprovalRequest", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SideCarServer is the server API for SideCar service.
 // All implementations must embed UnimplementedSideCarServer
 // for forward compatibility
@@ -215,6 +235,8 @@ type SideCarServer interface {
 	SendMicroserviceComm(context.Context, *MicroserviceCommunication) (*emptypb.Empty, error)
 	CreateQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
 	DeleteQueue(context.Context, *QueueInfo) (*emptypb.Empty, error)
+	SendRequestApprovalResponse(context.Context, *RequestApprovalResponse) (*emptypb.Empty, error)
+	SendRequestApprovalRequest(context.Context, *RequestApproval) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSideCarServer()
 }
 
@@ -257,6 +279,12 @@ func (UnimplementedSideCarServer) CreateQueue(context.Context, *QueueInfo) (*emp
 }
 func (UnimplementedSideCarServer) DeleteQueue(context.Context, *QueueInfo) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteQueue not implemented")
+}
+func (UnimplementedSideCarServer) SendRequestApprovalResponse(context.Context, *RequestApprovalResponse) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendRequestApprovalResponse not implemented")
+}
+func (UnimplementedSideCarServer) SendRequestApprovalRequest(context.Context, *RequestApproval) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendRequestApprovalRequest not implemented")
 }
 func (UnimplementedSideCarServer) mustEmbedUnimplementedSideCarServer() {}
 
@@ -493,6 +521,42 @@ func _SideCar_DeleteQueue_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SideCar_SendRequestApprovalResponse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestApprovalResponse)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).SendRequestApprovalResponse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/SendRequestApprovalResponse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).SendRequestApprovalResponse(ctx, req.(*RequestApprovalResponse))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SideCar_SendRequestApprovalRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestApproval)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).SendRequestApprovalRequest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.SideCar/SendRequestApprovalRequest",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).SendRequestApprovalRequest(ctx, req.(*RequestApproval))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SideCar_ServiceDesc is the grpc.ServiceDesc for SideCar service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -539,6 +603,14 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteQueue",
 			Handler:    _SideCar_DeleteQueue_Handler,
+		},
+		{
+			MethodName: "SendRequestApprovalResponse",
+			Handler:    _SideCar_SendRequestApprovalResponse_Handler,
+		},
+		{
+			MethodName: "SendRequestApprovalRequest",
+			Handler:    _SideCar_SendRequestApprovalRequest_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

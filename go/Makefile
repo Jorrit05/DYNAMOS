@@ -1,17 +1,15 @@
-targets := sidecar policy-enforcer orchestrator agent algorithm test anonymize aggregate
+targets := sidecar policy-enforcer orchestrator agent algorithm test anonymize api-gateway aggregate
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
+api_targets := sidecar orchestrator api-gateway
 
 prepare:
 	go mod tidy
 	go mod download
 
-aleandro:
-	docker run -v /Users/jorrit/Documents/uva/DYNAMOS:/data proto /bin/sh -c "cd /data/go && make proto"
-
 proto:
 	protoc -I ../proto-files --go_out=./pkg/proto --go_opt=paths=source_relative --go-grpc_out=./pkg/proto --go-grpc_opt=paths=source_relative ../proto-files/*.proto
 
-$(targets): prepare proto
+$(targets): prepare
 	cp Dockerfile go.mod go.sum ./cmd/$@
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
@@ -20,6 +18,7 @@ $(targets): prepare proto
 	docker push jorrit05/dynamos-$@:latest
 
 all: $(targets)
+api: $(api_targets)
 
 .PHONY: $(targets) prepare proto sidecar algorithm test anonymize
 
