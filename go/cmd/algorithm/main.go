@@ -109,10 +109,8 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 	}
 
-	<-COORDINATOR
 	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
 
-	c := pb.NewMicroserviceClient(config.GrpcConnection)
 	if sqlDataRequest.Options["graph"] {
 		// jsonString, _ := json.Marshal(msComm.Data)
 		// msComm.Result = jsonString
@@ -121,8 +119,6 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		jsonString, _ := m.MarshalToString(msComm.Data)
 		msComm.Result = []byte(jsonString)
 
-		c.SendData(ctx, msComm)
-		close(config.StopServer)
 		return nil
 	}
 
@@ -131,8 +127,6 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		// msComm.Result = jsonString
 
 		msComm.Result = getAverage(msComm.Data)
-		c.SendData(ctx, msComm)
-		close(config.StopServer)
 		return nil
 	}
 
@@ -145,9 +139,6 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	ctx, allResults := convertAllData(ctx, msComm.Data)
 	msComm.Result = allResults
 
-	c.SendData(ctx, msComm)
-	// time.Sleep(2 * time.Second)
-	close(config.StopServer)
 	return nil
 }
 

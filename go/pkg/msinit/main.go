@@ -20,16 +20,13 @@ var (
 )
 
 func (s *Configuration) CloseConnection() {
-	if s.GrpcConnection != nil {
-		s.GrpcConnection.Close()
+	if s.NextConnection != nil {
+		s.NextConnection.Close()
 	}
-}
-func (s *Configuration) GetConnection() *grpc.ClientConn {
-	if s.GrpcConnection != nil {
-		return s.GrpcConnection
+
+	if s.SidecarConnection != nil {
+		s.SidecarConnection.Close()
 	}
-	logger.Sugar().Errorf("GetConnecton, s.GrpcConnection is nil")
-	return nil
 }
 
 type Configuration struct {
@@ -92,7 +89,7 @@ func NewConfiguration(serviceName string,
 		conf.StartGrpcServer()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
 	}
-
+	close(COORDINATOR)
 	return conf, nil
 }
 

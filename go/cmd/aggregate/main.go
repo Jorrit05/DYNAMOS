@@ -69,6 +69,7 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	ctx, span := trace.StartSpan(ctx, "handleSqlDataRequest")
 	defer span.End()
 	logger.Sugar().Infof("Start %s handleSqlDataRequest", serviceName)
+	logger.Sugar().Infof("amount of data providers %v", NR_OF_DATA_PROVIDERS)
 
 	sqlDataRequest := &pb.SqlDataRequest{}
 	if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
@@ -76,11 +77,7 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	}
 
 	// Coordinator ensures all services are started before further processing messages
-	<-COORDINATOR
 	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
-
-	c := pb.NewMicroserviceClient(config.GrpcConnection)
-	logger.Sugar().Infof("amount of data providers %v", NR_OF_DATA_PROVIDERS)
 
 	// Process all data to make this service more realistic.
 	ctx, allResults := convertAllData(ctx, msComm.Data)
@@ -90,9 +87,6 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	// 	return err
 	// }
 
-	c.SendData(ctx, msComm)
-
-	close(config.StopServer)
 	return nil
 }
 
