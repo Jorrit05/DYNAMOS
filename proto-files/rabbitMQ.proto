@@ -79,8 +79,8 @@ message RequestApproval {
   string type = 1;
   User user = 2;
   repeated string data_providers = 3;
-  bool sync_services = 4;
-  string destination_queue = 5;
+  string destination_queue = 4;
+  map<string, bool> options = 5;
 }
 
 message RequestApprovalResponse  {
