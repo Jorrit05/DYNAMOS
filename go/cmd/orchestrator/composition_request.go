@@ -92,6 +92,7 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 		compositionRequest.Role = "computeProvider"
 		compositionRequest.DestinationQueue = ttp.RoutingKey
 		userTargets[ttp.Name] = ttp.Dns
+
 		c.SendCompositionRequest(ctx, compositionRequest)
 	}
 	return userTargets, ctx, nil
@@ -177,42 +178,6 @@ func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataPr
 
 	return "", fmt.Errorf("unexpected error: could not retrieve an archetype from the intersection")
 }
-
-// first := true
-// for dataProviderName, dataProvider := range validationResponse.ValidDataproviders {
-// 	_, ok := authorizedDataProviders[dataProviderName]
-// 	if !ok {
-// 		logger.Sugar().Debugf("dataprovider %s not authorized, probably offline", dataProviderName)
-// 		continue
-// 	}
-
-// 	if first {
-// 		for _, archType := range dataProvider.Archetypes {
-// 			intersection[archType] = true
-// 		}
-// 		first = false
-// 	} else {
-// 		newIntersection := make(map[string]bool)
-// 		for _, archType := range dataProvider.Archetypes {
-// 			if intersection[archType] {
-// 				newIntersection[archType] = true
-// 			}
-// 		}
-// 		intersection = newIntersection
-// 	}
-// }
-
-// if len(intersection) == 0 {
-// 	return "", fmt.Errorf("no common archetypes found")
-// }
-
-// // return the first common archetype
-// for key := range intersection {
-// 	return key, nil
-// }
-
-// 	return "", fmt.Errorf("unexpected error: could not retrieve an archetype from the intersection")
-// }
 
 func chooseThirdParty(validationResponse *pb.ValidationResponse) (lib.AgentDetails, error) {
 

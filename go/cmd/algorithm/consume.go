@@ -52,10 +52,7 @@ func sendDataHandler(ctx context.Context, data *pb.MicroserviceCommunication) (*
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		logger.Sugar().Infof("OK: %v", md)
-		// for _, v := range md. {
 
-		// 	logger.Sugar().Infof("v: %v", v)
-		// }
 	}
 
 	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: sendDataHandler, process grpc MS", data.Traces)

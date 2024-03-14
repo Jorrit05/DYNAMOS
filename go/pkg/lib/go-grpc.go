@@ -49,7 +49,7 @@ func InitializeSidecarMessaging(conn *grpc.ClientConn, in *pb.InitRequest) pb.Si
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
+	logger.Sugar().Debugf("Initializing sidecar messaging with: %v", in)
 	_, err := c.InitRabbitMq(ctx, in)
 	if err != nil {
 		logger.Sugar().Errorf("could not establish connection with: %v", err)

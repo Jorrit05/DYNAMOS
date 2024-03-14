@@ -44,7 +44,7 @@ func registerUserWithJob(ctx context.Context, compositionRequest *pb.Composition
 	userKey := fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, compositionRequest.User.UserName, compositionRequest.JobName)
 
 	// One entry with all related info with the jobName as key
-	err := etcd.SaveStructToEtcd[*pb.CompositionRequest](etcdClient, userKey, compositionRequest)
+	err := etcd.SaveStructToEtcd(etcdClient, userKey, compositionRequest)
 	if err != nil {
 		logger.Sugar().Warnf("Error saving struct to etcd: %v", err)
 		return err

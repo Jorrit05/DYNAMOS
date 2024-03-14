@@ -54,7 +54,7 @@ func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.Composit
 		return ctx, err
 	}
 	logger.Sugar().Debug(msChain)
-	err = deployJob(ctx, msChain, localJobName)
+	err = deployJob(ctx, msChain, localJobName, compositionRequest)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
 		return ctx, err
@@ -64,7 +64,7 @@ func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.Composit
 	return ctx, nil
 }
 
-func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobName string) error {
+func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobName string, compositionRequest *pb.CompositionRequest) error {
 	logger.Debug("Starting deployJob")
 
 	config, err := getKubeConfig()
@@ -118,6 +118,13 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 	nrOfServices := len(msChain)
 	firstService := "1"
 	lastService := "0"
+	// Determine the amount of data providers, only a 'computeProvider' should be able to access this data
+	// If it exists, set it as an environment variable below
+	nr_of_data_providers := 0
+	if compositionRequest.DataProviders != nil {
+		nr_of_data_providers = len(compositionRequest.DataProviders)
+	}
+
 	for i, microservice := range msChain {
 		port++
 
@@ -149,9 +156,11 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 				{Name: "JOB_NAME", Value: jobName},
 				{Name: "SIDECAR_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 				{Name: "OC_AGENT_HOST", Value: tracingHost},
+				{Name: "NR_OF_DATA_PROVIDERS", Value: strconv.Itoa(nr_of_data_providers)},
 			},
 			// Add additional container configuration here as needed
 		}
+
 		job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, container)
 		firstService = "0"
 	}

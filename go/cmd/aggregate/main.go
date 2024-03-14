@@ -17,9 +17,10 @@ import (
 )
 
 var (
-	logger      = lib.InitLogger(logLevel)
-	config      *msinit.Configuration
-	COORDINATOR = make(chan struct{})
+	logger               = lib.InitLogger(logLevel)
+	config               *msinit.Configuration
+	COORDINATOR          = make(chan struct{})
+	NR_OF_DATA_PROVIDERS = getNrOfDataProviders()
 )
 
 // Main function
@@ -30,6 +31,8 @@ func main() {
 	if err != nil {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
+	logger.Sugar().Debugf("SIDECAR_PORT: %s", os.Getenv("SIDECAR_PORT"))
+	logger.Sugar().Debugf("DESIGNATED_GRPC_PORT: %s", os.Getenv("DESIGNATED_GRPC_PORT"))
 
 	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler)
 	if err != nil {
@@ -48,11 +51,23 @@ func main() {
 	os.Exit(0)
 }
 
+func getNrOfDataProviders() int {
+	nr_of_data_providers_int := 0
+	nr_of_data_providers := os.Getenv("NR_OF_DATA_PROVIDERS")
+	var err error
+	if nr_of_data_providers != "" {
+		nr_of_data_providers_int, err = strconv.Atoi(nr_of_data_providers)
+		if err != nil {
+			logger.Sugar().Errorf("Error converting nr_of_data_providers to int: %v", err)
+		}
+	}
+	return nr_of_data_providers_int
+}
+
 // This is the function being called by the last microservice
 func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
 	ctx, span := trace.StartSpan(ctx, "handleSqlDataRequest")
 	defer span.End()
-
 	logger.Sugar().Infof("Start %s handleSqlDataRequest", serviceName)
 
 	sqlDataRequest := &pb.SqlDataRequest{}
@@ -65,6 +80,7 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
 
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
+	logger.Sugar().Infof("amount of data providers %v", NR_OF_DATA_PROVIDERS)
 
 	// Process all data to make this service more realistic.
 	ctx, allResults := convertAllData(ctx, msComm.Data)

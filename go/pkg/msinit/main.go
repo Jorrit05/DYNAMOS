@@ -33,16 +33,17 @@ func (s *Configuration) GetConnection() *grpc.ClientConn {
 }
 
 type Configuration struct {
-	Port            int
-	FirstService    bool
-	LastService     bool
-	ServiceName     string
-	SideCarClient   pb.SideCarClient
-	GrpcConnection  *grpc.ClientConn
-	SideCarCallback func() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
-	GrpcCallback    func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)
-	Stopped         chan struct{} // channel to tell us the server has stopped
-	StopServer      chan struct{} // Tell the server to stop
+	Port              int
+	FirstService      bool
+	LastService       bool
+	ServiceName       string
+	SideCarClient     pb.SideCarClient
+	SidecarConnection *grpc.ClientConn
+	NextConnection    *grpc.ClientConn
+	SideCarCallback   func() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
+	GrpcCallback      func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)
+	Stopped           chan struct{} // channel to tell us the server has stopped
+	StopServer        chan struct{} // Tell the server to stop
 }
 
 func NewConfiguration(serviceName string,
@@ -59,60 +60,51 @@ func NewConfiguration(serviceName string,
 	if err != nil {
 		return nil, fmt.Errorf("error determining first service: %w", err)
 	}
+
 	lastService, err := strconv.Atoi(os.Getenv("LAST"))
 	if err != nil {
 		return nil, fmt.Errorf("error determining last service: %w", err)
 	}
 
-	conf := &Configuration{
-		Port:            port,
-		FirstService:    firstService > 0,
-		LastService:     lastService > 0,
-		ServiceName:     serviceName,
-		SideCarCallback: sidecarCallback,
-		GrpcCallback:    grpcCallback,
-		Stopped:         make(chan struct{}), // channel to tell us the server has stopped
-		StopServer:      make(chan struct{}), // Tell the server to stop
-	}
+	logger.Sugar().Debugf("NewConfiguration %s, firstServer: %s, port: %s. lastservice: %s", serviceName, firstService, port, lastService)
 
-	go func() {
-		conf.ConnectNextService(grpcAddr)
-		// Probably not a best practice to close it here
-		close(COORDINATOR)
-	}()
+	conf := &Configuration{
+		Port:              port,
+		FirstService:      firstService > 0,
+		LastService:       lastService > 0,
+		ServiceName:       serviceName,
+		SidecarConnection: nil,
+		NextConnection:    nil,
+		SideCarCallback:   sidecarCallback,
+		GrpcCallback:      grpcCallback,
+		Stopped:           make(chan struct{}), // channel to tell us the server has stopped
+		StopServer:        make(chan struct{}), // Tell the server to stop
+	}
 
 	if conf.FirstService {
-		conf.InitSidecarMessaging(COORDINATOR)
+		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+		conf.InitSidecarMessaging()
+		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
+	} else if conf.LastService {
+		conf.StartGrpcServer()
+		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
 	} else {
 		conf.StartGrpcServer()
+		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
 	}
-	<-COORDINATOR
+
 	return conf, nil
 }
 
-func (s *Configuration) ConnectNextService(grpcAddr string) {
-	if s.LastService {
-		// We are the last service, connect to the sidecar
-		s.GrpcConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-	} else {
-		// Connect to following service
-		s.GrpcConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(s.Port+1))
-	}
-	logger.Debug("done with ConnectNextService")
-	if s.GrpcConnection == nil {
-		logger.Warn("ds.GrpcConnection is nil!!")
-	} else {
-		logger.Debug("s.GrpcConnection is NOT nil!!")
-	}
-}
+func (s *Configuration) InitSidecarMessaging() {
+	logger.Debug("InitSidecarMessaging")
 
-func (s *Configuration) InitSidecarMessaging(COORDINATOR chan struct{}) {
 	jobName := os.Getenv("JOB_NAME")
 	if jobName == "" {
 		logger.Sugar().Fatalf("Jobname not defined.")
 	}
-	<-COORDINATOR
-	s.SideCarClient = lib.InitializeSidecarMessaging(s.GrpcConnection, &pb.InitRequest{
+
+	s.SideCarClient = lib.InitializeSidecarMessaging(s.SidecarConnection, &pb.InitRequest{
 		ServiceName:     jobName,
 		RoutingKey:      jobName,
 		QueueAutoDelete: false,
