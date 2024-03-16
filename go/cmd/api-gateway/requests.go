@@ -13,7 +13,6 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-	"github.com/golang/protobuf/jsonpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.opencensus.io/trace"
 )
@@ -33,56 +32,51 @@ func requestHandler() http.HandlerFunc {
 			return
 		}
 
-		var reqApproval api.RequestApproval
-		err = json.Unmarshal(body, &reqApproval)
-		if err != nil {
-			logger.Sugar().Errorf("Error unmarshalling reqApproval: %v", err)
+		var apiReqApproval api.RequestApproval
+		if err := json.Unmarshal(body, &apiReqApproval); err != nil {
+			logger.Sugar().Errorf("Error unmMarshalling get apiReqApproval: %v", err)
 			return
 		}
 
 		userPb := &pb.User{
-			Id:       reqApproval.User.Id,
-			UserName: reqApproval.User.UserName,
+			Id:       apiReqApproval.User.Id,
+			UserName: apiReqApproval.User.UserName,
 		}
 
-		// Convert the JSON request to a protobuf message
-		protoRequest := &pb.RequestApproval{
-			Type:             reqApproval.Type,
-			User:             userPb,
-			DataProviders:    reqApproval.DataProviders,
-			DestinationQueue: "policyEnforcer-in",
-		}
-
-		// Unmarshal JSON into a regular Go struct
-		var bodyJsonObj map[string]interface{}
-		if err := json.Unmarshal(body, &bodyJsonObj); err != nil {
+		var dataRequestInterface map[string]interface{}
+		if err := json.Unmarshal(apiReqApproval.DataRequest, &dataRequestInterface); err != nil {
 			logger.Sugar().Errorf("Error unmarhsalling get request: %v", err)
 			return
 		}
 
-		dataRequest, err := prepareDataRequestStruct(protoRequest.Type, bodyJsonObj, userPb)
-		if err != nil {
-			logger.Sugar().Errorf("Error preparing data request: %v", err)
+		dataRequestOptions := &api.DataRequestOptions{}
+		if err := json.Unmarshal(apiReqApproval.DataRequest, &dataRequestOptions); err != nil {
+			logger.Sugar().Errorf("Error unmMarshalling get apiReqApproval: %v", err)
 			return
 		}
-		protoRequest.Options = dataRequest.Options
 
-		logger.Sugar().Debugf("Data Request of type %s prepared", dataRequest.Type)
+		dataRequestInterface["user"] = userPb
 
-		go func() {
-			_, err := c.SendRequestApproval(ctx, protoRequest)
-			if err != nil {
-				logger.Sugar().Errorf("error in sending requestapproval: %v", err)
-			}
-		}()
+		// Create protobuf struct for the req approval flow
+		protoRequest := &pb.RequestApproval{
+			Type:             apiReqApproval.Type,
+			User:             userPb,
+			DataProviders:    apiReqApproval.DataProviders,
+			DestinationQueue: "policyEnforcer-in",
+			Options:          make(map[string]bool),
+		}
 
 		// Create a channel to receive the response
 		responseChan := make(chan validation)
 
-		// Store the request information in the map
 		requestApprovalMutex.Lock()
 		requestApprovalMap[protoRequest.User.Id] = responseChan
 		requestApprovalMutex.Unlock()
+
+		_, err = c.SendRequestApproval(ctx, protoRequest)
+		if err != nil {
+			logger.Sugar().Errorf("error in sending requestapproval: %v", err)
+		}
 
 		select {
 		case validationStruct := <-responseChan:
@@ -95,12 +89,21 @@ func requestHandler() http.HandlerFunc {
 				return
 			}
 
-			logger.Sugar().Infof("Data Prepared Response: %s", dataRequest)
+			requestMetadata := &pb.RequestMetadata{
+				JobId: msg.JobId,
+			}
+			dataRequestInterface["requestMetadata"] = requestMetadata
 
-			// Add the job ID from the request approval to the data request
-			dataRequest.RequestMetadata.JobId = msg.JobId
+			// Marshal the combined data back into JSON for forwarding
+			dataRequestJson, err := json.Marshal(dataRequestInterface)
+			if err != nil {
+				logger.Sugar().Errorf("Error marshalling combined data: %v", err)
+				return
+			}
 
-			responses := sendDataToAuthProviders(dataRequest, msg.AuthorizedProviders)
+			logger.Sugar().Infof("Data Prepared jsonData: %s", dataRequestJson)
+
+			responses := sendDataToAuthProviders(dataRequestJson, msg.AuthorizedProviders, apiReqApproval.Type, msg.JobId)
 			w.WriteHeader(http.StatusOK)
 			w.Write(responses)
 			return
@@ -112,58 +115,27 @@ func requestHandler() http.HandlerFunc {
 	}
 }
 
-func prepareDataRequestStruct(dataRequestType string, bodyJsonObj map[string]interface{}, userPb *pb.User) (*pb.SqlDataRequest, error) {
-	// Marshal the JSON object into JSON string
-	dataRequestJsonString, err := json.Marshal(bodyJsonObj["data_request"])
-	if err != nil {
-		return nil, err
-	}
-
-	// If DataRequest is sqlDataRequest
-	switch dataRequestType {
-	case "sqlDataRequest":
-		dataRequest := &pb.SqlDataRequest{}
-		if err := jsonpb.UnmarshalString(string(dataRequestJsonString), dataRequest); err != nil {
-			return nil, err
-		}
-		// This is part of the request approval but it is also required for the SQL data request
-		dataRequest.User = userPb
-
-		return dataRequest, nil
-
-	}
-
-	return nil, nil
-}
-
 // Use the data request that was previously built and send it to the authorised providers
 // acquired from the request approval
-func sendDataToAuthProviders(dataRequest *pb.SqlDataRequest, authorizedProviders map[string]string) []byte {
-	// Prepare the data to send
-	jsonData, err := json.Marshal(dataRequest)
-	if err != nil {
-		logger.Sugar().Fatalf("error marshalling sqldatarequest: %v", err)
-	}
-
+func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]string, msgType string, jobId string) []byte {
 	// Setup the wait group for async data requests
 	var wg sync.WaitGroup
-	// Prepare the variables to be used for the requests
 	var responses []string
 
-	// This will be replaced with RMQ in the future
+	// This will be replaced with AMQ in the future
 	agentPort := "8080"
 	// Iterate over each auth provider
 	for auth, url := range authorizedProviders {
 		wg.Add(1)
 		target := strings.ToLower(auth)
 		// Construct the end point
-		endpoint := fmt.Sprintf("http://%s:%s/agent/v1/%s/%s", url, agentPort, dataRequest.Type, target)
+		endpoint := fmt.Sprintf("http://%s:%s/agent/v1/%s/%s", url, agentPort, msgType, target)
 
-		logger.Sugar().Infof("Sending request to %s.\nEndpoint: %s\nJSON:%v", target, endpoint, string(jsonData))
+		logger.Sugar().Infof("Sending request to %s.\nEndpoint: %s\nJSON:%v", target, endpoint, string(dataRequest))
 
 		// Async call send the data
 		go func() {
-			respData, err := sendData(endpoint, jsonData)
+			respData, err := sendData(endpoint, dataRequest)
 			if err != nil {
 				logger.Sugar().Errorf("Error sending data, %v", err)
 			}
@@ -177,17 +149,15 @@ func sendDataToAuthProviders(dataRequest *pb.SqlDataRequest, authorizedProviders
 	logger.Sugar().Debug("Returning responses")
 
 	responseMap := map[string]interface{}{
-		"jobId":     dataRequest.RequestMetadata.JobId,
+		"jobId":     jobId,
 		"responses": responses,
 	}
 
 	jsonResponse, _ := json.Marshal(responseMap)
 	return jsonResponse
-
 }
 
 func sendData(endpoint string, jsonData []byte) (string, error) {
-
 	// FIXME: Change to an actual token in the future?
 	headers := map[string]string{
 		"Authorization": "bearer 1234",
@@ -201,7 +171,6 @@ func sendData(endpoint string, jsonData []byte) (string, error) {
 	// For now we should append it to a list so that we gather all responses and send them in bulk
 	logger.Sugar().Infof("Body: %v", body)
 	return string(body), nil
-
 }
 
 func availableProvidersHandler() http.HandlerFunc {
