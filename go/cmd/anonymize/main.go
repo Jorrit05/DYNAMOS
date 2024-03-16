@@ -62,7 +62,7 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	<-COORDINATOR
 
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
-	if sqlDataRequest.Graph {
+	if sqlDataRequest.Options["graph"] {
 		// jsonString, _ := json.Marshal(msComm.Data)
 		// msComm.Result = jsonString
 

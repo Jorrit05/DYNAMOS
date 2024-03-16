@@ -69,13 +69,13 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	// Process all data to make this service more realistic.
 	ctx, allResults := convertAllData(ctx, msComm.Data)
 	msComm.Result = allResults
-	err := os.WriteFile("text.txt", allResults, 0644)
-	if err != nil {
-		return err
-	}
+	// err := os.WriteFile("text.txt", allResults, 0644)
+	// if err != nil {
+	// 	return err
+	// }
 
 	c.SendData(ctx, msComm)
-	// time.Sleep(2 * time.Second)
+
 	close(config.StopServer)
 	return nil
 }

@@ -26,11 +26,12 @@ type SQLDataRequest struct {
 }
 
 type RequestApproval struct {
-	Type          string   `json:"type"`
-	DataProviders []string `json:"dataProviders"`
-	Graph         bool     `json:"graph"`
-	SyncServices  bool     `json:"syncServices"`
-	User          User     `json:"user"`
+	Type             string   `json:"type"`
+	DataProviders    []string `json:"dataProviders"`
+	Graph            bool     `json:"graph"`
+	SyncServices     bool     `json:"syncServices"`
+	User             User     `json:"user"`
+	DestinationQueue string   `json:"destinationQueue"`
 }
 
 type User struct {
@@ -72,9 +73,9 @@ func getRequestApproval() []byte {
 	return json
 }
 
-func getAcceptedDataRequest(res *vegeta.Result) (*pb.AcceptedDataRequest, error) {
+func getAcceptedDataRequest(res *vegeta.Result) (*pb.RequestApprovalResponse, error) {
 
-	var response *pb.AcceptedDataRequest
+	var response *pb.RequestApprovalResponse
 	if err := json.Unmarshal(res.Body, &response); err != nil {
 		// prettyPrint(res)
 		return nil, err
@@ -90,7 +91,7 @@ func getRandomInt(maxSize int) int {
 	return num
 }
 
-func getDataRequest(acceptedDataRequest *pb.AcceptedDataRequest) *SQLDataRequest {
+func getDataRequest(requestApprovalResponse *pb.RequestApprovalResponse) *SQLDataRequest {
 
 	return &SQLDataRequest{
 		Type:      "sqlDataRequest",
@@ -101,11 +102,11 @@ func getDataRequest(acceptedDataRequest *pb.AcceptedDataRequest) *SQLDataRequest
 			"Geslacht": "Aanst_22, Gebdat",
 		},
 		User: User{
-			ID:       acceptedDataRequest.User.Id,
-			UserName: acceptedDataRequest.User.UserName,
+			ID:       requestApprovalResponse.User.Id,
+			UserName: requestApprovalResponse.User.UserName,
 		},
 		RequestMetadata: Metadata{
-			JobID: acceptedDataRequest.JobId,
+			JobID: requestApprovalResponse.JobId,
 		},
 	}
 }

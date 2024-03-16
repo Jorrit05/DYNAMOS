@@ -113,7 +113,7 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
 
 	c := pb.NewMicroserviceClient(config.GrpcConnection)
-	if sqlDataRequest.Graph {
+	if sqlDataRequest.Options["graph"] {
 		// jsonString, _ := json.Marshal(msComm.Data)
 		// msComm.Result = jsonString
 

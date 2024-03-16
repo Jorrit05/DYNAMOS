@@ -21,9 +21,7 @@ var (
 	logger                             = lib.InitLogger(logLevel)
 	etcdClient        *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
 	conn              *grpc.ClientConn
-	mutex             = &sync.Mutex{}
 	receiveMutex      = &sync.Mutex{}
-	validationMap     = make(map[string]chan validation)
 	policyUpdateMutex = &sync.Mutex{}
 	policyUpdateMap   = make(map[string]map[string]*pb.CompositionRequest)
 	c                 pb.SideCarClient
@@ -82,8 +80,6 @@ func main() {
 
 	apiMux.Handle("/policyEnforcer", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
 	apiMux.Handle("/policyEnforcer/", &ochttp.Handler{Handler: agreementsHandler(etcdClient, "/policyEnforcer")})
-
-	apiMux.Handle("/requestapproval", &ochttp.Handler{Handler: requestApprovalHandler()})
 
 	logger.Info(apiVersion) // prints /api/v1
 

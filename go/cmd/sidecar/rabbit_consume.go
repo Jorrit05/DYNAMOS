@@ -85,3 +85,9 @@ func (s *server) handlePolicyUpdate(msg amqp.Delivery, stream pb.SideCar_Consume
 
 	return s.handleResponse(msg, stream, &pb.PolicyUpdate{RequestMetadata: &pb.RequestMetadata{}})
 }
+
+func (s *server) handleRequestApprovalToApiResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+	logger.Debug("Starting handleRequestApprovalToApiResponse")
+
+	return s.handleResponse(msg, stream, &pb.RequestApprovalResponse{})
+}

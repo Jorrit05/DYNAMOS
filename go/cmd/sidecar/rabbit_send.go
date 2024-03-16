@@ -122,9 +122,8 @@ func (s *server) SendRequestApproval(ctx context.Context, in *pb.RequestApproval
 		Type: "requestApproval",
 	}
 
-	go send(ctx, message, "policyEnforcer-in")
+	go send(ctx, message, in.DestinationQueue)
 	return &emptypb.Empty{}, nil
-
 }
 
 func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationResponse) (*emptypb.Empty, error) {
@@ -244,5 +243,23 @@ func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.
 		Type:          "testSet",
 	}
 	go send(ctx, message, "no existss", etcd.WithMaxElapsedTime(10*time.Second))
+	return &emptypb.Empty{}, nil
+}
+
+func (s *server) SendRequestApprovalResponse(ctx context.Context, in *pb.RequestApprovalResponse) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal SendRequestApprovalResponse failed: %s", err)
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Do other stuff
+	message := amqp.Publishing{
+		Body: data,
+		Type: "requestApprovalResponse",
+	}
+
+	go send(ctx, message, in.RequestMetadata.DestinationQueue)
 	return &emptypb.Empty{}, nil
 }

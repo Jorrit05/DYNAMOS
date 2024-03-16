@@ -1,0 +1,4 @@
+Namespace: api-gateway
+etcdDns: etcd-headless.core.svc.cluster.local
+tracingEndpoint: collector.linkerd-jaeger:55678
+branchNameTag: "main"
