@@ -25,7 +25,6 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		if err := grpcMsg.Body.UnmarshalTo(validationResponse); err != nil {
 			logger.Sugar().Fatalf("Failed to unmarshal message: %v", err)
 		}
-
 		handleRequestApproval(ctx, validationResponse)
 
 	case "policyUpdate":
