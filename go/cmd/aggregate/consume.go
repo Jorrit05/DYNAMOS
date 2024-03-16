@@ -63,7 +63,10 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 	defer span.End()
 
 	// Wait till all services and connections have started
+	logger.Debug("Wait for all services to start")
+	logger.Sugar().Debugf("Before msComm.RequestType: %s", msComm.RequestType)
 	<-COORDINATOR
+	logger.Debug("After COORDINATOR")
 
 	c := pb.NewMicroserviceClient(config.NextConnection)
 

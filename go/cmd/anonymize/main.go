@@ -46,7 +46,7 @@ func main() {
 }
 
 // This is the function being called by the last microservice
-func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
+func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication) (context.Context, error) {
 	ctx, span := trace.StartSpan(ctx, "anonymize: handleSqlDataRequest")
 	defer span.End()
 
@@ -55,13 +55,11 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	sqlDataRequest := &pb.SqlDataRequest{}
 	if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
 		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
+		return ctx, err
 	}
 
 	anonymizeDatesInStruct(msComm.Data)
 
-	<-COORDINATOR
-
-	c := pb.NewMicroserviceClient(config.GrpcConnection)
 	if sqlDataRequest.Options["graph"] {
 		// jsonString, _ := json.Marshal(msComm.Data)
 		// msComm.Result = jsonString
@@ -70,19 +68,11 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		jsonString, _ := m.MarshalToString(msComm.Data)
 		msComm.Result = []byte(jsonString)
 
-		c.SendData(ctx, msComm)
-		close(config.StopServer)
-		return nil
+		return ctx, nil
 	}
 
-	// Process all data to make this service more realistic.
-
 	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
-
-	c.SendData(ctx, msComm)
-	// time.Sleep(2 * time.Second)
-	close(config.StopServer)
-	return nil
+	return ctx, nil
 }
 
 func anonymizeDatesInStruct(data *structpb.Struct) {

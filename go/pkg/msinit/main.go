@@ -78,13 +78,17 @@ func NewConfiguration(serviceName string,
 		StopServer:        make(chan struct{}), // Tell the server to stop
 	}
 
-	if conf.FirstService {
+	if conf.FirstService && conf.LastService {
+		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+		conf.InitSidecarMessaging()
+		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+	} else if conf.FirstService {
 		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
 		conf.InitSidecarMessaging()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
 	} else if conf.LastService {
 		conf.StartGrpcServer()
-		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
 	} else {
 		conf.StartGrpcServer()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
