@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"strings"
 	"time"
@@ -32,6 +33,7 @@ type SqlDataRequest struct {
 	Auth                Auth              `json:"auth"`
 	Providers           []string          `json:"providers"`
 	AuthorizedProviders map[string]string `json:"authorizedProviders"`
+	Options             Options           `json:"options"`
 }
 
 type User struct {
@@ -44,7 +46,19 @@ type RequestApproval struct {
 	Type          string   `json:"type"`
 	User          User     `json:"user"`
 	DataProviders []string `json:"dataProviders"`
-	SyncServices  bool     `json:"syncServices"`
+	// DataRequest   DataRequest `json:"dataRequest"`
+	DataRequest json.RawMessage `json:"data_request"`
+}
+
+type DataRequestOptions struct {
+	Options map[string]bool `json:"options"`
+	// Algorithm string          `json:"algorithm"`
+	// Query     string          `json:"query"`
+}
+
+type Options struct {
+	Aggregate bool `json:"aggregate"`
+	Graph     bool `json:"graph"`
 }
 
 type Relation struct {
@@ -207,7 +221,7 @@ func GenericPutToEtcd[T any](w http.ResponseWriter, req *http.Request, etcdClien
 	w.Write([]byte("OK"))
 }
 
-func PostRequest(url string, body string) ([]byte, error) {
+func PostRequest(url string, body string, extra_headers map[string]string) ([]byte, error) {
 	reqBody := bytes.NewBufferString(body)
 	req, err := http.NewRequest(http.MethodPost, url, reqBody)
 	if err != nil {
@@ -219,6 +233,8 @@ func PostRequest(url string, body string) ([]byte, error) {
 		"Content-Type": "application/json",
 		// add other headers as required
 	}
+
+	maps.Copy(headers, extra_headers)
 
 	for key, value := range headers {
 		req.Header.Add(key, value)
