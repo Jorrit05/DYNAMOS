@@ -12,7 +12,6 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"go.opencensus.io/trace"
-	"go.opencensus.io/trace/propagation"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -65,23 +64,22 @@ func getNrOfDataProviders() int {
 }
 
 // This is the function being called by the last microservice
-func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
+func handleSqlDataRequest(ctx context.Context, msCommList []*pb.MicroserviceCommunication) error {
 	ctx, span := trace.StartSpan(ctx, "handleSqlDataRequest")
 	defer span.End()
 	logger.Sugar().Infof("Start %s handleSqlDataRequest", serviceName)
-	logger.Sugar().Infof("amount of data providers %v", NR_OF_DATA_PROVIDERS)
 
-	sqlDataRequest := &pb.SqlDataRequest{}
-	if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
-		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
-	}
+	// sqlDataRequest := &pb.SqlDataRequest{}
+	// if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
+	// 	logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
+	// }
 
-	// Coordinator ensures all services are started before further processing messages
-	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
+	// // Coordinator ensures all services are started before further processing messages
+	// msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
 
-	// Process all data to make this service more realistic.
-	ctx, allResults := convertAllData(ctx, msComm.Data)
-	msComm.Result = allResults
+	// // Process all data to make this service more realistic.
+	// ctx, allResults := convertAllData(ctx, msComm.Data)
+	// msComm.Result = allResults
 	// err := os.WriteFile("text.txt", allResults, 0644)
 	// if err != nil {
 	// 	return err

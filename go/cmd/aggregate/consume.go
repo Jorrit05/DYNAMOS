@@ -11,6 +11,7 @@ import (
 )
 
 // This is called if this is the first microservice, coming in from rabbitMQ
+// TODO: Move to lib.
 func sideCarMessageHandler() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 	return func(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 
@@ -41,6 +42,7 @@ func sideCarMessageHandler() func(ctx context.Context, grpcMsg *pb.SideCarMessag
 }
 
 // This is the function being called by the last microservice
+// TODO: Move to lib.
 func sendDataHandler(ctx context.Context, msComm *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
 	logger.Debug("Start sendDataHandler")
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -54,7 +56,6 @@ func sendDataHandler(ctx context.Context, msComm *pb.MicroserviceCommunication) 
 }
 
 // Wrapper function to handle incoming messages either from rabbitMQ or a previous microservice
-// TODO: Move to lib.
 func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunication) {
 	ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: incomingMessageWrapper, process grpc MS", msComm.Traces)
 	if err != nil {
@@ -64,20 +65,29 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 
 	// Wait till all services and connections have started
 	logger.Debug("Wait for all services to start")
-	logger.Sugar().Debugf("Before msComm.RequestType: %s", msComm.RequestType)
 	<-COORDINATOR
-	logger.Debug("After COORDINATOR")
 
 	c := pb.NewMicroserviceClient(config.NextConnection)
 
-	switch msComm.RequestType {
-	case "sqlDataRequest":
-		handleSqlDataRequest(ctx, msComm)
-	default:
-		logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
+	mscommList := []*pb.MicroserviceCommunication{}
+	mscommList = append(mscommList, msComm)
+	logger.Sugar().Infof("mscommList: %v", mscommList)
+	logger.Sugar().Infof("amount of data providers %v", NR_OF_DATA_PROVIDERS)
+	logger.Sugar().Infof("Lenght of msCommList %v", len(mscommList))
+
+	if len(mscommList) == NR_OF_DATA_PROVIDERS {
+		// All messages haver arrived
+		logger.Sugar().Infof("All messages have arrived, %v", len(mscommList))
+
+		switch msComm.RequestType {
+		case "sqlDataRequest":
+			handleSqlDataRequest(ctx, mscommList)
+		default:
+			logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
+		}
+
+		c.SendData(ctx, mscommList[0])
+
+		close(config.StopServer)
 	}
-
-	c.SendData(ctx, msComm)
-
-	close(config.StopServer)
 }
