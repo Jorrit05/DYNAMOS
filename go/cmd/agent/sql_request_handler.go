@@ -203,7 +203,10 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 			logger.Sugar().Errorf("Error PutEtcdWithGrant: %v", err)
 		}
 
-		c.SendSqlDataRequest(ctx, sqlDataRequest)
+		_, err = c.SendSqlDataRequest(ctx, sqlDataRequest)
+		if err != nil {
+			logger.Sugar().Errorf("Error c.SendSqlDataRequest: %v", err)
+		}
 	}
 
 	// TODO: Parse SQL request for extra compute services
@@ -212,10 +215,11 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 	if err != nil {
 		logger.Sugar().Errorf("error deploying job: %v", err)
 	}
-
+	logger.Sugar().Debugf("Created job: %s", createdJob.Name)
 	waitingJobMutex.Lock()
-	waitingJobMap[sqlDataRequest.RequestMetadata.CorrelationId] = createdJob
+	waitingJobMap[sqlDataRequest.RequestMetadata.CorrelationId] = &waitingJob{job: createdJob, nrOfDataStewards: len(compositionRequest.DataProviders)}
 	waitingJobMutex.Unlock()
+	logger.Sugar().Debugf("Created job nr of stewards: %d", waitingJobMap[sqlDataRequest.RequestMetadata.CorrelationId].nrOfDataStewards)
 
 	return ctx, nil
 }

@@ -129,6 +129,15 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 	job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, addSidecar())
 
 	// Create the job
+	if clientSet == nil {
+		logger.Debug(" clientset was nill")
+		clientSet = getKubeClient()
+
+		if clientSet == nil {
+			logger.Debug(" clientset is stillll nill")
+		}
+	}
+
 	createdJob, err := clientSet.BatchV1().Jobs(dataStewardName).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		logger.Sugar().Errorf("failed to create job: %v", err)

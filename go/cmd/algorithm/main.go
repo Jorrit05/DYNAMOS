@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
@@ -17,9 +18,10 @@ import (
 )
 
 var (
-	logger      = lib.InitLogger(logLevel)
-	config      *msinit.Configuration
-	COORDINATOR = make(chan struct{})
+	logger       = lib.InitLogger(logLevel)
+	config       *msinit.Configuration
+	COORDINATOR  = make(chan struct{})
+	receiveMutex = &sync.Mutex{}
 )
 
 // Main function
@@ -31,7 +33,7 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
-	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler)
+	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler, receiveMutex)
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
 	}

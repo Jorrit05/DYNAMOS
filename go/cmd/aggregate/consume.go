@@ -72,7 +72,6 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 
 	c := pb.NewMicroserviceClient(config.NextConnection)
 
-	mscommList := []*pb.MicroserviceCommunication{}
 	mscommList = append(mscommList, msComm)
 	logger.Sugar().Infof("mscommList: %v", mscommList)
 	logger.Sugar().Infof("amount of data providers %v", NR_OF_DATA_PROVIDERS)
@@ -90,6 +89,6 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 		}
 
 		c.SendData(ctx, mscommList[0])
-		go close(config.StopMicroservice)
+		close(config.StopMicroservice)
 	}
 }

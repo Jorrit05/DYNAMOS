@@ -37,7 +37,6 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
-	// go func() {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		logger.Sugar().Fatalw("failed to listen: %v", err)
@@ -74,7 +73,7 @@ func main() {
 
 		select {
 		case <-timeout:
-			logger.Info("Hard stop")
+			logger.Info("Hard stop sidecars GRPC")
 			s.Stop() // forcefully stop if graceful stop did not complete within timeout
 		case <-done:
 			logger.Info("Finished graceful stop")
@@ -86,11 +85,12 @@ func main() {
 		close(finished)
 	}()
 
+	logger.Sugar().Debug("Before <- Serve")
 	if err := s.Serve(lis); err != nil {
 		logger.Sugar().Fatalw("failed to serve: %v", err)
 	}
 	// }()
-
+	logger.Sugar().Debug("Before <- finished")
 	<-finished
 
 	logger.Sugar().Infof("Exiting sidecar server")

@@ -63,8 +63,9 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 	defer span.End()
 
 	// Wait till all services and connections have started
+	logger.Sugar().Debug("algorithm incomingMessageWrapper, waiting for COORDINATOR")
 	<-COORDINATOR
-
+	logger.Sugar().Debug("algorithm incomingMessageWrapper, after for COORDINATOR")
 	c := pb.NewMicroserviceClient(config.NextConnection)
 
 	switch msComm.RequestType {
@@ -76,5 +77,5 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 
 	c.SendData(ctx, msComm)
 	logger.Sugar().Debugf("End incomingMessageWrapper, results: %s", string(msComm.Result))
-	go close(config.StopMicroservice)
+	close(config.StopMicroservice)
 }

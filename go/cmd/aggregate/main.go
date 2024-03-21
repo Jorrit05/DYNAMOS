@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
@@ -19,6 +20,8 @@ var (
 	config               *msinit.Configuration
 	COORDINATOR          = make(chan struct{})
 	NR_OF_DATA_PROVIDERS = getNrOfDataProviders()
+	receiveMutex         = &sync.Mutex{}
+	mscommList           = []*pb.MicroserviceCommunication{}
 )
 
 func main() {
@@ -31,12 +34,13 @@ func main() {
 	logger.Sugar().Debugf("SIDECAR_PORT: %s", os.Getenv("SIDECAR_PORT"))
 	logger.Sugar().Debugf("DESIGNATED_GRPC_PORT: %s", os.Getenv("DESIGNATED_GRPC_PORT"))
 
-	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler)
+	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler, receiveMutex)
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
 	}
 
 	<-config.StopMicroservice
+	logger.Sugar().Debugf("Stopping %s, go to safexit", serviceName)
 	config.SafeExit(oce, serviceName)
 	os.Exit(0)
 }

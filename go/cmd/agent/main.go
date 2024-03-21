@@ -37,7 +37,7 @@ var (
 	responseMap   = make(map[string]chan dataResponse)
 	thirdPartyMap = make(map[string]string)
 	jobCounter    = make(map[string]int)
-	waitingJobMap = make(map[string]*batchv1.Job)
+	waitingJobMap = make(map[string]*waitingJob)
 	queueInfoMap  = make(map[string]*pb.QueueInfo)
 	receiveMutex  = &sync.Mutex{}
 
@@ -47,6 +47,11 @@ var (
 type dataResponse struct {
 	response     *pb.MicroserviceCommunication
 	localContext context.Context
+}
+
+type waitingJob struct {
+	job              *batchv1.Job
+	nrOfDataStewards int
 }
 
 func main() {

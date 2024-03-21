@@ -43,6 +43,7 @@ func deleteJobInfo(userName string) {
 }
 
 func main() {
+	fmt.Printf("Start %s\n", serviceName)
 
 	var archeTypes = &api.Archetype{}
 

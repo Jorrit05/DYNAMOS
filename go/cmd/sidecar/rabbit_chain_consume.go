@@ -31,6 +31,7 @@ func (s *server) ChainConsume(in *pb.ConsumeRequest, stream pb.SideCar_ChainCons
 		switch msg.Type {
 
 		case "microserviceCommunication":
+
 			if err := s.handleMicroserviceCommunication(msg, stream); err != nil {
 				logger.Sugar().Errorf("Error handling microserviceCommunication: %v", err)
 				return status.Error(codes.Internal, err.Error())

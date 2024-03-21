@@ -3,48 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"go.opencensus.io/trace"
-	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func checkWaitingJob(ctx context.Context, waitingJob *batchv1.Job) bool {
-	logger.Sugar().Debugf("Checking waiting job: %s", waitingJob.Name)
-	job, err := clientSet.BatchV1().Jobs(strings.ToLower(serviceName)).Get(ctx, waitingJob.Name, metav1.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Job does not exist
-			logger.Sugar().Debugf("Job does not exist")
-		} else {
-			logger.Sugar().Errorf("Error getting Job:", err)
-		}
-		return false
-	}
-
-	// 2. Check the Job's status
-	if job.Status.Active > 0 {
-		// Job has active (running) containers
-		logger.Sugar().Debugf("Job is running with active containers")
-		return true
-	} else if job.Status.Succeeded > 0 {
-		// Job completed successfully
-		logger.Sugar().Debugf("Job completed successfully")
-		return false
-	} else if job.Status.Failed > 0 {
-		// Job failed
-		logger.Sugar().Debugf("Job failed")
-		return false
-	} else {
-		// Job exists but may be in a pending or unknown state
-		logger.Sugar().Debugf("Job exists but its status is unclear")
-		return false
-	}
-
-}
 
 func isJobWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, correlationId string) bool {
 	logger.Debug("Enter isJobWaiting")
@@ -57,20 +19,37 @@ func isJobWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, cor
 	waitingJob, ok := waitingJobMap[correlationId]
 	waitingJobMutex.Unlock()
 
-	if ok {
-		ok = checkWaitingJob(ctx, waitingJob)
-	}
-	logger.Sugar().Debugf("Job waiting: %t", ok)
-	if ok {
-		// There was still a job waiting for this response
-		handleFurtherProcessing(ctx, waitingJob.Name, msComm)
-		// waitingJobMutex.Lock()
-		// delete(waitingJobMap, correlationId)
-		// waitingJobMutex.Unlock()
+	if ok && waitingJob.nrOfDataStewards > 0 {
+		logger.Sugar().Infof("Nr. of stewards: %d", waitingJob.nrOfDataStewards)
+		handleFurtherProcessing(ctx, waitingJob.job.Name, msComm)
+		waitingJob.nrOfDataStewards = waitingJob.nrOfDataStewards - 1
+		if waitingJob.nrOfDataStewards == 0 {
+			waitingJobMutex.Lock()
+			delete(waitingJobMap, correlationId)
+			waitingJobMutex.Unlock()
+		}
+		logger.Sugar().Infof("Nr. of stewards before TRUE: %d", waitingJob.nrOfDataStewards)
+
 		return true
 	}
-
+	logger.Sugar().Debugf("No job waiting: %t", ok)
 	return false
+
+	// if ok {
+	// 	waitingJob.nrOfDataStewards = waitingJob.nrOfDataStewards - 1
+
+	// }
+	// logger.Sugar().Debugf("Job waiting: %t", ok)
+	// if ok {
+	// 	// There was still a job waiting for this response
+	// 	handleFurtherProcessing(ctx, waitingJob.Name, msComm)
+	// 	// waitingJobMutex.Lock()
+	// 	// delete(waitingJobMap, correlationId)
+	// 	// waitingJobMutex.Unlock()
+	// 	return true
+	// }
+
+	// return false
 }
 
 func isHttpWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, correlationId string) bool {

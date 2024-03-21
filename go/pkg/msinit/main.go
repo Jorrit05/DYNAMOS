@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"contrib.go.opencensus.io/exporter/ocagent"
@@ -49,7 +50,9 @@ func NewConfiguration(serviceName string,
 	grpcAddr string,
 	COORDINATOR chan struct{},
 	sidecarCallback func() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error,
-	grpcCallback func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)) (*Configuration, error) {
+	grpcCallback func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error),
+	receiveMutex *sync.Mutex,
+) (*Configuration, error) {
 
 	port, err := strconv.Atoi(os.Getenv("DESIGNATED_GRPC_PORT"))
 	if err != nil {
@@ -84,24 +87,28 @@ func NewConfiguration(serviceName string,
 
 	if conf.FirstService && conf.LastService {
 		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-		conf.InitSidecarMessaging()
+		conf.InitSidecarMessaging(receiveMutex)
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
 	} else if conf.FirstService {
 		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-		conf.InitSidecarMessaging()
+		conf.InitSidecarMessaging(receiveMutex)
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
 	} else if conf.LastService {
-		conf.GrpcServer = conf.StartGrpcServer()
+		logger.Debug("Last service")
+		conf.GrpcServer = grpc.NewServer()
+		conf.StartGrpcServer()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+		logger.Debug("eof Last service")
 	} else {
-		conf.GrpcServer = conf.StartGrpcServer()
+		conf.GrpcServer = grpc.NewServer()
+		conf.StartGrpcServer()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
 	}
 	close(COORDINATOR)
 	return conf, nil
 }
 
-func (s *Configuration) InitSidecarMessaging() {
+func (s *Configuration) InitSidecarMessaging(receiveMutex *sync.Mutex) {
 	logger.Debug("InitSidecarMessaging")
 
 	jobName := os.Getenv("JOB_NAME")
@@ -118,52 +125,51 @@ func (s *Configuration) InitSidecarMessaging() {
 	})
 
 	go func() {
-		lib.ChainConsumeWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(), 5, 5*time.Second)
+		lib.ChainConsumeWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(), 5, 5*time.Second, receiveMutex)
 	}()
 }
 
 // Register a gRPC server on our designated port
-func (s *Configuration) StartGrpcServer() *grpc.Server {
+func (s *Configuration) StartGrpcServer() {
 
-	// go func() {
-	logger.Sugar().Infof("Start listening on port: %v", s.Port)
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", s.Port))
-	if err != nil {
-		logger.Sugar().Fatalw("failed to listen: %v", err)
-	}
-	server := grpc.NewServer()
-	serverInstance := &lib.SharedServer{}
+	go func() {
+		logger.Sugar().Infof("Start listening on port: %v", s.Port)
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%v", s.Port))
+		if err != nil {
+			logger.Sugar().Fatalw("failed to listen: %v", err)
+		}
+		serverInstance := &lib.SharedServer{}
 
-	pb.RegisterMicroserviceServer(server, serverInstance)
-	pb.RegisterHealthServer(server, serverInstance)
-	serverInstance.RegisterCallback("microserviceCommunication", s.GrpcCallback)
-	// go func() {
-	// 	<-s.StopGrpcServer
-	// 	logger.Info("Stopping StartGrpcServer")
-	// 	timeout := time.After(5 * time.Second)
-	// 	done := make(chan bool)
+		pb.RegisterMicroserviceServer(s.GrpcServer, serverInstance)
+		pb.RegisterHealthServer(s.GrpcServer, serverInstance)
+		serverInstance.RegisterCallback("microserviceCommunication", s.GrpcCallback)
+		// go func() {
+		// 	<-s.StopGrpcServer
+		// 	logger.Info("Stopping StartGrpcServer")
+		// 	timeout := time.After(5 * time.Second)
+		// 	done := make(chan bool)
 
-	// 	go func() {
-	// 		server.GracefulStop()
-	// 		done <- true
-	// 	}()
+		// 	go func() {
+		// 		server.GracefulStop()
+		// 		done <- true
+		// 	}()
 
-	// 	select {
-	// 	case <-timeout:
-	// 		logger.Info("Hard stop")
-	// 		server.Stop() // forcefully stop if graceful stop did not complete within timeout
-	// 	case <-done:
-	// 		logger.Info("Finished graceful stop")
-	// 	}
+		// 	select {
+		// 	case <-timeout:
+		// 		logger.Info("Hard stop")
+		// 		server.Stop() // forcefully stop if graceful stop did not complete within timeout
+		// 	case <-done:
+		// 		logger.Info("Finished graceful stop")
+		// 	}
 
-	// 	close(s.Exit)
-	// }()
+		// 	close(s.Exit)
+		// }()
 
-	if err := server.Serve(lis); err != nil {
-		logger.Sugar().Fatalw("failed to serve: %v", err)
-	}
-	// }()
-	return server
+		if err := s.GrpcServer.Serve(lis); err != nil {
+			logger.Sugar().Fatalw("failed to serve: %v", err)
+		}
+	}()
+
 }
 
 func (s *Configuration) SafeExit(oce *ocagent.Exporter, serviceName string) {
