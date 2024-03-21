@@ -1,26 +1,61 @@
 <script setup>
 
 import { ref } from 'vue';
+import { requestApproval } from '../http';
 
-const algo = ref(null);
+const algo = ref("average");
 const graph = ref(false);
 const aggregate = ref(false);
-const sql = ref(null);
+const sql = ref("SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 3");
 const selectedProviders = ref();
+// TODO: Change from hard coded
+const requestType = "sqlDataRequest"
+// TODO: Make an actual user system
+const user = {
+    id: "12324",
+    userName: "jorrit.stutterheim@cloudnation.nl"
+    // Actual loginToken features....
+}
 
 // TODO: replace with actual data
 const availableProviders = ref([
-    {label: 'UvA', value: 'uva'},
-    {label: 'VU', value: 'vu'}
+    {label: 'UvA', value: 'UVA'},
+    {label: 'VU', value: 'VU'}
 ])
 
 const submitting = ref(false);
+
+
+const getSelectedProviderValues = () => {
+    var selectedValues = []
+    selectedProviders.value.forEach(element => {
+        selectedValues.push(element.value)
+    });
+
+    return selectedValues
+}
 
 const submit = () => {
     submitting.value = true;
     setTimeout(() => {
         submitting.value = false;
+        requestApproval(requestType, 
+                        user,
+                        getSelectedProviderValues(),
+                        sql.value,
+                        algo.value,
+                        graph.value,
+                        aggregate.value)
+        .then(response => {
+            // Handle successful response
+            console.log('Response data:', response.data);
+        })
+        .catch(error => {
+            // Handle error
+            console.error('Error:', error);
+        });
     }, 2000);
+    
 };
 </script>
 

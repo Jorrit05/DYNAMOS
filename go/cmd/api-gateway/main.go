@@ -11,6 +11,11 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	socketio "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io/engineio"
+	"github.com/googollee/go-socket.io/engineio/transport"
+	"github.com/googollee/go-socket.io/engineio/transport/polling"
+	"github.com/googollee/go-socket.io/engineio/transport/websocket"
 	"github.com/gorilla/handlers"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.opencensus.io/plugin/ochttp"
@@ -73,8 +78,7 @@ func main() {
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/requestApproval", &ochttp.Handler{Handler: requestHandler()})
 	apiMux.Handle("/getAvailableProviders", &ochttp.Handler{Handler: availableProvidersHandler()})
-	apiMux.Handle("/ws", &ochttp.Handler{Handler: handleWebSocket()})
-
+	go socketServer(apiMux)
 	logger.Info(apiVersion) // prints /api/v1
 
 	mux.Handle(apiVersion+"/", http.StripPrefix(apiVersion, apiMux))
@@ -85,6 +89,34 @@ func main() {
 			logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
 		}
 	}()
-
 	wg.Wait()
+}
+
+func socketServer(apiMux *http.ServeMux) {
+	server := socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			&polling.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+			&websocket.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+		},
+	})
+
+	server.OnError("/", func(s socketio.Conn, e error) {
+		logger.Sugar().Infow("meet error:", e)
+	})
+
+	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		logger.Sugar().Infow("closed", reason)
+	})
+
+	// Serve Socket.IO requests at "/socket.io/" prefix
+	apiMux.Handle("/socket.io/", server)
+}
+
+// Easier to get running with CORS. Thanks for help @Vindexus and @erkie
+var allowOriginFunc = func(r *http.Request) bool {
+	return true
 }
