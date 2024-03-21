@@ -21,7 +21,7 @@ import (
 func requestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Starting requestApprovalHandler")
-		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
 
 		// Start a new span with the context that has a timeout
@@ -33,10 +33,9 @@ func requestHandler() http.HandlerFunc {
 			return
 		}
 
-		var reqApproval api.RequestApproval
-		err = json.Unmarshal(body, &reqApproval)
-		if err != nil {
-			logger.Sugar().Errorf("Error unmarshalling reqApproval: %v", err)
+		var apiReqApproval api.RequestApproval
+		if err := json.Unmarshal(body, &apiReqApproval); err != nil {
+			logger.Sugar().Errorf("Error unmMarshalling get apiReqApproval: %v", err)
 			return
 		}
 
@@ -79,10 +78,14 @@ func requestHandler() http.HandlerFunc {
 		// Create a channel to receive the response
 		responseChan := make(chan validation)
 
-		// Store the request information in the map
 		requestApprovalMutex.Lock()
 		requestApprovalMap[protoRequest.User.Id] = responseChan
 		requestApprovalMutex.Unlock()
+
+		_, err = c.SendRequestApproval(ctx, protoRequest)
+		if err != nil {
+			logger.Sugar().Errorf("error in sending requestapproval: %v", err)
+		}
 
 		select {
 		case validationStruct := <-responseChan:
@@ -201,7 +204,6 @@ func sendData(endpoint string, jsonData []byte) (string, error) {
 	// For now we should append it to a list so that we gather all responses and send them in bulk
 	logger.Sugar().Infof("Body: %v", body)
 	return string(body), nil
-
 }
 
 func availableProvidersHandler() http.HandlerFunc {
