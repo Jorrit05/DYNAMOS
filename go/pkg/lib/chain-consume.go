@@ -22,9 +22,11 @@ func ChainConsumeWithRetry(serviceName string, c pb.SideCarClient, queueName str
 	}
 }
 
+// Specific handler for microservices in the microservice chain
 func chainConsume(serviceName string, c pb.SideCarClient, from string, handler MessageHandlerFunc) error {
+	logger.Sugar().Debugf("Starting %s/chainConsume", serviceName)
 	ctx := context.Background()
-	stream, err := c.ChainConsume(ctx, &pb.ConsumeRequest{QueueName: from, AutoAck: false})
+	stream, err := c.ChainConsume(ctx, &pb.ConsumeRequest{QueueName: from, AutoAck: true})
 	if err != nil {
 		logger.Sugar().Fatalf("Error on consume: %v", err)
 	}
@@ -49,5 +51,6 @@ func chainConsume(serviceName string, c pb.SideCarClient, from string, handler M
 		logger.Sugar().Fatalf("Failed to close stream: %v", err)
 	}
 
+	logger.Sugar().Debugf("At the end %s/chainConsume", serviceName)
 	return err
 }

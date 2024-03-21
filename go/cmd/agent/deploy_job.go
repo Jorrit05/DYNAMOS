@@ -14,35 +14,9 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	rest "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
-func getKubeConfig() (*rest.Config, error) {
-	var config *rest.Config
-	var err error
-
-	if local {
-		// Use out-of-cluster configuration
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-		if err != nil {
-			logger.Sugar().Errorf("failed to build config: %v", err)
-			return nil, err
-		}
-	} else {
-		// Use in-cluster configuration
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			logger.Sugar().Errorf("failed to build config: %v", err)
-			return nil, err
-		}
-	}
-
-	return config, nil
-}
-
-func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.CompositionRequest, localJobName string, options map[string]bool) (context.Context, error) {
+func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.CompositionRequest, localJobName string, options map[string]bool) (context.Context, *batchv1.Job, error) {
 	logger.Debug("Starting generateChainAndDeploy")
 
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: generateChainAndDeploy")
@@ -51,37 +25,24 @@ func generateChainAndDeploy(ctx context.Context, compositionRequest *pb.Composit
 	msChain, err := generateMicroserviceChain(compositionRequest, options)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
-		return ctx, err
+		return ctx, nil, err
 	}
 	logger.Sugar().Debug(msChain)
-	err = deployJob(ctx, msChain, localJobName, compositionRequest)
+	createdJob, err := deployJob(ctx, msChain, localJobName, compositionRequest)
 	if err != nil {
 		logger.Sugar().Errorf("Error generating microservice chain %v", err)
-		return ctx, err
+		return ctx, nil, err
 	}
 
-	// logger.Sugar().Infow("Deployed job.", "actualJobName", localJobName, "msChain", msChain)
-	return ctx, nil
+	return ctx, createdJob, nil
 }
 
-func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobName string, compositionRequest *pb.CompositionRequest) error {
+func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobName string, compositionRequest *pb.CompositionRequest) (*batchv1.Job, error) {
 	logger.Debug("Starting deployJob")
-
-	config, err := getKubeConfig()
-	if err != nil {
-		return err
-	}
-
-	// Create the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		logger.Sugar().Errorf("failed to create clientset: %v", err)
-		return err
-	}
 
 	dataStewardName := strings.ToLower(serviceName)
 	if dataStewardName == "" {
-		return fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
+		return nil, fmt.Errorf("env variable DATA_STEWARD_NAME not defined")
 	}
 
 	jobMutex.Lock()
@@ -166,14 +127,15 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 	}
 
 	job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, addSidecar())
+
 	// Create the job
-	_, err = clientset.BatchV1().Jobs(dataStewardName).Create(ctx, job, metav1.CreateOptions{})
+	createdJob, err := clientSet.BatchV1().Jobs(dataStewardName).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		logger.Sugar().Errorf("failed to create job: %v", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return createdJob, nil
 }
 
 func addSidecar() v1.Container {

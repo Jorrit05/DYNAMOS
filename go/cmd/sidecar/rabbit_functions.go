@@ -55,11 +55,11 @@ func setupConnection(queueName string, routingKey string, queueAutoDelete bool) 
 		return nil, nil, nil, err
 	}
 
-	// queue, err := declareQueue(queueName, channel, queueAutoDelete)
-	// if err != nil {
-	// 	logger.Sugar().Fatalw("Failed to declare queue: %v", err)
-	// 	return nil, nil, nil, err
-	// }
+	queue, err := declareQueue(queueName, channel, queueAutoDelete)
+	if err != nil {
+		logger.Sugar().Fatalw("Failed to declare queue: %v", err)
+		return nil, nil, nil, err
+	}
 
 	// Bind queue to "topic_exchange"
 	// TODO: Make "topic_exchange" flexible?
@@ -67,7 +67,7 @@ func setupConnection(queueName string, routingKey string, queueAutoDelete bool) 
 	// We are going to assume the queue has been created by the composition request
 	for i := 1; i <= 7; i++ { // maximum of 7 retries
 		err := channel.QueueBind(
-			queueName,        // name
+			queue.Name,       // name
 			routingKey,       // key
 			"topic_exchange", // exchange
 			false,            // noWait

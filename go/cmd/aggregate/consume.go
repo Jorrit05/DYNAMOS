@@ -13,8 +13,10 @@ import (
 // This is called if this is the first microservice, coming in from rabbitMQ
 // TODO: Move to lib.
 func sideCarMessageHandler() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
-	return func(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
+	logger.Sugar().Infof("before return sideCarMessageHandler")
 
+	return func(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
+		logger.Sugar().Infof("after retun sideCarMessageHandler")
 		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: messageHandler, process MS", grpcMsg.Traces)
 		if err != nil {
 			logger.Sugar().Warnf("Error starting span: %v", err)
@@ -30,8 +32,9 @@ func sideCarMessageHandler() func(ctx context.Context, grpcMsg *pb.SideCarMessag
 				logger.Sugar().Errorf("Failed to unmarshal msComm message: %v", err)
 			}
 
+			logger.Sugar().Infof("MSG came in")
 			incomingMessageWrapper(ctx, msComm)
-
+			logger.Sugar().Infof("AFTER incomingMessageWrapper")
 		default:
 			logger.Sugar().Errorf("Unknown message type: %v", grpcMsg.Type)
 			return fmt.Errorf("unknown message type: %s", grpcMsg.Type)
@@ -87,7 +90,6 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 		}
 
 		c.SendData(ctx, mscommList[0])
-
-		close(config.StopServer)
+		go close(config.StopMicroservice)
 	}
 }

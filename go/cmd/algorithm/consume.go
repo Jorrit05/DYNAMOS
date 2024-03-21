@@ -76,5 +76,5 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 
 	c.SendData(ctx, msComm)
 	logger.Sugar().Debugf("End incomingMessageWrapper, results: %s", string(msComm.Result))
-	close(config.StopServer)
+	go close(config.StopMicroservice)
 }

@@ -28,6 +28,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 		go compositionRequestHandler(ctx, compositionRequest)
 	case "microserviceCommunication":
+		logger.Debug("Received microserviceCommunication")
 		handleMicroserviceCommunication(ctx, grpcMsg)
 	case "sqlDataRequest":
 		// handleSqlRequestDataProvider
@@ -41,11 +42,6 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 			logger.Sugar().Errorf("Failed to unmarshal sqlResult message: %v", err)
 		}
 
-		waitingJobMutex.Lock()
-		defer waitingJobMutex.Unlock()
-
-		actualJobName, ok := waitingJobMap[sqlDataRequest.RequestMetadata.JobName]
-
 		ttpMutex.Lock()
 		thirdPartyMap[sqlDataRequest.RequestMetadata.CorrelationId] = sqlDataRequest.RequestMetadata.ReturnAddress
 		ttpMutex.Unlock()
@@ -55,6 +51,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 
 		msComm.Type = "microserviceCommunication"
 		msComm.RequestType = sqlDataRequest.Type
+		// Set own routing key as return address to ensure the response comes back to me and then returned to where it needs
 		msComm.RequestMetadata.ReturnAddress = agentConfig.RoutingKey
 		msComm.RequestMetadata.CorrelationId = sqlDataRequest.RequestMetadata.CorrelationId
 
@@ -65,33 +62,18 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 
 		msComm.OriginalRequest = any
+		logger.Sugar().Debugf("Sending msComm, first getCompositionRequest ")
+		compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
+		if err != nil {
 
-		key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, actualJobName)
-		value := actualJobName
-
-		if ok {
-
-			delete(waitingJobMap, sqlDataRequest.RequestMetadata.JobName)
-
-			logger.Sugar().Debugf("Sending SendMicroserviceInput to: %s", actualJobName)
-			msComm.RequestMetadata.DestinationQueue = actualJobName
-
-			c.SendMicroserviceComm(ctx, msComm)
-
-		} else {
-			logger.Sugar().Infof("No waiting job found for: %v", sqlDataRequest.RequestMetadata.JobName)
-			compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
-			if err != nil {
-
-				logger.Sugar().Errorf("Error getting matching composition request: %v", err)
-				return err
-			}
-			msComm.RequestMetadata.DestinationQueue = compositionRequest.LocalJobName
-			key = fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, compositionRequest.LocalJobName)
-			value = compositionRequest.LocalJobName
-			generateChainAndDeploy(ctx, compositionRequest, compositionRequest.LocalJobName, sqlDataRequest.Options)
-			c.SendMicroserviceComm(ctx, msComm)
+			logger.Sugar().Errorf("Error getting matching composition request: %v", err)
+			return err
 		}
+		msComm.RequestMetadata.DestinationQueue = compositionRequest.LocalJobName
+		key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, compositionRequest.LocalJobName)
+		value := compositionRequest.LocalJobName
+		generateChainAndDeploy(ctx, compositionRequest, compositionRequest.LocalJobName, sqlDataRequest.Options)
+		c.SendMicroserviceComm(ctx, msComm)
 
 		logger.Sugar().Warnf("key: %v", key)
 		logger.Sugar().Warnf("value: %v", value)

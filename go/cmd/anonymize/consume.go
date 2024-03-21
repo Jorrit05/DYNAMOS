@@ -83,5 +83,6 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 	c.SendData(ctx, msComm)
 
 	logger.Debug("End incomingMessageWrapper (close(config.StopServer))")
-	close(config.StopServer)
+
+	go close(config.StopMicroservice)
 }

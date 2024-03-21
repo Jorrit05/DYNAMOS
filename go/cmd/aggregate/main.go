@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
@@ -22,7 +21,6 @@ var (
 	NR_OF_DATA_PROVIDERS = getNrOfDataProviders()
 )
 
-// Main function
 func main() {
 	logger.Sugar().Debugf("Starting %s", serviceName)
 
@@ -38,15 +36,8 @@ func main() {
 		logger.Sugar().Fatalf("%v", err)
 	}
 
-	<-config.Stopped
-	logger.Sugar().Infof("Wait 2 seconds before ending %s", serviceName)
-
-	oce.Flush()
-	time.Sleep(2 * time.Second)
-	oce.Stop()
-	config.CloseConnection()
-	logger.Sugar().Infof("Exiting %s", serviceName)
-
+	<-config.StopMicroservice
+	config.SafeExit(oce, serviceName)
 	os.Exit(0)
 }
 

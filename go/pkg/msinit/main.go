@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"contrib.go.opencensus.io/exporter/ocagent"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"go.uber.org/zap"
@@ -39,8 +40,9 @@ type Configuration struct {
 	NextConnection    *grpc.ClientConn
 	SideCarCallback   func() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
 	GrpcCallback      func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)
-	Stopped           chan struct{} // channel to tell us the server has stopped
-	StopServer        chan struct{} // Tell the server to stop
+	StopMicroservice  chan struct{} // channel to continue the main routine to kill the MS
+	// Exit              chan struct{} // Final exit
+	GrpcServer *grpc.Server
 }
 
 func NewConfiguration(serviceName string,
@@ -74,8 +76,10 @@ func NewConfiguration(serviceName string,
 		NextConnection:    nil,
 		SideCarCallback:   sidecarCallback,
 		GrpcCallback:      grpcCallback,
-		Stopped:           make(chan struct{}), // channel to tell us the server has stopped
-		StopServer:        make(chan struct{}), // Tell the server to stop
+		StopMicroservice:  make(chan struct{}), // Continue the main routine to kill the MS
+		// StopGrpcServer:    make(chan struct{}), // Tell the self-hosted GRPC listener to stop
+		GrpcServer: nil,
+		// Exit:              make(chan struct{}), // Final exit
 	}
 
 	if conf.FirstService && conf.LastService {
@@ -87,10 +91,10 @@ func NewConfiguration(serviceName string,
 		conf.InitSidecarMessaging()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
 	} else if conf.LastService {
-		conf.StartGrpcServer()
+		conf.GrpcServer = conf.StartGrpcServer()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
 	} else {
-		conf.StartGrpcServer()
+		conf.GrpcServer = conf.StartGrpcServer()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
 	}
 	close(COORDINATOR)
@@ -105,6 +109,8 @@ func (s *Configuration) InitSidecarMessaging() {
 		logger.Sugar().Fatalf("Jobname not defined.")
 	}
 
+	// When being called from an MS, QueueAutoDelete should be false, it is no managed in the compositionrequest handler.
+	// This might be up for refactoring....
 	s.SideCarClient = lib.InitializeSidecarMessaging(s.SidecarConnection, &pb.InitRequest{
 		ServiceName:     jobName,
 		RoutingKey:      jobName,
@@ -113,51 +119,81 @@ func (s *Configuration) InitSidecarMessaging() {
 
 	go func() {
 		lib.ChainConsumeWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(), 5, 5*time.Second)
-		// Consuming is done, so am assuming processing is finished as well.
-		close(s.Stopped)
 	}()
 }
 
 // Register a gRPC server on our designated port
-func (s *Configuration) StartGrpcServer() {
+func (s *Configuration) StartGrpcServer() *grpc.Server {
+
+	// go func() {
+	logger.Sugar().Infof("Start listening on port: %v", s.Port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", s.Port))
+	if err != nil {
+		logger.Sugar().Fatalw("failed to listen: %v", err)
+	}
+	server := grpc.NewServer()
+	serverInstance := &lib.SharedServer{}
+
+	pb.RegisterMicroserviceServer(server, serverInstance)
+	pb.RegisterHealthServer(server, serverInstance)
+	serverInstance.RegisterCallback("microserviceCommunication", s.GrpcCallback)
+	// go func() {
+	// 	<-s.StopGrpcServer
+	// 	logger.Info("Stopping StartGrpcServer")
+	// 	timeout := time.After(5 * time.Second)
+	// 	done := make(chan bool)
+
+	// 	go func() {
+	// 		server.GracefulStop()
+	// 		done <- true
+	// 	}()
+
+	// 	select {
+	// 	case <-timeout:
+	// 		logger.Info("Hard stop")
+	// 		server.Stop() // forcefully stop if graceful stop did not complete within timeout
+	// 	case <-done:
+	// 		logger.Info("Finished graceful stop")
+	// 	}
+
+	// 	close(s.Exit)
+	// }()
+
+	if err := server.Serve(lis); err != nil {
+		logger.Sugar().Fatalw("failed to serve: %v", err)
+	}
+	// }()
+	return server
+}
+
+func (s *Configuration) SafeExit(oce *ocagent.Exporter, serviceName string) {
+	logger.Sugar().Infof("Wait 2 seconds before ending %s", serviceName)
+
+	oce.Flush()
+	time.Sleep(2 * time.Second)
+	oce.Stop()
+	s.CloseConnection()
+
+	if s.GrpcServer != nil {
+		s.StopGrpcServer()
+	}
+}
+
+func (s *Configuration) StopGrpcServer() {
+	logger.Info("Stopping StartGrpcServer")
+	timeout := time.After(5 * time.Second)
+	done := make(chan bool)
 
 	go func() {
-		logger.Sugar().Infof("Start listening on port: %v", s.Port)
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%v", s.Port))
-		if err != nil {
-			logger.Sugar().Fatalw("failed to listen: %v", err)
-		}
-		server := grpc.NewServer()
-		serverInstance := &lib.SharedServer{}
-
-		pb.RegisterMicroserviceServer(server, serverInstance)
-		pb.RegisterHealthServer(server, serverInstance)
-		serverInstance.RegisterCallback("microserviceCommunication", s.GrpcCallback)
-		go func() {
-			<-s.StopServer
-			logger.Info("Stopping StartGrpcServer wait 2 seconds")
-			time.Sleep(2 * time.Second)
-			timeout := time.After(5 * time.Second)
-			done := make(chan bool)
-
-			go func() {
-				server.GracefulStop()
-				done <- true
-			}()
-
-			select {
-			case <-timeout:
-				logger.Info("Hard stop")
-				server.Stop() // forcefully stop if graceful stop did not complete within timeout
-			case <-done:
-				logger.Info("Finished graceful stop")
-			}
-
-			close(s.Stopped)
-		}()
-
-		if err := server.Serve(lis); err != nil {
-			logger.Sugar().Fatalw("failed to serve: %v", err)
-		}
+		s.GrpcServer.GracefulStop()
+		done <- true
 	}()
+
+	select {
+	case <-timeout:
+		logger.Info("Hard stop")
+		s.GrpcServer.Stop() // forcefully stop if graceful stop did not complete within timeout
+	case <-done:
+		logger.Info("Finished graceful stop")
+	}
 }

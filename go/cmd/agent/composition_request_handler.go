@@ -70,10 +70,8 @@ func watchQueue(ctx context.Context, key string) {
 }
 
 func compositionRequestHandler(ctx context.Context, compositionRequest *pb.CompositionRequest) context.Context {
-	// get local requiredServices
-	// Generate microservice chain
-	// Spin up pod
-	// Save session information in etcd
+	// Register user and job
+	// Create queue (this might be up for refactoring)
 
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: startCompositionRequest")
 	defer span.End()
@@ -102,18 +100,6 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 
 	ctx = handleQueue(ctx, compositionRequest.JobName, localJobname, compositionRequest.User.UserName)
 
-	// if strings.EqualFold(compositionRequest.Role, "dataProvider") {
-	// ctx, err = generateChainAndDeploy(ctx, compositionRequest, localJobname, &pb.SqlDataRequest{})
-	// if err != nil {
-	// 	logger.Sugar().Errorf("Error in deploying job: %v", err)
-	// 	return ctx
-	// }
-	// logger.Sugar().Warnf("jobName: %v", compositionRequest.JobName)
-	// logger.Sugar().Warnf("actualJobName: %v", localJobname)
-	// waitingJobMutex.Lock()
-	// waitingJobMap[compositionRequest.JobName] = localJobname
-	// waitingJobMutex.Unlock()
-	// }
 	return ctx
 }
 

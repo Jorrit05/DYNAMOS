@@ -133,7 +133,7 @@ func handleSqlAll(ctx context.Context, jobName string, compositionRequest *pb.Co
 	defer span.End()
 
 	var err error
-	ctx, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest.Options)
+	ctx, _, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest.Options)
 	if err != nil {
 		logger.Sugar().Errorf("error deploying job: %v", err)
 		return ctx, err
@@ -208,13 +208,13 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 
 	// TODO: Parse SQL request for extra compute services
 	var err error
-	ctx, err = generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest.Options)
+	ctx, createdJob, err := generateChainAndDeploy(ctx, compositionRequest, jobName, sqlDataRequest.Options)
 	if err != nil {
 		logger.Sugar().Errorf("error deploying job: %v", err)
 	}
 
 	waitingJobMutex.Lock()
-	waitingJobMap[sqlDataRequest.RequestMetadata.CorrelationId] = jobName
+	waitingJobMap[sqlDataRequest.RequestMetadata.CorrelationId] = createdJob
 	waitingJobMutex.Unlock()
 
 	return ctx, nil
