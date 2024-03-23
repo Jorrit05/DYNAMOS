@@ -62,7 +62,6 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 
 		msComm.OriginalRequest = any
-		logger.Sugar().Debugf("Sending msComm, first getCompositionRequest ")
 		compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
 		if err != nil {
 

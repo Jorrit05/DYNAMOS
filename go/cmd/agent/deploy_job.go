@@ -128,16 +128,11 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 
 	job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, addSidecar())
 
-	// Create the job
 	if clientSet == nil {
-		logger.Debug(" clientset was nill")
 		clientSet = getKubeClient()
-
-		if clientSet == nil {
-			logger.Debug(" clientset is stillll nill")
-		}
 	}
 
+	// Create the job
 	createdJob, err := clientSet.BatchV1().Jobs(dataStewardName).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		logger.Sugar().Errorf("failed to create job: %v", err)
@@ -221,24 +216,6 @@ func getOptionalMicroservices(microserviceMetada *[]mschain.MicroserviceMetadata
 			// Possibly add microservice to the list
 			for msName, optionKey := range request.OptionalServices {
 				if strings.EqualFold(option, optionKey) {
-					// Add microservice to the list
-
-					// --- This part is checking the optional_microservices.json configuration. Intended for allowing agents to forcibly add microservices
-					// lets ignore this for now.
-					// key := fmt.Sprintf("/agents/%s/requestType/%s/%s ", serviceName, requestType, msName)
-					// logger.Sugar().Debug("key: " + key)
-					// resp, err := etcdClient.Get(context.Background(), key)
-					// if err != nil {
-					// 	logger.Sugar().Errorf("getting to etcd: %v", err)
-					// 	return err
-					// }
-
-					// if len(resp.Kvs) == 0 {
-					// 	logger.Sugar().Debug("resp.Kvs = 0, microservice ")
-					// 	continue
-					// }
-					// ---------------------------------------------------------------------------------------------------------------------------------------
-
 					var metadataObject mschain.MicroserviceMetadata
 
 					_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/microservices/%s/chainMetadata", msName), &metadataObject)

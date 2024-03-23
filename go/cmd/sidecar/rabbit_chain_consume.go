@@ -25,21 +25,18 @@ func (s *server) ChainConsume(in *pb.ConsumeRequest, stream pb.SideCar_ChainCons
 	}
 
 	logger.Sugar().Infof("Started consuming from %s", in.QueueName)
-	// breaker := false
+
 	for msg := range messages {
 		logger.Sugar().Debugw("switchin: ", "msg,Type", msg.Type, "Port:", port)
 		switch msg.Type {
 
 		case "microserviceCommunication":
-
 			if err := s.handleMicroserviceCommunication(msg, stream); err != nil {
 				logger.Sugar().Errorf("Error handling microserviceCommunication: %v", err)
 				return status.Error(codes.Internal, err.Error())
 			}
-			logger.Sugar().Debug("ack message")
+			logger.Sugar().Debug("Handled s.handleMicroserviceCommunication")
 
-			// msg.Ack(false)
-			// breaker = true
 		// Handle other message types...
 		default:
 			logger.Sugar().Errorf("Unknown message type: %s", msg.Type)
@@ -47,9 +44,6 @@ func (s *server) ChainConsume(in *pb.ConsumeRequest, stream pb.SideCar_ChainCons
 				Error(codes.Unknown, fmt.Sprintf("Unknown message type: %s", msg.Type))
 		}
 
-		// if breaker {
-		// 	break
-		// }
 	}
 	logger.Sugar().Debug("returning nil")
 	return nil

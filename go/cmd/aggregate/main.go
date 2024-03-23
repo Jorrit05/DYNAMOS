@@ -40,7 +40,7 @@ func main() {
 	}
 
 	<-config.StopMicroservice
-	logger.Sugar().Debugf("Stopping %s, go to safexit", serviceName)
+
 	config.SafeExit(oce, serviceName)
 	os.Exit(0)
 }

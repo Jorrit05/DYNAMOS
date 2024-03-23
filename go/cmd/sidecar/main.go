@@ -59,38 +59,24 @@ func main() {
 		sharedServer.RegisterCallback("microserviceCommunication", SendDataThroughAMQ)
 	}
 
-	go func() {
+	go func(s *grpc.Server, finished chan struct{}) {
 		<-stop
-		logger.Info("Stopping sidecar wait for a few 2 seconds before initating stop")
-		time.Sleep(2 * time.Second)
-		timeout := time.After(5 * time.Second)
-		done := make(chan bool)
+		logger.Info("Stopping sidecar wait for a few 4 seconds before initating stop")
+		time.Sleep(4 * time.Second)
 
-		go func() {
-			s.GracefulStop()
-			done <- true
-		}()
-
-		select {
-		case <-timeout:
-			logger.Info("Hard stop sidecars GRPC")
-			s.Stop() // forcefully stop if graceful stop did not complete within timeout
-		case <-done:
-			logger.Info("Finished graceful stop")
-		}
+		s.Stop()
 
 		if channel != nil {
 			close_channel(channel)
 		}
-		close(finished)
-	}()
 
-	logger.Sugar().Debug("Before <- Serve")
+		close(finished)
+	}(s, finished)
+
 	if err := s.Serve(lis); err != nil {
 		logger.Sugar().Fatalw("failed to serve: %v", err)
 	}
-	// }()
-	logger.Sugar().Debug("Before <- finished")
+
 	<-finished
 
 	logger.Sugar().Infof("Exiting sidecar server")

@@ -94,11 +94,9 @@ func NewConfiguration(serviceName string,
 		conf.InitSidecarMessaging(receiveMutex)
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
 	} else if conf.LastService {
-		logger.Debug("Last service")
 		conf.GrpcServer = grpc.NewServer()
 		conf.StartGrpcServer()
 		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-		logger.Debug("eof Last service")
 	} else {
 		conf.GrpcServer = grpc.NewServer()
 		conf.StartGrpcServer()
@@ -143,27 +141,6 @@ func (s *Configuration) StartGrpcServer() {
 		pb.RegisterMicroserviceServer(s.GrpcServer, serverInstance)
 		pb.RegisterHealthServer(s.GrpcServer, serverInstance)
 		serverInstance.RegisterCallback("microserviceCommunication", s.GrpcCallback)
-		// go func() {
-		// 	<-s.StopGrpcServer
-		// 	logger.Info("Stopping StartGrpcServer")
-		// 	timeout := time.After(5 * time.Second)
-		// 	done := make(chan bool)
-
-		// 	go func() {
-		// 		server.GracefulStop()
-		// 		done <- true
-		// 	}()
-
-		// 	select {
-		// 	case <-timeout:
-		// 		logger.Info("Hard stop")
-		// 		server.Stop() // forcefully stop if graceful stop did not complete within timeout
-		// 	case <-done:
-		// 		logger.Info("Finished graceful stop")
-		// 	}
-
-		// 	close(s.Exit)
-		// }()
 
 		if err := s.GrpcServer.Serve(lis); err != nil {
 			logger.Sugar().Fatalw("failed to serve: %v", err)

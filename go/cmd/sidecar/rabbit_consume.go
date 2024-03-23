@@ -46,11 +46,10 @@ func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServ
 		}
 	}
 
-	logger.Sugar().Debugf("Before  stream.SendMsg(grpcMsg)")
 	sendMutex.Lock()
 	err = stream.SendMsg(grpcMsg)
 	sendMutex.Unlock()
-	logger.Sugar().Debugf("After  stream.SendMsg(grpcMsg)")
+
 	if err != nil {
 		logger.Sugar().Warnf("stream error: %v", err)
 	}

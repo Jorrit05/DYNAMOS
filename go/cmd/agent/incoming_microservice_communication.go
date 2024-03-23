@@ -28,28 +28,11 @@ func isJobWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, cor
 			delete(waitingJobMap, correlationId)
 			waitingJobMutex.Unlock()
 		}
-		logger.Sugar().Infof("Nr. of stewards before TRUE: %d", waitingJob.nrOfDataStewards)
 
 		return true
 	}
 	logger.Sugar().Debugf("No job waiting: %t", ok)
 	return false
-
-	// if ok {
-	// 	waitingJob.nrOfDataStewards = waitingJob.nrOfDataStewards - 1
-
-	// }
-	// logger.Sugar().Debugf("Job waiting: %t", ok)
-	// if ok {
-	// 	// There was still a job waiting for this response
-	// 	handleFurtherProcessing(ctx, waitingJob.Name, msComm)
-	// 	// waitingJobMutex.Lock()
-	// 	// delete(waitingJobMap, correlationId)
-	// 	// waitingJobMutex.Unlock()
-	// 	return true
-	// }
-
-	// return false
 }
 
 func isHttpWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, correlationId string) bool {
