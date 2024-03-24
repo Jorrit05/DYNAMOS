@@ -64,7 +64,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"type\": \"sqlDataRequest\",\n    \"query\" : \"SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 10000\",\n    // \"query\" : \"SELECT DISTINCT p.Unieknr, p.Geslacht, p.Gebdat, s.Aanst_22, s.Functcat, s.Salschal as Salary FROM Personen p JOIN Aanstellingen s ON p.Unieknr = s.Unieknr LIMIT 4\",\n    \"graph\" : false,\n    \"algorithm\" : \"average\",\n    \"algorithmColumns\" : {\n        \"Geslacht\" : \"Aanst_22, Gebdat\"\n    },\n    \"user\": {\n        \"id\": \"1234\",\n        \"userName\": \"jorrit.stutterheim@cloudnation.nl\"\n    },\n    \"requestMetadata\": {\n        \"jobId\": \"jorrit-stutterheim-eb36161f\"\n    }\n}",
+					"raw": "{\n    \"type\": \"sqlDataRequest\",\n    \"query\" : \"SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 10\",\n    // \"query\" : \"SELECT DISTINCT p.Unieknr, p.Geslacht, p.Gebdat, s.Aanst_22, s.Functcat, s.Salschal as Salary FROM Personen p JOIN Aanstellingen s ON p.Unieknr = s.Unieknr LIMIT 4\",\n    \"graph\" : false,\n    \"algorithm\" : \"average\",\n    \"algorithmColumns\" : {\n        \"Geslacht\" : \"Aanst_22, Gebdat\"\n    },\n    \"user\": {\n        \"id\": \"1234\",\n        \"userName\": \"jorrit.stutterheim@cloudnation.nl\"\n    },\n    \"requestMetadata\": {\n        \"jobId\": \"jorrit-stutterheim-eb36161f\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"

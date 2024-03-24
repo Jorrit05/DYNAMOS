@@ -164,7 +164,7 @@ func processPolicyUpdate(ctx context.Context, agentsWithThisJob map[string]*pb.C
 		logger.Sugar().Errorf("error getAuthorizedProviders : %v", err)
 	}
 
-	archetype, err := chooseArchetype(policyUpdate.ValidationResponse.ValidDataproviders, authorizedProviders)
+	archetype, err := chooseArchetype(policyUpdate.ValidationResponse, authorizedProviders)
 	if err != nil {
 		logger.Sugar().Errorf("error choosing archetype: %v", err)
 	}

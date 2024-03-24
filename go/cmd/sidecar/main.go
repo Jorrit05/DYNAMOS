@@ -37,7 +37,6 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
-	// go func() {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		logger.Sugar().Fatalw("failed to listen: %v", err)
@@ -60,36 +59,23 @@ func main() {
 		sharedServer.RegisterCallback("microserviceCommunication", SendDataThroughAMQ)
 	}
 
-	go func() {
+	go func(s *grpc.Server, finished chan struct{}) {
 		<-stop
-		logger.Info("Stopping sidecar wait for a few 2 seconds before initating stop")
-		time.Sleep(2 * time.Second)
-		timeout := time.After(5 * time.Second)
-		done := make(chan bool)
+		logger.Info("Stopping sidecar wait for a few 4 seconds before initating stop")
+		time.Sleep(4 * time.Second)
 
-		go func() {
-			s.GracefulStop()
-			done <- true
-		}()
-
-		select {
-		case <-timeout:
-			logger.Info("Hard stop")
-			s.Stop() // forcefully stop if graceful stop did not complete within timeout
-		case <-done:
-			logger.Info("Finished graceful stop")
-		}
+		s.Stop()
 
 		if channel != nil {
 			close_channel(channel)
 		}
+
 		close(finished)
-	}()
+	}(s, finished)
 
 	if err := s.Serve(lis); err != nil {
 		logger.Sugar().Fatalw("failed to serve: %v", err)
 	}
-	// }()
 
 	<-finished
 

@@ -82,6 +82,10 @@ type RequestType struct {
 	OptionalServices map[string]string `json:"optionalServices"`
 }
 
+type Archetypes struct {
+	Archetypes []Archetype `json:"archetypes"`
+}
+
 type Archetype struct {
 	Name            string `json:"name"`
 	ComputeProvider string `json:"computeProvider"`

@@ -60,6 +60,15 @@ message DataProvider {
   repeated string compute_providers = 2;
 }
 
+message UserAllowedArchetypes {
+  repeated string archetypes = 1;
+}
+
+message UserArchetypes {
+  string user_name = 1;
+  map<string, UserAllowedArchetypes> archetypes = 2;
+}
+
 message ValidationResponse {
   string type = 1;
   string request_type = 2;
@@ -68,6 +77,8 @@ message ValidationResponse {
   Auth auth = 5;
   User user = 6;
   bool request_approved = 7;
+  UserArchetypes valid_archetypes = 8;
+  map<string,bool> options = 9;
 }
 
 message User {
@@ -76,7 +87,7 @@ message User {
 }
 
 message RequestApproval {
-  string type = 1;
+  string type = 1;  //RequestApproval
   User user = 2;
   repeated string data_providers = 3;
   string destination_queue = 4;

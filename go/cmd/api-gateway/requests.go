@@ -50,6 +50,7 @@ func requestHandler() http.HandlerFunc {
 		}
 
 		dataRequestOptions := &api.DataRequestOptions{}
+		dataRequestOptions.Options = make(map[string]bool)
 		if err := json.Unmarshal(apiReqApproval.DataRequest, &dataRequestOptions); err != nil {
 			logger.Sugar().Errorf("Error unmMarshalling get apiReqApproval: %v", err)
 			return
@@ -63,7 +64,7 @@ func requestHandler() http.HandlerFunc {
 			User:             userPb,
 			DataProviders:    apiReqApproval.DataProviders,
 			DestinationQueue: "policyEnforcer-in",
-			Options:          make(map[string]bool),
+			Options:          dataRequestOptions.Options,
 		}
 
 		// Create a channel to receive the response
@@ -144,6 +145,7 @@ func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]
 			wg.Done()
 		}()
 	}
+
 	// Wait until all the requests are complete
 	wg.Wait()
 	logger.Sugar().Debug("Returning responses")
@@ -153,8 +155,18 @@ func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]
 		"responses": responses,
 	}
 
-	jsonResponse, _ := json.Marshal(responseMap)
-	return jsonResponse
+	// jsonResponse, _ := json.Marshal(responseMap)
+	// return jsonResponse
+	return cleanupAndMarshalResponse(responseMap)
+}
+
+// Now assumes input is map[string]interface{} and directly marshals it to prettified JSON.
+func cleanupAndMarshalResponse(responseMap map[string]interface{}) []byte {
+	prettifiedJSON, err := json.MarshalIndent(responseMap, "", "    ")
+	if err != nil {
+		logger.Sugar().Errorf("Error marshalling cleaned response: %v", err)
+	}
+	return prettifiedJSON
 }
 
 func sendData(endpoint string, jsonData []byte) (string, error) {

@@ -14,6 +14,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/gorilla/handlers"
 	"go.opencensus.io/plugin/ochttp"
+	batchv1 "k8s.io/api/batch/v1"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
@@ -36,14 +37,21 @@ var (
 	responseMap   = make(map[string]chan dataResponse)
 	thirdPartyMap = make(map[string]string)
 	jobCounter    = make(map[string]int)
-	waitingJobMap = make(map[string]string)
+	waitingJobMap = make(map[string]*waitingJob)
 	queueInfoMap  = make(map[string]*pb.QueueInfo)
 	receiveMutex  = &sync.Mutex{}
+
+	clientSet = getKubeClient()
 )
 
 type dataResponse struct {
 	response     *pb.MicroserviceCommunication
 	localContext context.Context
+}
+
+type waitingJob struct {
+	job              *batchv1.Job
+	nrOfDataStewards int
 }
 
 func main() {
@@ -98,4 +106,3 @@ func main() {
 	wg.Wait()
 
 }
-

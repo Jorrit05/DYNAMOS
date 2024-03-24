@@ -63,17 +63,32 @@ func setupConnection(queueName string, routingKey string, queueAutoDelete bool) 
 
 	// Bind queue to "topic_exchange"
 	// TODO: Make "topic_exchange" flexible?
-	if err := channel.QueueBind(
-		queue.Name,       // name
-		routingKey,       // key
-		"topic_exchange", // exchange
-		false,            // noWait
-		nil,              // args
-	); err != nil {
-		logger.Sugar().Fatalw("Queue Bind: %s", err)
-		return nil, nil, nil, err
-	}
 
+	// We are going to assume the queue has been created by the composition request
+	for i := 1; i <= 7; i++ { // maximum of 7 retries
+		err := channel.QueueBind(
+			queue.Name,       // name
+			routingKey,       // key
+			"topic_exchange", // exchange
+			false,            // noWait
+			nil,              // args
+		)
+		if err == nil {
+			break // no error, break out of loop
+		}
+
+		if i == 7 {
+			logger.Sugar().Fatalw("Queue Bind: %s", err)
+			return nil, nil, nil, err
+		}
+		// if err != nil {
+		// 	logger.Sugar().Fatalw("Queue Bind: %s", err)
+		// 	return nil, nil, nil, err
+		// }
+
+		logger.Sugar().Infof("Failed to connect to QueueBind: %v", err)
+		time.Sleep(2 * time.Second)
+	}
 	return nil, conn, channel, nil
 }
 

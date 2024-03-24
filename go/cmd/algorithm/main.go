@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"time"
+	"sync"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
@@ -18,9 +18,10 @@ import (
 )
 
 var (
-	logger      = lib.InitLogger(logLevel)
-	config      *msinit.Configuration
-	COORDINATOR = make(chan struct{})
+	logger       = lib.InitLogger(logLevel)
+	config       *msinit.Configuration
+	COORDINATOR  = make(chan struct{})
+	receiveMutex = &sync.Mutex{}
 )
 
 // Main function
@@ -32,19 +33,13 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
-	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler)
+	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler, receiveMutex)
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
 	}
 
-	<-config.Stopped
-	logger.Sugar().Infof("Wait 2 seconds before ending algorithm service")
-
-	oce.Flush()
-	time.Sleep(2 * time.Second)
-	oce.Stop()
-	config.CloseConnection()
-	logger.Sugar().Infof("Exiting algorithm service")
+	<-config.StopMicroservice
+	config.SafeExit(oce, serviceName)
 	os.Exit(0)
 }
 
@@ -109,10 +104,8 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
 	}
 
-	<-COORDINATOR
 	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
 
-	c := pb.NewMicroserviceClient(config.GrpcConnection)
 	if sqlDataRequest.Options["graph"] {
 		// jsonString, _ := json.Marshal(msComm.Data)
 		// msComm.Result = jsonString
@@ -121,8 +114,6 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		jsonString, _ := m.MarshalToString(msComm.Data)
 		msComm.Result = []byte(jsonString)
 
-		c.SendData(ctx, msComm)
-		close(config.StopServer)
 		return nil
 	}
 
@@ -131,8 +122,6 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 		// msComm.Result = jsonString
 
 		msComm.Result = getAverage(msComm.Data)
-		c.SendData(ctx, msComm)
-		close(config.StopServer)
 		return nil
 	}
 
@@ -145,9 +134,6 @@ func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunicat
 	ctx, allResults := convertAllData(ctx, msComm.Data)
 	msComm.Result = allResults
 
-	c.SendData(ctx, msComm)
-	// time.Sleep(2 * time.Second)
-	close(config.StopServer)
 	return nil
 }
 

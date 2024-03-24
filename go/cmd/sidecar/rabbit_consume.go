@@ -49,6 +49,7 @@ func (s *server) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServ
 	sendMutex.Lock()
 	err = stream.SendMsg(grpcMsg)
 	sendMutex.Unlock()
+
 	if err != nil {
 		logger.Sugar().Warnf("stream error: %v", err)
 	}

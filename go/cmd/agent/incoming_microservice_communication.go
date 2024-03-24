@@ -16,18 +16,22 @@ func isJobWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, cor
 
 	// Check if there is a job waiting for this result
 	waitingJobMutex.Lock()
-	waitingJobName, ok := waitingJobMap[correlationId]
+	waitingJob, ok := waitingJobMap[correlationId]
 	waitingJobMutex.Unlock()
 
-	if ok {
-		// There was still a job waiting for this response
-		handleFurtherProcessing(ctx, waitingJobName, msComm)
-		waitingJobMutex.Lock()
-		delete(waitingJobMap, correlationId)
-		waitingJobMutex.Unlock()
+	if ok && waitingJob.nrOfDataStewards > 0 {
+		logger.Sugar().Infof("Nr. of stewards: %d", waitingJob.nrOfDataStewards)
+		handleFurtherProcessing(ctx, waitingJob.job.Name, msComm)
+		waitingJob.nrOfDataStewards = waitingJob.nrOfDataStewards - 1
+		if waitingJob.nrOfDataStewards == 0 {
+			waitingJobMutex.Lock()
+			delete(waitingJobMap, correlationId)
+			waitingJobMutex.Unlock()
+		}
+
 		return true
 	}
-
+	logger.Sugar().Debugf("No job waiting: %t", ok)
 	return false
 }
 
@@ -72,7 +76,7 @@ func isThirdPartyWaiting(ctx context.Context, msComm *pb.MicroserviceCommunicati
 
 	if ok {
 		logger.Sugar().Infof("Sending sql response to returnAddress: %s", returnAddress)
-		// Send a signal on the channel to indicate that the response is ready
+
 		msComm.RequestMetadata.DestinationQueue = returnAddress
 
 		c.SendMicroserviceComm(ctx, msComm)
@@ -86,7 +90,7 @@ func isThirdPartyWaiting(ctx context.Context, msComm *pb.MicroserviceCommunicati
 
 func handleMicroserviceCommunication(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 
-	logger.Debug("Received microserviceCommunication")
+	logger.Debug("Start handleMicroserviceCommunication")
 
 	msComm := &pb.MicroserviceCommunication{}
 	msComm.RequestMetadata = &pb.RequestMetadata{}
@@ -104,6 +108,7 @@ func handleMicroserviceCommunication(ctx context.Context, grpcMsg *pb.SideCarMes
 	if isHttpWaiting(ctx, msComm, correlationId) {
 		return nil
 	}
+
 	if isThirdPartyWaiting(ctx, msComm, correlationId) {
 		return nil
 	}

@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -41,6 +43,40 @@ func deleteJobInfo(userName string) {
 	}
 }
 
+var (
+	UVA1 = &pb.DataProvider{
+		Archetypes: []string{"computeToData", "dataThroughTtp"},
+	}
+	VU1 = &pb.DataProvider{
+		Archetypes: []string{"computeToData", "dataThroughTtp"},
+	}
+
+	test1 = &pb.ValidationResponse{
+		Type:            "validationResponse",
+		RequestType:     "sqlDataRequest",
+		RequestApproved: true,
+		ValidArchetypes: &pb.UserArchetypes{
+			Archetypes: map[string]*pb.UserAllowedArchetypes{
+				"UVA": {Archetypes: []string{"computeToData", "dataThroughTtp"}},
+				"VU":  {Archetypes: []string{"computeToData", "dataThroughTtp"}},
+			}},
+		User: &pb.User{
+			Id:       "1234",
+			UserName: "jorrit.stutterheim@cloudnation.nl",
+		},
+		ValidDataproviders: map[string]*pb.DataProvider{
+			"UVA": UVA1,
+			"VU":  VU1,
+		},
+		InvalidDataproviders: []string{},
+	}
+
+	agentDetails1 = map[string]lib.AgentDetails{
+		"UVA": {Name: "UVA", RoutingKey: "UVA-in", Dns: "uva.uva.svc.cluster.local"},
+		"VU":  {Name: "VU", RoutingKey: "VU-in", Dns: "vu.vu.svc.cluster.local"},
+	}
+)
+
 func getAvailableAgents() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -67,6 +103,24 @@ func getAvailableAgents() {
 	fmt.Printf("result: %v", result)
 }
 func main() {
+
+	fmt.Println(test1.ValidArchetypes.Archetypes["UVA"].Archetypes)
+	fmt.Println(test1.ValidArchetypes.Archetypes["VU"].Archetypes)
+
+	os.Exit(0)
+
+	fmt.Printf("Start %s\n", serviceName)
+
+	var archeTypes = &api.Archetype{}
+
+	archeTypess, _ := etcd.GetPrefixListEtcd(etcdClient, "/archetypes", archeTypes)
+
+	fmt.Println(archeTypess)
+	for _, archeType := range archeTypess {
+		fmt.Println(archeType)
+	}
+	fmt.Println(len(archeTypess))
+	os.Exit(0)
 	// deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
 	getAvailableAgents()
 	// conn = lib.GetGrpcConnection(grpcAddr)

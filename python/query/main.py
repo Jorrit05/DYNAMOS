@@ -174,7 +174,7 @@ def handle_incoming_request(rabbitClient, msg):
 
 # @tracer.start_as_current_span("test_single_query")
 def test_single_query():
-    size = "30000"
+    size = "100"
     # Define your SQL query
     query = f"""SELECT *
                FROM Personen p
@@ -211,7 +211,7 @@ def main():
     if int(os.getenv("FIRST")) > 0:
         # logger.debug("First service")
         job_name = os.getenv("JOB_NAME")
-        rabbitClient = RabbitClient(config, job_name, job_name, handle_incoming_request, True)
+        rabbitClient = RabbitClient(config, job_name, job_name, handle_incoming_request, False)
         rabbitClient.start_consuming(job_name, 10, 2)
     else:
         #TODO: Setup listener service for Python
