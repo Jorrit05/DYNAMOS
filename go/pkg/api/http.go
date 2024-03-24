@@ -46,8 +46,14 @@ type RequestApproval struct {
 	Type          string   `json:"type"`
 	User          User     `json:"user"`
 	DataProviders []string `json:"dataProviders"`
-	SyncServices  bool     `json:"syncServices"`
 	// DataRequest   DataRequest `json:"dataRequest"`
+	DataRequest json.RawMessage `json:"data_request"`
+}
+
+type DataRequestOptions struct {
+	Options map[string]bool `json:"options"`
+	// Algorithm string          `json:"algorithm"`
+	// Query     string          `json:"query"`
 }
 
 type Options struct {

@@ -34,7 +34,6 @@ const requestApproval = async (requestType: string,
 
     try {
         const response = await http.post("/api/v1/requestApproval", payload)
-        console.log('Response:', response.data);
 
         return response
     } catch (error) {

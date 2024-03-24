@@ -1,7 +1,9 @@
 <script setup>
-
-import { ref } from 'vue';
+import VueJsonPretty from 'vue-json-pretty';
+import { ref, computed } from 'vue';
 import { requestApproval } from '../http';
+import 'vue-json-pretty/lib/styles.css';
+import { useToast } from "primevue/usetoast";
 
 const algo = ref("average");
 const graph = ref(false);
@@ -17,6 +19,8 @@ const user = {
     // Actual loginToken features....
 }
 
+const responseData = ref(null);
+const toast = useToast();
 // TODO: replace with actual data
 const availableProviders = ref([
     {label: 'UvA', value: 'UVA'},
@@ -35,32 +39,44 @@ const getSelectedProviderValues = () => {
     return selectedValues
 }
 
+const processedData = computed(() => {
+  // Process your response data here if needed
+  return responseData.value; // Or perform some computation on responseData
+});
+
 const submit = () => {
-    submitting.value = true;
-    setTimeout(() => {
-        submitting.value = false;
-        requestApproval(requestType, 
-                        user,
-                        getSelectedProviderValues(),
-                        sql.value,
-                        algo.value,
-                        graph.value,
-                        aggregate.value)
-        .then(response => {
-            // Handle successful response
-            console.log('Response data:', response.data);
-        })
-        .catch(error => {
-            // Handle error
-            console.error('Error:', error);
-        });
-    }, 2000);
-    
+    if (selectedProviders.value == null ||  sql.value == null) {
+        toast.add({severity:'error', summary: 'Form submission invalid', life: 3000})
+
+    } else {
+        submitting.value = true;
+        setTimeout(() => {
+            submitting.value = false;
+            requestApproval(requestType, 
+                            user,
+                            getSelectedProviderValues(),
+                            sql.value,
+                            algo.value,
+                            graph.value,
+                            aggregate.value)
+            .then(response => {
+                // Handle successful response
+                responseData.value = response.data
+                toast.add({severity:'success', summary: 'Request succesful!', life: 3000})
+            })
+            .catch(error => {
+                // Handle error
+                toast.add({severity:'error', summary: 'Request unsuccesful', life: 3000})
+
+            });
+        }, 5000);
+    }
 };
 </script>
 
 <template>
     <div>
+        <Toast />
         <Card class="m-4">
             <template #title>DYNAMOS Request Form</template>
             <template #content>
@@ -182,6 +198,16 @@ const submit = () => {
                 @click="submit"
             />
         </template>
-    </Card>  
+    </Card> 
+    
+    <div v-if="(responseData != null)">
+
+        <Card class="m-4">
+            <template #title>Response</template>
+            <template #content>
+            <vue-json-pretty :data="processedData" />
+            </template>
+        </Card> 
+    </div>
     </div>
 </template>

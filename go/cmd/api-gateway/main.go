@@ -12,10 +12,6 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	socketio "github.com/googollee/go-socket.io"
-	"github.com/googollee/go-socket.io/engineio"
-	"github.com/googollee/go-socket.io/engineio/transport"
-	"github.com/googollee/go-socket.io/engineio/transport/polling"
-	"github.com/googollee/go-socket.io/engineio/transport/websocket"
 	"github.com/gorilla/handlers"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.opencensus.io/plugin/ochttp"
@@ -78,31 +74,18 @@ func main() {
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/requestApproval", &ochttp.Handler{Handler: requestHandler()})
 	apiMux.Handle("/getAvailableProviders", &ochttp.Handler{Handler: availableProvidersHandler()})
-	go socketServer(apiMux)
-	logger.Info(apiVersion) // prints /api/v1
-
-	mux.Handle(apiVersion+"/", http.StripPrefix(apiVersion, apiMux))
-
-	logger.Sugar().Infow("Starting http server on: ", "port", port)
-	go func() {
-		if err := http.ListenAndServe(port, api.LogMiddleware(handlers.CORS(originsOk, headersOk, methodsOk)(mux))); err != nil {
-			logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
-		}
-	}()
-	wg.Wait()
-}
-
-func socketServer(apiMux *http.ServeMux) {
-	server := socketio.NewServer(&engineio.Options{
-		Transports: []transport.Transport{
-			&polling.Transport{
-				CheckOrigin: allowOriginFunc,
-			},
-			&websocket.Transport{
-				CheckOrigin: allowOriginFunc,
-			},
-		},
-	})
+	// go socketServer(apiMux)
+	// server := socketio.NewServer(&engineio.Options{
+	// 	Transports: []transport.Transport{
+	// 		&polling.Transport{
+	// 			CheckOrigin: allowOriginFunc,
+	// 		},
+	// 		&websocket.Transport{
+	// 			CheckOrigin: allowOriginFunc,
+	// 		},
+	// 	},
+	// })
+	server := socketio.NewServer(nil)
 
 	server.OnError("/", func(s socketio.Conn, e error) {
 		logger.Sugar().Infow("meet error:", e)
@@ -114,6 +97,17 @@ func socketServer(apiMux *http.ServeMux) {
 
 	// Serve Socket.IO requests at "/socket.io/" prefix
 	apiMux.Handle("/socket.io/", server)
+	logger.Info(apiVersion) // prints /api/v1
+
+	mux.Handle(apiVersion+"/", http.StripPrefix(apiVersion, apiMux))
+
+	logger.Sugar().Infow("Starting http server on: ", "port", port)
+	go func() {
+		if err := http.ListenAndServe(port, api.LogMiddleware(handlers.CORS(originsOk, headersOk, methodsOk)(mux))); err != nil {
+			logger.Sugar().Fatalw("Error starting HTTP server: %s", err)
+		}
+	}()
+	wg.Wait()
 }
 
 // Easier to get running with CORS. Thanks for help @Vindexus and @erkie

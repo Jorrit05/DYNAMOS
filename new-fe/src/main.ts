@@ -13,7 +13,7 @@ import Card from 'primevue/card';
 import InlineMessage from 'primevue/inlinemessage';
 
 import "primeflex/primeflex.css";
-import "primevue/resources/themes/bootstrap4-dark-purple/theme.css"
+import "primevue/resources/themes/bootstrap4-light-blue/theme.css"
 // import "primevue/resources/primevue.min.css"; /* Deprecated */
 import "primeicons/primeicons.css";
 
