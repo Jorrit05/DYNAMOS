@@ -30,6 +30,11 @@ func checkRequestApproval(ctx context.Context, requestApproval *pb.RequestApprov
 		},
 		RequestApproved: false,
 		ValidArchetypes: &pb.UserArchetypes{Archetypes: make(map[string]*pb.UserAllowedArchetypes)},
+		Options:         make(map[string]bool),
+	}
+
+	if requestApproval.Options != nil && len(requestApproval.Options) > 0 {
+		protoRequest.Options = requestApproval.Options
 	}
 
 	getValidAgreements(requestApproval.DataProviders, requestApproval.User, &agreements, protoRequest)

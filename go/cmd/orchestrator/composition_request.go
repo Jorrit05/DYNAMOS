@@ -124,18 +124,10 @@ func pickArchetypeBasedOnWeight() (*api.Archetype, error) {
 	return lightest, nil
 }
 
-// TODO: Make smarter
-func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataProviders map[string]lib.AgentDetails) (string, error) {
-	logger.Sugar().Debug("starting chooseArchetype")
-
-	for k, _ := range validationResponse.ValidDataproviders {
-		logger.Sugar().Debug("validDataprovider: %s ", k)
-	}
-
-	options := map[string]bool{"aggregate": true, "other": false}
+func getArchetypeBasedOnOptions(validationResponse *pb.ValidationResponse, authorizedDataProviders map[string]lib.AgentDetails) string {
 
 	// This ranges over the options. And selects an archetype based on the options.
-	for option, value := range options {
+	for option, value := range validationResponse.Options {
 		switch option {
 		case "aggregate":
 			// If aggregate is enabled, it will select the 'dataThroughTtp' archetype, if this is allowed on all the authorizedDataProviders
@@ -148,9 +140,26 @@ func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataPr
 				}
 
 				if allowed {
-					return "dataThroughTtp", nil
+					return "dataThroughTtp"
 				}
 			}
+		}
+	}
+	return ""
+}
+
+// TODO: Make smarter
+func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataProviders map[string]lib.AgentDetails) (string, error) {
+	logger.Sugar().Debug("starting chooseArchetype")
+
+	for k, _ := range validationResponse.ValidDataproviders {
+		logger.Sugar().Debug("validDataprovider: %s ", k)
+	}
+
+	if validationResponse.Options != nil && len(validationResponse.Options) > 0 {
+		archetype := getArchetypeBasedOnOptions(validationResponse, authorizedDataProviders)
+		if archetype != "" {
+			return archetype, nil
 		}
 	}
 

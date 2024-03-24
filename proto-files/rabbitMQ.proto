@@ -78,6 +78,7 @@ message ValidationResponse {
   User user = 6;
   bool request_approved = 7;
   UserArchetypes valid_archetypes = 8;
+  map<string,bool> options = 9;
 }
 
 message User {

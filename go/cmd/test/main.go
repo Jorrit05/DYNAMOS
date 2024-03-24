@@ -42,7 +42,47 @@ func deleteJobInfo(userName string) {
 	}
 }
 
+var (
+	UVA1 = &pb.DataProvider{
+		Archetypes: []string{"computeToData", "dataThroughTtp"},
+	}
+	VU1 = &pb.DataProvider{
+		Archetypes: []string{"computeToData", "dataThroughTtp"},
+	}
+
+	test1 = &pb.ValidationResponse{
+		Type:            "validationResponse",
+		RequestType:     "sqlDataRequest",
+		RequestApproved: true,
+		ValidArchetypes: &pb.UserArchetypes{
+			Archetypes: map[string]*pb.UserAllowedArchetypes{
+				"UVA": {Archetypes: []string{"computeToData", "dataThroughTtp"}},
+				"VU":  {Archetypes: []string{"computeToData", "dataThroughTtp"}},
+			}},
+		User: &pb.User{
+			Id:       "1234",
+			UserName: "jorrit.stutterheim@cloudnation.nl",
+		},
+		ValidDataproviders: map[string]*pb.DataProvider{
+			"UVA": UVA1,
+			"VU":  VU1,
+		},
+		InvalidDataproviders: []string{},
+	}
+
+	agentDetails1 = map[string]lib.AgentDetails{
+		"UVA": {Name: "UVA", RoutingKey: "UVA-in", Dns: "uva.uva.svc.cluster.local"},
+		"VU":  {Name: "VU", RoutingKey: "VU-in", Dns: "vu.vu.svc.cluster.local"},
+	}
+)
+
 func main() {
+
+	fmt.Println(test1.ValidArchetypes.Archetypes["UVA"].Archetypes)
+	fmt.Println(test1.ValidArchetypes.Archetypes["VU"].Archetypes)
+
+	os.Exit(0)
+
 	fmt.Printf("Start %s\n", serviceName)
 
 	var archeTypes = &api.Archetype{}

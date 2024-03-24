@@ -74,17 +74,24 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 	logger.Sugar().Infof("Lenght of msCommList %v", len(mscommList))
 
 	if len(mscommList) == NR_OF_DATA_PROVIDERS {
+		logger.Sugar().Debugf(mscommList[0].Data.String())
 		// All messages haver arrived
 		logger.Sugar().Infof("All messages have arrived, %v", len(mscommList))
 
 		switch msComm.RequestType {
 		case "sqlDataRequest":
-			handleSqlDataRequest(ctx, mscommList)
+			ctx, msComm, err = handleSqlDataRequest(ctx, mscommList)
+			if err != nil {
+				logger.Sugar().Errorf("Error in handlesqlrequest: %v", err)
+			}
+
 		default:
 			logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
 		}
 
-		c.SendData(ctx, mscommList[0])
+		logger.Sugar().Debug("Printing merged data")
+		c.SendData(ctx, msComm)
+		logger.Sugar().Debugf(msComm.Data.String())
 		close(config.StopMicroservice)
 	}
 }

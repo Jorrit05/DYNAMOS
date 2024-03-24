@@ -17,6 +17,7 @@ spec:
       containers:
         - name: grafana
           image: grafana/grafana:latest
+          imagePullPolicy: Always
           command: ["/bin/sh", "/entrypoint/entrypoint.sh"]
           ports:
             - containerPort: 3000
