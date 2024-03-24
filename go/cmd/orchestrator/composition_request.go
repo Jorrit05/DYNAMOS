@@ -30,6 +30,7 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 	if err != nil {
 		return nil, ctx, err
 	}
+	logger.Sugar().Infof("Chosen archetype: %s", archetype)
 
 	var archetypeConfig api.Archetype
 	_, err = etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/archetypes/%s", archetype), &archetypeConfig)
@@ -100,7 +101,9 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 
 // Simple sorting to return the archetype with the least weight
 func pickArchetypeBasedOnWeight() (*api.Archetype, error) {
-	var target = &api.Archetype{}
+	logger.Sugar().Info("Start pickArchetypeBasedOnWeight")
+
+	target := &api.Archetype{}
 
 	// Assuming GetPrefixListEtcd returns a slice of Archetype and an error
 	archeTypes, err := etcd.GetPrefixListEtcd(etcdClient, "/archetypes", target)
@@ -109,7 +112,7 @@ func pickArchetypeBasedOnWeight() (*api.Archetype, error) {
 	}
 
 	if len(archeTypes) == 0 {
-		return nil, fmt.Errorf("No archetypes available")
+		return nil, fmt.Errorf("no archetypes available")
 	}
 
 	lightest := archeTypes[0]
@@ -125,6 +128,7 @@ func pickArchetypeBasedOnWeight() (*api.Archetype, error) {
 }
 
 func getArchetypeBasedOnOptions(validationResponse *pb.ValidationResponse, authorizedDataProviders map[string]lib.AgentDetails) string {
+	logger.Sugar().Debugf("Start getArchetypeBasedOnOptions, options: %v", validationResponse.Options)
 
 	// This ranges over the options. And selects an archetype based on the options.
 	for option, value := range validationResponse.Options {
@@ -135,6 +139,8 @@ func getArchetypeBasedOnOptions(validationResponse *pb.ValidationResponse, autho
 				allowed := true
 				for provider, _ := range authorizedDataProviders {
 					if !slices.Contains(validationResponse.ValidArchetypes.Archetypes[provider].Archetypes, "dataThroughTtp") {
+						logger.Sugar().Debugf("allowed false, slice: %v", validationResponse.ValidArchetypes.Archetypes[provider].Archetypes)
+
 						allowed = false
 					}
 				}
@@ -151,6 +157,7 @@ func getArchetypeBasedOnOptions(validationResponse *pb.ValidationResponse, autho
 // TODO: Make smarter
 func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataProviders map[string]lib.AgentDetails) (string, error) {
 	logger.Sugar().Debug("starting chooseArchetype")
+	logger.Sugar().Debugf("length options: %v", len(validationResponse.Options))
 
 	for k, _ := range validationResponse.ValidDataproviders {
 		logger.Sugar().Debug("validDataprovider: %s ", k)
@@ -169,7 +176,7 @@ func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataPr
 		return "", err
 	}
 	allowed := true
-	for provider, _ := range authorizedDataProviders {
+	for provider := range authorizedDataProviders {
 		if !slices.Contains(validationResponse.ValidArchetypes.Archetypes[provider].Archetypes, archeType.Name) {
 			allowed = false
 		}
@@ -178,7 +185,7 @@ func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataPr
 		return archeType.Name, nil
 	}
 
-	for provider, _ := range authorizedDataProviders {
+	for provider := range authorizedDataProviders {
 		someArchetype := validationResponse.ValidArchetypes.Archetypes[provider].Archetypes[0]
 		if someArchetype != "" {
 			return someArchetype, nil

@@ -73,9 +73,11 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 	logger.Sugar().Infof("amount of data providers %v", NR_OF_DATA_PROVIDERS)
 	logger.Sugar().Infof("Lenght of msCommList %v", len(mscommList))
 
-	if len(mscommList) == NR_OF_DATA_PROVIDERS {
+	// If NR_OF_DATA_PROVIDERS == 0 aggregate won't actually function and pass on the message.
+	// This can happen at this moment if the aggregate flag is set to True, but it is not allowed by policy.
+	if len(mscommList) == NR_OF_DATA_PROVIDERS || NR_OF_DATA_PROVIDERS == 0 {
 		logger.Sugar().Debugf(mscommList[0].Data.String())
-		// All messages haver arrived
+		// All messages have arrived
 		logger.Sugar().Infof("All messages have arrived, %v", len(mscommList))
 
 		switch msComm.RequestType {
