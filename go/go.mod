@@ -7,6 +7,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.4
 	github.com/docker/docker v23.0.3+incompatible
 	github.com/google/uuid v1.4.0
+	github.com/googollee/go-socket.io v1.7.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/rabbitmq/amqp091-go v1.8.0
 	github.com/stretchr/testify v1.8.4
@@ -31,7 +32,9 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.1 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
+	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/gomodule/redigo v1.8.4 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3 // indirect

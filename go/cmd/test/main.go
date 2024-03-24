@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -76,6 +77,31 @@ var (
 	}
 )
 
+func getAvailableAgents() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Get the value from etcd.
+	resp, err := etcdClient.Get(ctx, "/agents/online", clientv3.WithPrefix())
+	if err != nil {
+		// logger.Sugar().Errorf("failed to get value from etcd: %v", err)
+		fmt.Printf("failed to get value from etcd: %v", err)
+	}
+
+	// Initialize an empty map to store the unmarshaled structs.
+	result := make(map[string]lib.AgentDetails)
+	// Iterate through the key-value pairs and unmarshal the values into structs.
+	for _, kv := range resp.Kvs {
+		var target lib.AgentDetails
+		err = json.Unmarshal(kv.Value, &target)
+		if err != nil {
+			// return nil, fmt.Errorf("failed to unmarshal JSON for key %s: %v", key, err)
+		}
+		result[string(target.Name)] = target
+	}
+
+	fmt.Printf("result: %v", result)
+}
 func main() {
 
 	fmt.Println(test1.ValidArchetypes.Archetypes["UVA"].Archetypes)
@@ -96,6 +122,8 @@ func main() {
 	fmt.Println(len(archeTypess))
 	os.Exit(0)
 	// deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
+	getAvailableAgents()
+	// conn = lib.GetGrpcConnection(grpcAddr)
 	conn = lib.GetGrpcConnection(grpcAddr)
 
 	c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
