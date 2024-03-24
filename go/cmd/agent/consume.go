@@ -28,7 +28,7 @@ func handleIncomingMessages(ctx context.Context, grpcMsg *pb.SideCarMessage) err
 		}
 		go compositionRequestHandler(ctx, compositionRequest)
 	case "microserviceCommunication":
-		logger.Debug("Received microserviceCommunication")
+
 		handleMicroserviceCommunication(ctx, grpcMsg)
 	case "sqlDataRequest":
 		// handleSqlRequestDataProvider

@@ -90,7 +90,7 @@ func isThirdPartyWaiting(ctx context.Context, msComm *pb.MicroserviceCommunicati
 
 func handleMicroserviceCommunication(ctx context.Context, grpcMsg *pb.SideCarMessage) error {
 
-	logger.Debug("Received microserviceCommunication")
+	logger.Debug("Start handleMicroserviceCommunication")
 
 	msComm := &pb.MicroserviceCommunication{}
 	msComm.RequestMetadata = &pb.RequestMetadata{}
