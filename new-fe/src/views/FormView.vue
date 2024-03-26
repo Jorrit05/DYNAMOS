@@ -8,7 +8,7 @@ import { useToast } from "primevue/usetoast";
 const algo = ref("average");
 const graph = ref(false);
 const aggregate = ref(false);
-const sql = ref("SELECT p.Geslacht, s.Salschal FROM Personen p JOIN Aanstellingen s ON p.Unieknr = s.Unieknr");
+const sql = ref("SELECT p.Geslacht, s.Salschal FROM Personen p JOIN Aanstellingen s ON p.Unieknr = s.Unieknr LIMIT 100");
 const selectedProviders = ref();
 // TODO: Change from hard coded
 const requestType = "sqlDataRequest"
