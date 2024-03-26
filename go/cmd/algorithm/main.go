@@ -239,12 +239,13 @@ func getAverage(data *structpb.Struct) []byte {
 		}
 	}
 
-	result := make(map[string]float64)
+	result := make(map[string]string)
 	if maleCount != 0 {
-		result["average_male_salary"] = totalMaleSalary / float64(maleCount)
+		result["avg_salary_scale_men"] = fmt.Sprintf("%.3f", totalMaleSalary/float64(maleCount))
 	}
 	if femaleCount != 0 {
-		result["average_female_salary"] = totalFemaleSalary / float64(femaleCount)
+		result["avg_salary_scale_women"] = fmt.Sprintf("%.3f", totalFemaleSalary/float64(femaleCount))
+
 	}
 
 	jsonResult, err := json.Marshal(result)

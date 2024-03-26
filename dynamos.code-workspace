@@ -46,7 +46,7 @@
 			"path": "go/cmd/policy-enforcer"
 		},
 		{
-			"path": "dynamos-fe"
+			"path": "new-fe"
 		},
 		{
 			"path": "go/cmd/anonymize"

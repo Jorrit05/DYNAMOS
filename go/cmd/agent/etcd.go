@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -23,18 +24,29 @@ func getCompositionRequest(userName string, jobName string) (*pb.CompositionRequ
 	var compositionRequest *pb.CompositionRequest
 
 	key := fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, userName, jobName)
-	_, err := etcd.GetAndUnmarshalJSON(etcdClient, key, &compositionRequest)
-	if err != nil {
-		logger.Sugar().Warnf("Error getting composition request for key: %s, error: %v", key, err)
-		return nil, err
+
+	// Due to timing issues in ETCD we should check again. Up for a smarter way of solving this issue
+	for i := 0; i <= 3; i++ {
+
+		jsonVal, err := etcd.GetAndUnmarshalJSON(etcdClient, key, &compositionRequest)
+		if err != nil {
+			logger.Sugar().Warnf("Error getting composition request for key: %s, error: %v", key, err)
+			return nil, err
+		}
+
+		if jsonVal != nil {
+			break
+		}
+		time.Sleep(1 * time.Second)
 	}
+
 	if compositionRequest == nil {
 		return nil, fmt.Errorf("no job found for user: %v, jobName: %v", userName, jobName)
 	}
 	return compositionRequest, nil
 }
 
-func registerUserWithJob(ctx context.Context, compositionRequest *pb.CompositionRequest) error {
+func registerUserWithJob(ctx context.Context, compositionRequest *pb.CompositionRequest) (context.Context, error) {
 	logger.Debug("Entering registerUserWithJob")
 
 	// // /agents/jobs/UVA/jorrit-3141334 ->  pb.CompositionRequest
@@ -47,7 +59,7 @@ func registerUserWithJob(ctx context.Context, compositionRequest *pb.Composition
 	err := etcd.SaveStructToEtcd(etcdClient, userKey, compositionRequest)
 	if err != nil {
 		logger.Sugar().Warnf("Error saving struct to etcd: %v", err)
-		return err
+		return ctx, err
 	}
 
 	// One entry with the jobName with the userName as key
@@ -56,5 +68,5 @@ func registerUserWithJob(ctx context.Context, compositionRequest *pb.Composition
 	// 	logger.Sugar().Warnf("Error saving jobname to etcd: %v", err)
 	// 	return err
 	// }
-	return nil
+	return ctx, nil
 }
