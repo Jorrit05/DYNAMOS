@@ -1,4 +1,4 @@
-package main
+apackage main
 
 import (
 	"context"
@@ -92,7 +92,7 @@ func compositionRequestHandler(ctx context.Context, compositionRequest *pb.Compo
 	}
 
 	compositionRequest.LocalJobName = localJobname
-	err = registerUserWithJob(ctx, compositionRequest)
+	ctx, err = registerUserWithJob(ctx, compositionRequest)
 	if err != nil {
 		logger.Sugar().Errorf("Error in registering Job %v", err)
 		return ctx
