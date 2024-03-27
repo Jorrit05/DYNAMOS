@@ -26,7 +26,7 @@ func getCompositionRequest(userName string, jobName string) (*pb.CompositionRequ
 	key := fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, userName, jobName)
 
 	// Due to timing issues in ETCD we should check again. Up for a smarter way of solving this issue
-	for i := 0; i <= 3; i++ {
+	for i := 0; i <= 5; i++ {
 
 		jsonVal, err := etcd.GetAndUnmarshalJSON(etcdClient, key, &compositionRequest)
 		if err != nil {
