@@ -1,0 +1,4 @@
+/agents/jobs/VU/jorrit.stutterheim@cloudnation.nl/jorrit-stutterheim-41f46321
+{"archetype_id":"dataThroughTtp","request_type":"sqlDataRequest","role":"dataProvider","user":{"id":"12324","user_name":"jorrit.stutterheim@cloudnation.nl"},"destination_queue":"VU-in","job_name":"jorrit-stutterheim-41f46321","local_job_name":"jorrit-stutterheim-41f46321vu1"}
+/agents/jobs/VU/queueInfo/jorrit-stutterheim-41f46321vu1
+jorrit-stutterheim-41f46321vu1

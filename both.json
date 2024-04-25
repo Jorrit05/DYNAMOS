@@ -1,0 +1,14 @@
+[
+  {
+    "average_female_salary": 10.59710651035171,
+    "average_male_salary": 11.87707876756478
+  },
+  {
+    "average_female_salary": 9.656509407858328,
+    "average_male_salary": 10.954698777701207
+  },
+  { // AGREGGATED:
+    "average_female_salary": 10.202994116112576,
+    "average_male_salary": 11.443096298571648
+  }
+]
