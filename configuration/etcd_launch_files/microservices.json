@@ -41,5 +41,11 @@
         "invalidArchetypes": [
             "computeToData"
         ]
+    },
+    {
+        "name": "federated-learning",
+        "label": "computeProvider",
+        "allowedOutputs": [],
+        "invalidArchetypes": []
     }
 ]

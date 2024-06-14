@@ -15,5 +15,11 @@
         "name": "genericRequest",
         "requiredServices": [],
         "optionalServices": {}
+    }, 
+    {
+        "name": "federatedRequest",
+        "requiredServices": ["federated-learning"],
+        "optionalServices": {}
     }
+
 ]

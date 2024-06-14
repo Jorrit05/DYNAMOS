@@ -1,4 +1,4 @@
-targets := query
+targets := federated-learning
 # datasets := "/Users/jorrit/Documents/uva/thesis/DYNAMOS/configuration/datasets/"
 datasets := "../configuration/datasets/"
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
