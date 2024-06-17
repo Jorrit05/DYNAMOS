@@ -45,7 +45,34 @@
     {
         "name": "federated-learning",
         "label": "computeProvider",
-        "allowedOutputs": [],
+        "allowedOutputs": [
+            "fl-aggregate"
+        ],
+        "invalidArchetypes": []
+    },
+    {
+        "name": "fl-aggregate",
+        "label": "computeProvider",
+        "allowedOutputs": [
+            "evaluate-service", 
+            "model-service"
+        ],
+        "invalidArchetypes": []
+    },
+    {
+        "name": "evaluate-service",
+        "label": "computeProvider",
+        "allowedOutputs": ["model-service"],
+        "invalidArchetypes": []
+    },
+    {
+        "name": "model-service",
+        "label": "dataProvider",
+        "allowedOutputs": ["federated-learning", "fl-aggregate", "evaluate-service"],
         "invalidArchetypes": []
     }
+    
+
+
+
 ]

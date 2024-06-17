@@ -11,7 +11,7 @@ def train_client(X_train, y_train):
     y_train_list = y_train.values.tolist()
     
     payload = {'X_train': X_train_list, 'y_train': y_train_list}
-    response = requests.post("http://localhost:5002/train_client", json=payload)
+    response = requests.post("http://localhost:5000/train", json=payload)
     if response.status_code == 200:
         print("Training completed successfully.")
         return response.json()  # Return the client parameters
@@ -28,9 +28,24 @@ def aggregate_models(client_params, mode='sequential'):
     else:
         print(f"Error: {response.status_code}")
 
+# Function to evaluate the global model
+def evaluate_global_model(X_test, y_test):
+    global_model_response = requests.get("http://localhost:5004/get_global_model")
+    if global_model_response.status_code == 200:
+        global_model = global_model_response.json()
+        payload = {'X_test': X_test.values.tolist(), 'y_test': y_test.values.tolist(), 'global_model': global_model}
+        response = requests.post("http://localhost:5003/evaluate", json=payload)
+        if response.status_code == 200:
+            print("Evaluation done successfully.")
+            print(response.json())
+        else:
+            print(f"Error: {response.status_code}")
+    else:
+        print(f"Error fetching global model: {global_model_response.status_code}")
+
 if __name__ == '__main__':
     # Process each dataset and perform training and aggregation sequentially
-    files = ['datasets/part_1_N-CMAPSS_DS01-005.h5', 'datasets/part_2_N-CMAPSS_DS01-005.h5']
+    files = ['datasets/part_1_N-CMAPSS_DS01-005.h5', 'datasets/part_2_N-CMAPSS_DS01-005.h5','datasets/part_3_N-CMAPSS_DS01-005.h5']
     
     for file in files:
         with h5py.File(file, 'r') as hdf:
@@ -45,6 +60,9 @@ if __name__ == '__main__':
 
             X_train = df_train.drop(columns=["RUL"])  # Features
             y_train = df_train['RUL']  # Target variable
+            X_test = df_test.drop(columns=["RUL"])  # Features
+            y_test = df_test['RUL']  # Target variable
+
 
             # Train client and get parameters
             client_params = train_client(X_train, y_train)
@@ -52,4 +70,5 @@ if __name__ == '__main__':
             # Aggregate client parameters after each training
             if client_params:
                 aggregate_models(client_params, mode='sequential')
+                evaluate_global_model(X_test, y_test)
 

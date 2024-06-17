@@ -1,4 +1,4 @@
-targets := federated-learning
+targets := federated-learning fl-aggregate evaluate-service model-service
 # datasets := "/Users/jorrit/Documents/uva/thesis/DYNAMOS/configuration/datasets/"
 datasets := "../configuration/datasets/"
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)

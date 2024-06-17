@@ -18,7 +18,12 @@
     }, 
     {
         "name": "federatedRequest",
-        "requiredServices": ["federated-learning"],
+        "requiredServices": [
+            "federated-learning",
+            "fl-aggregate",
+            "evaluate-service",
+            "model-service"
+            ],
         "optionalServices": {}
     }
 
