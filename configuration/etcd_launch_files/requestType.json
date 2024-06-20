@@ -2,13 +2,13 @@
     {
         "name": "sqlDataRequest",
         "requiredServices": [
-            "dynamos-query",
-            "dynamos-algorithm"
+            "sql-query",
+            "sql-algorithm"
         ],
         "optionalServices": {
-            "dynamos-anonymize": "anonymize",
-            "dynamos-graph": "graph",
-            "dynamos-aggregate": "aggregate"
+            "sql-anonymize": "anonymize",
+            "sql-graph": "graph",
+            "sql-aggregate": "aggregate"
         }
     },
     {

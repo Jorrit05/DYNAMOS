@@ -1,42 +1,42 @@
 [
     {
-        "name": "dynamos-query",
+        "name": "sql-query",
         "label": "dataProvider",
         "allowedOutputs": [
-            "dynamos-aggregate",
-            "dynamos-algorithm",
-            "dynamos-anonymize"
+            "sql-aggregate",
+            "sql-algorithm",
+            "sql-anonymize"
         ],
         "invalidArchetypes": []
     },
     {
-        "name": "dynamos-anonymize",
+        "name": "sql-anonymize",
         "label": "dataProvider",
         "allowedOutputs": [
-            "dynamos-aggregate",
-            "dynamos-algorithm"
+            "sql-aggregate",
+            "sql-algorithm"
         ],
         "invalidArchetypes": []
     },
     {
-        "name": "dynamos-algorithm",
+        "name": "sql-algorithm",
         "label": "computeProvider",
         "allowedOutputs": [
-            "dynamos-graph"
+            "sql-graph"
         ],
         "invalidArchetypes": []
     },
     {
-        "name": "dynamos-graph",
+        "name": "sql-graph",
         "label": "computeProvider",
         "allowedOutputs": [],
         "invalidArchetypes": []
     },
     {
-        "name": "dynamos-aggregate",
+        "name": "sql-aggregate",
         "label": "computeProvider",
         "allowedOutputs": [
-            "dynamos-algorithm"
+            "sql-algorithm"
         ],
         "invalidArchetypes": [
             "computeToData"

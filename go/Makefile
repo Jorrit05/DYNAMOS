@@ -1,8 +1,7 @@
-targets := sidecar policy-enforcer orchestrator agent algorithm test anonymize api-gateway aggregate
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
-api_targets := sidecar orchestrator api-gateway
-microservices := algorithm anonymize aggregate
-agents := sidecar policy-enforcer orchestrator agent
+sql_microservices := sql-algorithm sql-anonymize sql-aggregate sql-test
+dynamos := sidecar policy-enforcer orchestrator agent api-gateway
+dockerhub_account := dynamos1
 
 prepare:
 	go mod tidy
@@ -11,18 +10,25 @@ prepare:
 proto:
 	protoc -I ../proto-files --go_out=./pkg/proto --go_opt=paths=source_relative --go-grpc_out=./pkg/proto --go-grpc_opt=paths=source_relative ../proto-files/*.proto
 
-$(targets): prepare
+$(dynamos): prepare
 	cp Dockerfile go.mod go.sum ./cmd/$@
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
-	docker build --build-arg NAME='$@' -t jorrit05/dynamos-$@:$(branch_name) -t jorrit05/dynamos-$@:latest ./cmd/$@/)
-	docker push jorrit05/dynamos-$@:$(branch_name)
-	docker push jorrit05/dynamos-$@:latest
+	docker build --build-arg NAME='$@' -t $(dockerhub_account)/$@:$(branch_name) -t $(dockerhub_account)/$@:latest ./cmd/$@/)
+	docker push $(dockerhub_account)/$@:$(branch_name)
+	docker push $(dockerhub_account)/$@:latest
 
-all: $(targets)
-api: $(api_targets)
-microservices: $(microservices)
-agents: $(agents)
 
-.PHONY: $(targets) prepare proto sidecar algorithm test anonymize
+$(sql_microservices): prepare proto
+	cp Dockerfile go.mod go.sum ./cmd/$@
+	cp -r pkg ./cmd/$@
+	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
+	docker build --build-arg NAME='$@' -t $(dockerhub_account)/$@:$(branch_name) -t $(dockerhub_account)/$@:latest ./cmd/$@/)
+	docker push $(dockerhub_account)/$@:$(branch_name)
+	docker push $(dockerhub_account)/$@:latest
 
+all: $(dynamos) $(sql_microservices)
+dynamos: $(dynamos)
+sql_microservices: $(sql_microservices)
+
+.PHONY: all prepare proto $(dynamos) $(sql_microservices)
