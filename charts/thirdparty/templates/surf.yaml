@@ -18,7 +18,7 @@ spec:
       serviceAccountName: job-creator-surf
       containers:
       - name: surf
-        image: jorrit05/dynamos-agent:{{ .Values.branchNameTag }}
+        image: {{ .Values.dockerArtifactAccount }}/agent:{{ .Values.branchNameTag }}
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -28,7 +28,7 @@ spec:
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
       - name: sidecar
-        image: jorrit05/dynamos-sidecar:{{ .Values.branchNameTag }}
+        image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
         imagePullPolicy: Always
         env:
         - name: AMQ_PASSWORD

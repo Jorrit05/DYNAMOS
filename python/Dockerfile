@@ -16,6 +16,7 @@ COPY ./grpc_lib/*.py /app/grpc_lib
 COPY ./*.csv /app/datasets
 
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade numpy pandas
 
 ENV  ENV="PROD"
 ENV PYTHONPATH="/app/grpc_lib"

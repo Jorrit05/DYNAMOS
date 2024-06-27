@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: orchestrator
-        image: jorrit05/dynamos-orchestrator:{{ .Values.branchNameTag }}
+        image: {{ .Values.dockerArtifactAccount }}/orchestrator:{{ .Values.branchNameTag }}
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -32,7 +32,7 @@ spec:
         #   limits:
         #     memory: "256Mi"
       - name: sidecar
-        image: jorrit05/dynamos-sidecar:{{ .Values.branchNameTag }}
+        image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
         imagePullPolicy: Always
         env:
         - name: AMQ_PASSWORD
