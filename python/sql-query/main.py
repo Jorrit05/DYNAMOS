@@ -4,13 +4,16 @@ import re
 import time
 import sys
 import os
-from rabbit_client import RabbitClient
-from microservice_client import MsCommunication
+from dynamos.rabbit_client import RabbitClient
+from dynamos.microservice_client import MsCommunication
+from dynamos.logger import InitLogger
+from dynamos import rabbitMQ_pb2 as rabbitTypes
+from dynamos import microserviceCommunication_pb2 as msCommTypes
+
 from google.protobuf.struct_pb2 import Struct, Value, ListValue
-import rabbitMQ_pb2 as rabbitTypes
-import microserviceCommunication_pb2 as msCommTypes
+# import rabbitMQ_pb2 as rabbitTypes
+# import microserviceCommunication_pb2 as msCommTypes
 import json
-from my_logger import InitLogger
 import argparse
 from opentelemetry import trace, context
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter

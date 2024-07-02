@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-package proto;
+// package proto;
+package dynamos;
 
 option go_package = "github.com/Jorrit05/DYNAMOS/pkg/proto";
 import "google/protobuf/empty.proto";
