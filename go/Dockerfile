@@ -26,7 +26,11 @@ ARG NAME
 ENV NAME=$NAME
 RUN apk --no-cache add ca-certificates
 
+
+
+
 WORKDIR /app/
+
 
 # Copy the pre-built binary from the previous stage
 COPY --from=builder /go/bin/$NAME .

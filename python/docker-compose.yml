@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  model-service:
+    image: jorrit05/dynamos-model-service
+    ports:
+      - "5004:5004"
+    networks:
+      - federated-net
+
+  fl-aggregate:
+    image: jorrit05/dynamos-fl-aggregate
+    ports:
+      - "5002:5002"
+    networks:
+      - federated-net
+
+  evaluate-service:
+    image: jorrit05/dynamos-evaluate-service
+    ports:
+      - "5003:5003"
+    networks:
+      - federated-net
+
+  federated-learning:
+
+    volumes:
+      - /app/datasets
+
+    image: jorrit05/dynamos-federated-learning
+    ports:
+      - "5000:5000"
+    networks:
+      - federated-net
+    depends_on:
+      - model-service
+      - fl-aggregate
+      - evaluate-service
+
+networks:
+  federated-net:
+    driver: bridge

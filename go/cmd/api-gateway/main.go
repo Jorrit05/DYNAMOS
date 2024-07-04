@@ -73,7 +73,9 @@ func main() {
 
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/requestApproval", &ochttp.Handler{Handler: requestHandler()})
+
 	apiMux.Handle("/getAvailableProviders", &ochttp.Handler{Handler: availableProvidersHandler()})
+	apiMux.Handle("/startFedLearning", &ochttp.Handler{Handler: 	flRequestHandler()})
 	// go socketServer(apiMux)
 	// server := socketio.NewServer(&engineio.Options{
 	// 	Transports: []transport.Transport{

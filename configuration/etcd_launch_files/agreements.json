@@ -64,5 +64,62 @@
     {
         "name": "RUG",
         "relations": {}
+    },
+    {
+        "name": "KLM",
+        "relations": {
+            "datascientist@klm.nl": {
+                "ID": "GUID",
+                "requestTypes": [
+                    "flRequest"
+                ],
+
+                "allowedArchetypes": [
+                    "computeToData",
+                    "dataThroughTtp"
+                ],
+                "allowedComputeProviders": [
+                    "SURF"
+                ]
+            }
+        },
+        "computeProviders": [
+            "SURF",
+            "otherCompany"
+        ],
+        "archetypes": [
+            "computeToData",
+            "dataThroughTtp",
+            "reproducableScience"
+        ]
+    },
+    {
+        "name": "AF",
+        "relations": {
+            "datascientist@klm.nl": {
+                "ID": "GUID",
+                "requestTypes": [
+                    "flRequest"
+                ],
+
+                "allowedArchetypes": [
+                    "computeToData",
+                    "dataThroughTtp"
+                ],
+                "allowedComputeProviders": [
+                    "SURF"
+                ]
+            }
+        },
+        "computeProviders": [
+            "SURF",
+            "otherCompany"
+        ],
+        "archetypes": [
+            "computeToData",
+            "dataThroughTtp",
+            "reproducableScience"
+        ]
     }
+ 
 ]
