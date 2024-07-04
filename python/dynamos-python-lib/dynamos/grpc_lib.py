@@ -6,7 +6,7 @@ import health_pb2 as healthTypes
 
 import grpc
 import time
-from my_logger import InitLogger
+from .logger import InitLogger
 from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
 
 class SecureChannel:

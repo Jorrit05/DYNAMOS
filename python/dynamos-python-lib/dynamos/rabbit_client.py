@@ -2,9 +2,10 @@ import grpc
 import os
 import time
 
-import rabbitMQ_pb2_grpc as rabbit
-import rabbitMQ_pb2 as rabbitTypes
-from grpc_lib import SecureChannel
+from . import rabbitMQ_pb2_grpc as rabbit
+from . import rabbitMQ_pb2 as rabbitTypes
+from .grpc_lib import SecureChannel
+
 
 
 class RabbitClient(SecureChannel):

@@ -1,7 +1,8 @@
 
 import etcd_pb2_grpc as etcd
 import etcd_pb2 as etcdTypes
-from grpc_lib import SecureChannel
+from .grpc_lib import SecureChannel
+
 from google.protobuf.empty_pb2 import Empty
 
 class EtcdClient(SecureChannel):

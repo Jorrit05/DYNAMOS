@@ -3,7 +3,8 @@ import os
 import microserviceCommunication_pb2 as msServerTypes
 import microserviceCommunication_pb2_grpc as msServer
 from google.protobuf.any_pb2 import Any
-from grpc_lib import SecureChannel
+from .grpc_lib import SecureChannel
+
 # from opentelemetry.propagate import set_in_grpc_metadata
 # from grpc import Metadata
 from opentelemetry import trace, context

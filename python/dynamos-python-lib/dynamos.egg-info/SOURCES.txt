@@ -15,7 +15,6 @@ dynamos/microservice_client.py
 dynamos/rabbitMQ_pb2.py
 dynamos/rabbitMQ_pb2_grpc.py
 dynamos/rabbit_client.py
-dynamos/test.py
 dynamos.egg-info/PKG-INFO
 dynamos.egg-info/SOURCES.txt
 dynamos.egg-info/dependency_links.txt
