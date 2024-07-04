@@ -15,12 +15,12 @@ from google.protobuf.struct_pb2 import Struct, Value, ListValue
 # import microserviceCommunication_pb2 as msCommTypes
 import json
 import argparse
-from opentelemetry import trace, context
+from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.propagate import extract
+
 from opentelemetry.trace.span import TraceFlags, TraceState
 from opentelemetry.trace.propagation import set_span_in_context
 

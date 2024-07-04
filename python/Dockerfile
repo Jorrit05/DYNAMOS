@@ -8,12 +8,13 @@ ENV NAME=$NAME
 
 WORKDIR /app
 RUN mkdir $NAME
-RUN mkdir grpc_lib
 RUN mkdir datasets
+RUN mkdir protofiles
 
 COPY requirements.txt .
 COPY ./*.py /app/$NAME
-# COPY ./grpc_lib/*.py /app/grpc_lib
+COPY ./protofiles/*.py /app/protofiles
+
 COPY ./*.csv /app/datasets
 COPY $WHEEL_NAME /tmp/
 
@@ -22,6 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --upgrade numpy pandas
 
 ENV  ENV="PROD"
-# ENV PYTHONPATH="/app/grpc_lib"
+ENV PYTHONPATH="/app/protofiles"
 
 CMD ["sh", "-c", "python /app/${NAME}/main.py"]

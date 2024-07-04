@@ -7,12 +7,12 @@ dockerhub_account := dynamos1
 .PHONY: proto $(targets) dynamos
 
 proto:
-	@python3 -m grpc_tools.protoc -I../proto-files --python_out=./dynamos-python-lib/dynamos --grpc_python_out=./dynamos-python-lib/dynamos ../proto-files/*.proto
+	@python3 -m grpc_tools.protoc -I../proto-files --python_out=./dynamos-python-lib/protofiles --grpc_python_out=./dynamos-python-lib/protofiles ../proto-files/*.proto
 
 dynamos:
 	(cd ./dynamos-python-lib && python3 setup.py bdist_wheel)
 
-$(targets):
+$(targets): proto
 	cp Dockerfile ./$@
 
 	# Build the wheel for the local package
@@ -20,8 +20,9 @@ $(targets):
 
 	# Copy the wheel to the target directory
 	cp ./dynamos-python-lib/dist/*.whl ./$@
+	cp -r ./dynamos-python-lib/protofiles ./$@
 
-	@trap 'rm -f ./$@/Dockerfile; rm -rf ./$@/*.whl; rm -rf ./$@/datasets;' EXIT;  \
+	@trap 'rm -f ./$@/Dockerfile; rm -rf ./$@/*.whl; rm -rf ./$@/datasets; rm -rf ./$@/protofiles' EXIT;  \
 	WHEEL_NAME=$$(ls ./$@/*.whl); \
 	BASE=$$(basename $$WHEEL_NAME); \
 	docker build --build-arg NAME=$@ -t $(dockerhub_account)/$@:$(branch_name) --build-arg WHEEL_NAME=$$BASE -t $(dockerhub_account)/$@:latest ./$@/

@@ -7,7 +7,7 @@ from .grpc_lib import SecureChannel
 
 # from opentelemetry.propagate import set_in_grpc_metadata
 # from grpc import Metadata
-from opentelemetry import trace, context
+from opentelemetry import trace
 
 class MsCommunication(SecureChannel):
     def __init__(self, config, ctx):
