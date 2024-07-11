@@ -267,5 +267,5 @@ func getMicroserviceTag(msName string) string {
 		return tag
 	}
 
-	return "latest"
+	return "main"
 }
