@@ -229,7 +229,7 @@ cp configuration/k8s_service_files/definitions_example.json configuration/k8s_se
 ```
 Update the docker password in the definitions file
 ```bash
-Send an email to the create Jorrit to get the password
+Send an email to create Jorrit to get the password
 ```
 
 ## Update hostfile
