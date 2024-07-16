@@ -146,7 +146,7 @@ func addSidecar() v1.Container {
 	sidecarName := os.Getenv("SIDECAR_NAME")
 
 	if sidecarName == "" {
-		sidecarName = "dynamos-sidecar"
+		sidecarName = "sidecar"
 	}
 
 	repositoryName := os.Getenv("SIDECAR_REPOSITORY_NAME")
