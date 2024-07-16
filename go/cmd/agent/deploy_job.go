@@ -151,7 +151,7 @@ func addSidecar() v1.Container {
 
 	repositoryName := os.Getenv("SIDECAR_REPOSITORY_NAME")
 	if repositoryName == "" {
-		repositoryName = "jorrit05"
+		repositoryName = "dynamos1"
 	}
 
 	sidecarTag := getMicroserviceTag(sidecarName)
@@ -162,7 +162,7 @@ func addSidecar() v1.Container {
 	return v1.Container{
 		Name:            sidecarName,
 		Image:           fullImage,
-		ImagePullPolicy: v1.PullIfNotPresent,
+		ImagePullPolicy: "Always",
 		Env: []v1.EnvVar{
 			{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 			{Name: "TEMPORARY_JOB", Value: "true"},
