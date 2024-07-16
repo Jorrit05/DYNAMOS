@@ -108,7 +108,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 		container := v1.Container{
 			Name:            microservice.Name,
 			Image:           fullImage,
-			ImagePullPolicy: v1.PullIfNotPresent,
+			ImagePullPolicy: "Always",
 			Env: []v1.EnvVar{
 				{Name: "DATA_STEWARD_NAME", Value: strings.ToUpper(dataStewardName)},
 				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
