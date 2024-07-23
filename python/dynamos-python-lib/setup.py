@@ -4,6 +4,7 @@ setup(
     name='dynamos',
     version='0.1',
     packages=find_packages(),
+    include_package_data=True,
     install_requires=[
         'grpcio==1.59.3',
         'google>=3.0.0',

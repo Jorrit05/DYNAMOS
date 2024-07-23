@@ -27,6 +27,8 @@ spec:
           value: UVA
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
+        - name: SQL-QUERY_TAG
+          value: latest
         # resources:
         #   requests:
         #     memory: "128Mi"

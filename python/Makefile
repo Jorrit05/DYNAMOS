@@ -12,6 +12,7 @@ proto:
 dynamos:
 	(cd ./dynamos-python-lib && python3 setup.py bdist_wheel)
 
+# Set PYTHONPATH to protofiles directory for includes to GRPC code to work
 $(targets): proto
 	cp Dockerfile ./$@
 

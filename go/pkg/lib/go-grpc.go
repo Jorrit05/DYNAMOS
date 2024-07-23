@@ -10,6 +10,14 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// GetGrpcConnection establishes a gRPC connection to the specified address.
+// It returns a *grpc.ClientConn if the connection is successfully established,
+// otherwise it logs a fatal error and exits the program.
+// The function makes up to 7 retries with a 1-second delay between each retry
+// until the gRPC server is serving or until it reaches the maximum number of retries.
+// The function uses the pb.HealthClient to check the health status of the gRPC server.
+// It uses an insecure transport credentials and an ocgrpc.ClientHandler for stats handling.
+// The function takes the gRPC address as a parameter.
 func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 	var conn *grpc.ClientConn
 	var err error

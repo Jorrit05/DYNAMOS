@@ -2,26 +2,26 @@ This document provides guidelines to installing all dependencies of DYNAMOS.
 
 **NOTE**: This document mainly focuses on Linux based commands. Thus we expect Windows users to enable Windows Subsystem for Linux 2. If there are any special instructions related to other operating systems, it will clearly be highlighted.
 
-# Prerequisites 
+# Prerequisites
 ## WSL2 (Windows)
 There are multiple ways to enable this, whether that be through the CLI, the Windows store or some other magical way. Here is one example of a tutorial:
 https://learn.microsoft.com/en-us/windows/wsl/install
 ## Docker Desktop
 https://www.docker.com/products/docker-desktop/
-Extra instructions: 
+Extra instructions:
 1. Make sure to enable Kubernetes and provide sufficient resources to Docker when installed. We recommend at least 8GB of RAM and 4 CPU cores
 2. **For Windows users**: Make sure to enable WSL integration in the settings menu. If the option is not there, you may need to edit a script within windows to enable the integration.
-3. 
+3.
 
 # Installing
 
 ## Helm
 Software to deploy all the DYNAMOS environment
 https://helm.sh/docs/intro/install/
-## Linkerd 
+## Linkerd
 https://linkerd.io/2.15/getting-started/
 ## kubectl
-CLI tool to interact with Kubernetes: 
+CLI tool to interact with Kubernetes:
 
 On linux you can simply do:
 ```bash
@@ -32,7 +32,7 @@ https://kubernetes.io/docs/tasks/tools/
 
 https://docs.brew.sh/Homebrew-on-Linux
 
-## k9s (optional) 
+## k9s (optional)
 Preqeqs: Homebrew
 Useful CLI tool to view all currently running kuberentes containers.
 https://k9scli.io/topics/install/
@@ -48,7 +48,7 @@ linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
 linkerd check
 
 linkerd jaeger install | kubectl apply -f -
-# Maybe linerkd wiz install | kubectl apply -f - 
+# Maybe linerkd wiz install | kubectl apply -f -
 ```
 
 ### RabbitqMQ
@@ -138,18 +138,6 @@ delete_jobs() {
   etcdctl --endpoints=http://localhost:30005 del /agents/jobs/SURF/queueInfo/jorrit-stutterheim- --prefix
 }
 
-uninstall_all(){
-  helm uninstall orchestrator
-  helm uninstall surf
-  helm uninstall agent
-  helm uninstall api-gateway
-  helm uninstall core
-}
-
-uninstall_orch(){
-  helm uninstall orchestrator
-}
-
 deploy_all(){
   deploy_orchestrator
   deploy_agent
@@ -158,6 +146,13 @@ deploy_all(){
   deploy_core
 }
 
+deploy_addons(){
+  deploy_orchestrator
+  deploy_agent
+  deploy_surf
+  deploy_api_gateway
+}
+
 uninstall_all(){
   helm uninstall orchestrator
   helm uninstall surf
@@ -166,16 +161,15 @@ uninstall_all(){
   helm uninstall core
 }
 
-uninstall_orch(){
+uninstall_addons(){
   helm uninstall orchestrator
+  helm uninstall surf
+  helm uninstall agent
+  helm uninstall api-gateway
 }
 
-deploy_all(){
-  deploy_orchestrator
-  deploy_agent
-  deploy_surf
-  deploy_api_gateway
-  deploy_core
+uninstall_orch(){
+  helm uninstall orchestrator
 }
 
 watch_pods(){
@@ -202,11 +196,11 @@ deploy_api() {
 }
 ```
 
-## Deploy namespaces 
+## Deploy namespaces
 cd into DYNAMOS project
 ```bash
 cd /charts/namespaces
-helm install . 
+helm install .
 ```
 
 ## Delete the rabbit secrets

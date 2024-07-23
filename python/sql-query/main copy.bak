@@ -8,12 +8,12 @@ from dynamos.rabbit_client import RabbitClient
 from dynamos.microservice_client import MsCommunication
 from dynamos.logger import InitLogger
 from dynamos.tracer import InitTracer
-from dynamos.ms_init import NewConfiguration
 from dynamos import rabbitMQ_pb2 as rabbitTypes
 from dynamos import microserviceCommunication_pb2 as msCommTypes
 
 from google.protobuf.struct_pb2 import Struct, Value, ListValue
-
+# import rabbitMQ_pb2 as rabbitTypes
+# import microserviceCommunication_pb2 as msCommTypes
 import json
 import argparse
 
@@ -23,23 +23,15 @@ else:
     import config_local as config
 
 
-#---- GLOBALS
+# globals
 logger = InitLogger()
 tracer = InitTracer(config.service_name, config.tracing_host)
-
-#------------
-
-#---- LOCAL TEST SETUP OPTIONAL!
 
 # Go into local test code with flag '-t'
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--test", action='store_true')
 args = parser.parse_args()
 test = args.test
-
-#--------------------------------
-
-
 
 @tracer.start_as_current_span("load_and_query_csv")
 def load_and_query_csv(file_path_prefix, query):
@@ -198,16 +190,6 @@ def main():
         exit(0)
 
     logger.debug("Starting Query service")
-
-
-    conf = NewConfiguration(
-        service_name=config.service_name,
-        grpc_addr="localhost:",
-        COORDINATOR=COORDINATOR,
-        sidecar_callback=lambda: lambda ctx, grpc_msg: None,
-        grpc_callback=lambda ctx, data: None,
-        receive_mutex=receive_mutex
-    )
 
     if int(os.getenv("FIRST")) > 0:
         # logger.debug("First service")

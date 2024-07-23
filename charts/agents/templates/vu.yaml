@@ -25,6 +25,8 @@ spec:
           value: VU
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
+        - name: SQL-QUERY_TAG
+          value: latest
       - name: sidecar
         image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
         imagePullPolicy: Always
