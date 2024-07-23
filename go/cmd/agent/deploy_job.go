@@ -108,7 +108,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 		container := v1.Container{
 			Name:            microservice.Name,
 			Image:           fullImage,
-			ImagePullPolicy: v1.PullIfNotPresent,
+			ImagePullPolicy: "Always",
 			Env: []v1.EnvVar{
 				{Name: "DATA_STEWARD_NAME", Value: strings.ToUpper(dataStewardName)},
 				{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(port)},
@@ -146,12 +146,12 @@ func addSidecar() v1.Container {
 	sidecarName := os.Getenv("SIDECAR_NAME")
 
 	if sidecarName == "" {
-		sidecarName = "dynamos-sidecar"
+		sidecarName = "sidecar"
 	}
 
 	repositoryName := os.Getenv("SIDECAR_REPOSITORY_NAME")
 	if repositoryName == "" {
-		repositoryName = "jorrit05"
+		repositoryName = "dynamos1"
 	}
 
 	sidecarTag := getMicroserviceTag(sidecarName)
@@ -162,7 +162,7 @@ func addSidecar() v1.Container {
 	return v1.Container{
 		Name:            sidecarName,
 		Image:           fullImage,
-		ImagePullPolicy: v1.PullIfNotPresent,
+		ImagePullPolicy: "Always",
 		Env: []v1.EnvVar{
 			{Name: "DESIGNATED_GRPC_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 			{Name: "TEMPORARY_JOB", Value: "true"},
@@ -267,5 +267,5 @@ func getMicroserviceTag(msName string) string {
 		return tag
 	}
 
-	return "latest"
+	return "main"
 }
