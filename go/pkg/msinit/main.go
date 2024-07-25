@@ -146,7 +146,6 @@ func (s *Configuration) StartGrpcServer() {
 			logger.Sugar().Fatalw("failed to serve: %v", err)
 		}
 	}()
-
 }
 
 func (s *Configuration) SafeExit(oce *ocagent.Exporter, serviceName string) {

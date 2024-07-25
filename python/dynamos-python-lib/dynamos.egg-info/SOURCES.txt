@@ -1,7 +1,8 @@
 setup.py
 dynamos/__init__.py
-dynamos/etcd_client.py
-dynamos/grpc_lib.py
+dynamos/base_client.py
+dynamos/grpc_client.py
+dynamos/grpc_server.py
 dynamos/logger.py
 dynamos/microservice_client.py
 dynamos/ms_init.py
