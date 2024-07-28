@@ -110,6 +110,72 @@
         <mxCell id="f8cxn0Wl8pAEAEjFYCCp-30" value="SendData" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="1" vertex="1" connectable="0">
           <mxGeometry x="250" y="585" as="geometry" />
         </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="LEeBYhgFfHJEdmibUD4I-2" target="LEeBYhgFfHJEdmibUD4I-15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="LEeBYhgFfHJEdmibUD4I-2" target="LEeBYhgFfHJEdmibUD4I-20">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="1060" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-2" value="Python Service A" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="920" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-10" value="&lt;b&gt;Last&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="810" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-11" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="40" y="1100" as="sourcePoint" />
+            <mxPoint x="800" y="1100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="LEeBYhgFfHJEdmibUD4I-15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="490" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-17" value="WAIT for SendData" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="LEeBYhgFfHJEdmibUD4I-16">
+          <mxGeometry x="-0.2031" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-15" value="Start GRPC server" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="830" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="LEeBYhgFfHJEdmibUD4I-18" target="LEeBYhgFfHJEdmibUD4I-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-25" value="Send processed to next service" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="LEeBYhgFfHJEdmibUD4I-24">
+          <mxGeometry x="-0.2364" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-18" value="Process MSCOMM" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="830" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="LEeBYhgFfHJEdmibUD4I-20" target="LEeBYhgFfHJEdmibUD4I-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-23" value="Wait for processed &lt;br&gt;MSCOMM" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="LEeBYhgFfHJEdmibUD4I-22">
+          <mxGeometry x="-0.1875" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-20" value="Create connection to next client" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="1000" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="LEeBYhgFfHJEdmibUD4I-21" target="LEeBYhgFfHJEdmibUD4I-26">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-21" value="Send data to next connection" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="1000" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="LEeBYhgFfHJEdmibUD4I-26" value="Python Service B&lt;br&gt;or&lt;br&gt;sidecar" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="685" y="1000" width="120" height="60" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>

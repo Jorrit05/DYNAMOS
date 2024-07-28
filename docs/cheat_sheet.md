@@ -102,6 +102,12 @@ export FIRST="0"
 export LAST="1"
 
 
+# LAST PYTHON SERVICE:
+
+export SIDECAR_PORT=50051
+export DESIGNATED_GRPC_PORT=50052
+export FIRST=0
+export LAST=1
 
 # LInkerD
 

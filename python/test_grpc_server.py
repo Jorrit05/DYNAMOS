@@ -2,24 +2,26 @@ import grpc
 from concurrent import futures
 from dynamos.logger import InitLogger
 from dynamos.grpc_server import GRPCServer
+import microserviceCommunication_pb2 as msCommTypes
 import time
 
 # Configure logging
 logger = InitLogger()
 
 
-def msCommHandler(msComm):
+def msCommHandler(msComm : msCommTypes.MicroserviceCommunication):
     logger.info(f"Start msCommHandler")
 
-    logger.info(f"Received message mscomm: {msComm.request_metadata.destination_queue}")
-    logger.info(f"Received message mscomm: {msComm.request_type}")
+    logger.debug(f"Received message of request type: {msComm.request_type}")
 
     # Implement the logic to handle the message here
 
 
 
+
+
 def main():
-    server = GRPCServer("localhost:50052", msCommHandler)
+    server = GRPCServer("localhost:50053", msCommHandler)
     server.start()
 
 

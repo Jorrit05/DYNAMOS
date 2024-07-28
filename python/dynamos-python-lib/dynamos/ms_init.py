@@ -64,15 +64,15 @@ def NewConfiguration(service_name,
         conf.NextClient = conf.SidecarConnection
     elif conf.FirstService:
         # First service, connect to sidecar for processing and look for next MS for connecting to
-        # conf.SidecarConnection = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
-        # conf.init_sidecar_messaging(receive_mutex)
+        conf.SidecarConnection = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
+        conf.init_sidecar_messaging(receive_mutex)
         conf.NextClient = GRPCClient(grpc_addr + str(conf.Port + 1))
     elif conf.LastService:
         # Last service, connect to sidecar as final destination and start own server to receive from previous MS
-        conf.GrpcServer = GRPCServer(conf.Port)
+        conf.GrpcServer = GRPCServer(grpc_addr + str(conf.Port), sidecar_callback)
         conf.NextClient = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
     else:
-        conf.GrpcServer = GRPCServer(conf.Port)
+        conf.GrpcServer = GRPCServer(grpc_addr + str(conf.Port))
         conf.NextClient = GRPCClient(grpc_addr + str(conf.Port + 1))
 
     # COORDINATOR.set()  # Signal the coordinator, all connections setup

@@ -73,7 +73,7 @@ class GRPCServer:
         self.server.add_insecure_port(self.grpc_addr)
         self.stop_event = threading.Event()
         self.condition = threading.Condition()
-
+        self.start()
 
     def start_server(self):
         self.server.start()
