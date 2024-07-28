@@ -8,16 +8,24 @@ import time
 logger = InitLogger()
 
 
-def main():
-    server = GRPCServer("localhost:50051")
+def msCommHandler(msComm):
+    logger.info(f"Start msCommHandler")
 
+    logger.info(f"Received message mscomm: {msComm.request_metadata.destination_queue}")
+    logger.info(f"Received message mscomm: {msComm.request_type}")
+
+    # Implement the logic to handle the message here
+
+
+
+def main():
+    server = GRPCServer("localhost:50052", msCommHandler)
     server.start()
 
 
     # Example of other tasks that can run while the server is running
     try:
         while True:
-            print("Running other tasks...")
             time.sleep(5)
     except KeyboardInterrupt:
         print("KeyboardInterrupt received, stopping server...")

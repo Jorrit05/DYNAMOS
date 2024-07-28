@@ -34,13 +34,12 @@ class HealthServicer(healthServer.HealthServicer):
         )
 
 
-
 class MicroserviceServicer(msCommServer.MicroserviceServicer):
-    def __init__(self):
-        self.callbacks: Dict[int, CallbackType] = {}
+    def __init__(self, msCommHandler: Callable[[msCommTypes.MicroserviceCommunication], Empty]):
+        self.callback: CallbackType = msCommHandler
 
-    def SendData(self, msComm):
-        logger.debug(f"Starting grpc_server.py/SendData: {msComm.RequestMetadata.DestinationQueue}")
+    def SendData(self, msComm, context):
+        logger.debug(f"Starting MicroserviceServicer grpc_server.py/SendData: {msComm.request_metadata.destination_queue}")
 
         span = trace.get_current_span()
         try:
@@ -51,33 +50,25 @@ class MicroserviceServicer(msCommServer.MicroserviceServicer):
             logger.warn(f"Error starting span: {err}")
             span.end()
 
-        callback = self.callbacks.get(request.Type)
-        if not callback:
-            logger.warn("no callback registered for this message type")
-            return Empty()
-
-        logger.debug("In SendData function:")
         try:
-            callback(context, request)
+            self.callback(msComm)
         except Exception as err:
-            logger.error(f"Callback Error: {err}")
+            logger.error(f"SendData Error: {err}")
             return Empty()
 
         return Empty()
 
-    def register_callback(self, message_type: int, callback: CallbackType) -> None:
-        self.callbacks[message_type] = callback
-
 
 class GRPCServer:
-    def __init__(self, grpc_addr):
+    def __init__(self, grpc_addr, msCommHandler: Callable[[msCommTypes.MicroserviceCommunication], Empty]):
         self.grpc_addr = grpc_addr
+        self.callback: CallbackType = msCommHandler
 
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         healthServer.add_HealthServicer_to_server(HealthServicer(), self.server)
+        msCommServer.add_MicroserviceServicer_to_server(MicroserviceServicer(self.callback), self.server)
     #     # rabbitServer.add_RabbitServicer_to_server(RabbitServicer(), self.server)
     #     # etcdServer.add_EtcdServicer_to_server(EtcdServicer(), self.server)
-    #     # .add_MicroserviceServicer_to_server(MicroserviceServicer(), self.server)
 
         self.server.add_insecure_port(self.grpc_addr)
         self.stop_event = threading.Event()

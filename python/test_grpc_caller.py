@@ -1,5 +1,6 @@
 
-from dynamos.grpc_client import GRPCClient
+# from dynamos.grpc_client import GRPCClient
+from dynamos.ms_init import NewConfiguration
 from dynamos.logger import InitLogger
 from google.protobuf import struct_pb2, any_pb2
 import microserviceCommunication_pb2_grpc as msCommServer
@@ -9,12 +10,6 @@ import generic_pb2 as genericTypes
 # Initialize the logger (assuming InitLogger is correctly defined somewhere in dynamos.logger)
 logger = InitLogger()
 
-grpc_addr = "localhost:50051"
-client = GRPCClient(grpc_addr)
-
-# Check health statuss
-health_status = client.health.check_health()
-print(f"Health status: {health_status}")
 
 def getMsComm():
     # Create an instance of MicroserviceCommunication
@@ -50,7 +45,7 @@ def getMsComm():
         job_id="job_12345"
     )
     msComm.request_metadata.CopyFrom(request_metadata)
-
+    logger.warning(f"msComm.request_metadata: {msComm.request_metadata}")
     # Populate the traces field with some test data
     msComm.traces["trace_key1"] = b'trace_value1'
     msComm.traces["trace_key2"] = b'trace_value2'
@@ -62,14 +57,28 @@ def getMsComm():
     msComm.routing_data.extend(["route1", "route2", "route3"])
 
     # Print the message for verification
-    print(msComm)
+    # print(msComm)
     return data_struct, msComm
+
+
+def request_handler(msComm):
+    logger.info(f"Received request: ")
+
+    # do logic...
+
+    data_struct, msComm = getMsComm()
+
+    client.ms_comm.send_data(data_struct, msComm.metadata,  msComm)
+
+
+
+grpc_addr = "localhost:"
+
+conf = NewConfiguration("caller", grpc_addr, "COORDINATOR", request_handler, None, None)
 
 data_struct, msComm = getMsComm()
 
-client.ms_comm.send_data(data_struct, msComm.metadata,  msComm)
-# Initialize sidecar messaging
-# init_request = sidecarTypes.InitRequest()
-# client.sidecar.initialize_messaging(init_request)
+conf.NextClient.ms_comm.send_data(data_struct, msComm.metadata,  msComm)
 
-client.close_program()
+
+# client.close_program()

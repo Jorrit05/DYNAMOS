@@ -7,17 +7,17 @@ from .grpc_server import GRPCServer
 logger = InitLogger()
 
 class Configuration:
-    def __init__(self, port, first_service, last_service, service_name, sidecar_callback, grpc_callback):
+    def __init__(self, port, first_service, last_service, service_name, sidecar_callback):
         self.Port = port
         self.FirstService = first_service
         self.LastService = last_service
         self.ServiceName = service_name
         self.SidecarConnection = None
-        self.NextConnection = None
+        self.NextClient = None
         self.SideCarCallback = sidecar_callback
-        self.GrpcCallback = grpc_callback
-        self.StopMicroservice = None  # Placeholder for stopping the service
-        self.GrpcServer = None  # Placeholder for gRPC server
+        # self.GrpcCallback = grpc_callback
+        # self.StopMicroservice = None  # Placeholder for stopping the service
+        # self.GrpcServer = None  # Placeholder for gRPC server
 
     def init_sidecar_messaging(self, receive_mutex):
         pass  # Implement sidecar messaging initialization
@@ -27,7 +27,7 @@ def NewConfiguration(service_name,
                       grpc_addr,
                       COORDINATOR,
                       sidecar_callback,
-                      grpc_callback,
+                      next_callback,
                       receive_mutex):
     try:
         port = int(os.getenv("DESIGNATED_GRPC_PORT"))
@@ -54,26 +54,26 @@ def NewConfiguration(service_name,
         last_service=last_service > 0,
         service_name=service_name,
         sidecar_callback=sidecar_callback,
-        grpc_callback=grpc_callback
+        # receive_callback=receive_callback
     )
 
     if conf.FirstService and conf.LastService:
         # First and last, connect to sidecar for processing and final destination
         conf.SidecarConnection = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
         conf.init_sidecar_messaging(receive_mutex)
-        conf.NextConnection = conf.SidecarConnection
+        conf.NextClient = conf.SidecarConnection
     elif conf.FirstService:
         # First service, connect to sidecar for processing and look for next MS for connecting to
-        conf.SidecarConnection = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
-        conf.init_sidecar_messaging(receive_mutex)
-        conf.NextConnection = GRPCClient(grpc_addr + str(conf.Port + 1))
+        # conf.SidecarConnection = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
+        # conf.init_sidecar_messaging(receive_mutex)
+        conf.NextClient = GRPCClient(grpc_addr + str(conf.Port + 1))
     elif conf.LastService:
         # Last service, connect to sidecar as final destination and start own server to receive from previous MS
         conf.GrpcServer = GRPCServer(conf.Port)
-        conf.NextConnection = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
+        conf.NextClient = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
     else:
         conf.GrpcServer = GRPCServer(conf.Port)
-        conf.NextConnection = GRPCClient(grpc_addr + str(conf.Port + 1))
+        conf.NextClient = GRPCClient(grpc_addr + str(conf.Port + 1))
 
-    COORDINATOR.set()  # Signal the coordinator, all connections setup
+    # COORDINATOR.set()  # Signal the coordinator, all connections setup
     return conf

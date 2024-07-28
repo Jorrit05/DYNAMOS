@@ -65,12 +65,12 @@ class MicroserviceClient(BaseClient):
             msComm.metadata[key] = value
 
         # Add metadata to gRPC call
-        span = trace.get_current_span()
-        span_context = span.get_span_context()
-        print(f"Span ID: {hex(span_context.span_id)[2:].zfill(16)}")
-        print(f"Span trace_id: {hex(span_context.trace_id)[2:].zfill(16)}")
-        print(f"Span trace_flags: {hex(span_context.trace_flags)[2:].zfill(2)}")
-        print(f"Span trace_state: {span_context.trace_state}")
+        # span = trace.get_current_span()
+        # span_context = span.get_span_context()
+        # # print(f"Span ID: {hex(span_context.span_id)[2:].zfill(16)}")
+        # # print(f"Span trace_id: {hex(span_context.trace_id)[2:].zfill(16)}")
+        # # print(f"Span trace_flags: {hex(span_context.trace_flags)[2:].zfill(2)}")
+        # # print(f"Span trace_state: {span_context.trace_state}")
 
         logger.debug(f"Sending message to {self.stub}")
         self.stub.SendData(msComm)
