@@ -24,7 +24,7 @@ def getMsComm():
     # Create and populate the Struct message for the data field
     data_struct = struct_pb2.Struct()
     data_struct.update({
-        "key1": "value1",
+        "type": "sqlDataRequest",
         "key2": 1234,
         "key3": True
     })
@@ -66,10 +66,11 @@ def getMsComm():
 
 
 grpc_addr = "localhost:"
-data_struct, msComm = getMsComm()
+data, msComm = getMsComm()
 client = GRPCClient("localhost:50052")
+logger.debug(f"msComm type: {type(msComm)}")
 
-client.ms_comm.send_data(data_struct, msComm.metadata,  msComm)
+client.ms_comm.send_data(msComm, data, msComm.metadata)
 
 
 # client.close_program()

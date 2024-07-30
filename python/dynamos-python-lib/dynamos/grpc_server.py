@@ -12,12 +12,12 @@ from typing import Callable, Dict
 import health_pb2_grpc as healthServer
 import health_pb2 as healthTypes
 import microserviceCommunication_pb2_grpc as msCommServer
-import microserviceCommunication_pb2 as msCommTypes
+import microserviceCommunication_pb2
 
 # Configure logging
 logger = InitLogger()
 
-CallbackType = Callable[[grpc.ServicerContext, msCommTypes.MicroserviceCommunication], Empty]
+CallbackType = Callable[[grpc.ServicerContext, microserviceCommunication_pb2.MicroserviceCommunication], Empty]
 
 
 class HealthServicer(healthServer.HealthServicer):
@@ -34,11 +34,16 @@ class HealthServicer(healthServer.HealthServicer):
         )
 
 
+def test(msComm):
+    logger.info(f"Received original request type: ")
+    return
+
+
 class MicroserviceServicer(msCommServer.MicroserviceServicer):
-    def __init__(self, msCommHandler: Callable[[msCommTypes.MicroserviceCommunication], Empty]):
+    def __init__(self, msCommHandler: Callable[[microserviceCommunication_pb2.MicroserviceCommunication], Empty()]):
         self.callback: CallbackType = msCommHandler
 
-    def SendData(self, msComm, context):
+    def SendData(self, msComm: microserviceCommunication_pb2.MicroserviceCommunication, context):
         logger.debug(f"Starting MicroserviceServicer grpc_server.py/SendData: {msComm.request_metadata.destination_queue}")
 
         span = trace.get_current_span()
@@ -51,22 +56,30 @@ class MicroserviceServicer(msCommServer.MicroserviceServicer):
             span.end()
 
         try:
+            logger.debug(f"msComm type: {type(msComm)}")
+            if not isinstance(msComm, microserviceCommunication_pb2.MicroserviceCommunication):
+                raise TypeError(f"Expected msComm to be of type microserviceCommunication_pb2.MicroserviceCommunication, got {type(msComm)}")
+
             self.callback(msComm)
+        except TypeError as e:
+            logger.error(f"TypeError: {e}")
+            return Empty()
         except Exception as err:
             logger.error(f"SendData Error: {err}")
             return Empty()
+
 
         return Empty()
 
 
 class GRPCServer:
-    def __init__(self, grpc_addr, msCommHandler: Callable[[msCommTypes.MicroserviceCommunication], Empty]):
+    def __init__(self, grpc_addr, msCommHandler: Callable[[microserviceCommunication_pb2.MicroserviceCommunication], None]):
         self.grpc_addr = grpc_addr
         self.callback: CallbackType = msCommHandler
 
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         healthServer.add_HealthServicer_to_server(HealthServicer(), self.server)
-        msCommServer.add_MicroserviceServicer_to_server(MicroserviceServicer(self.callback), self.server)
+        msCommServer.add_MicroserviceServicer_to_server(MicroserviceServicer(msCommHandler), self.server)
     #     # rabbitServer.add_RabbitServicer_to_server(RabbitServicer(), self.server)
     #     # etcdServer.add_EtcdServicer_to_server(EtcdServicer(), self.server)
 

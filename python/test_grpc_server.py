@@ -22,8 +22,6 @@ def msCommHandler(msComm : msCommTypes.MicroserviceCommunication):
 
 def main():
     server = GRPCServer("localhost:50053", msCommHandler)
-    server.start()
-
 
     # Example of other tasks that can run while the server is running
     try:

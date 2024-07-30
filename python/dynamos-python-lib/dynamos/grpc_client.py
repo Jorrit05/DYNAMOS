@@ -56,7 +56,7 @@ class MicroserviceClient(BaseClient):
         self.stub = msCommServer.MicroserviceStub(channel)
 
     # Define microservice-specific methods here
-    def send_data(self, data, metadata, msComm):
+    def send_data(self, msComm, data, metadata):
         # Populate the message fields
         msComm.data.CopyFrom(data)
 
