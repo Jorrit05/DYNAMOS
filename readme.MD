@@ -9,6 +9,34 @@ The video unfortunately does not provide a voice-over yet.
 
 The Fabric-CloudLab profile can be cloned and adapted from the [dynamos-cluster](https://github.com/Jorrit05/DYNAMOS-cluster) GitHub page.
 
+# Table of Contents
+
+- [DYNAMOS](#dynamos)
+- [Table of Contents](#table-of-contents)
+- [Installation Guide](#installation-guide)
+- [Prerequisite software tools](#prerequisite-software-tools)
+  - [1. WSL2 (for Windows)](#1-wsl2-for-windows)
+  - [2. Docker Desktop](#2-docker-desktop)
+  - [3. Homebrew (optional)](#3-homebrew-optional)
+- [Installing](#installing)
+  - [4. kubectl](#4-kubectl)
+  - [5. Helm CLI](#5-helm-cli)
+  - [6. Linkerd](#6-linkerd)
+  - [7. etcdctl (optional)](#7-etcdctl-optional)
+  - [8. k9s (optional)](#8-k9s-optional)
+- [System Configuration](#system-configuration)
+  - [9. Install script](#9-install-script)
+  - [10. RabbitMQ password process](#10-rabbitmq-password-process)
+    - [10.1. Configure Rabbit PVC](#101-configure-rabbit-pvc)
+  - [11. Ingress](#11-ingress)
+    - [11.1. Update hostfile](#111-update-hostfile)
+    - [11.2. Example Request](#112-example-request)
+- [Bashrc shortcuts](#bashrc-shortcuts)
+  - [12. Add DYNAMOS env vars and helper functions to shell](#12-add-dynamos-env-vars-and-helper-functions-to-shell)
+- [Troubleshooting](#troubleshooting)
+  - [13. Services crash because the connection to RabbitMQ does not work](#13-services-crash-because-the-connection-to-rabbitmq-does-not-work)
+
+
 # Installation Guide
 
 This document provides guidelines to installing all dependencies of DYNAMOS.
@@ -18,14 +46,14 @@ This document provides guidelines to installing all dependencies of DYNAMOS.
 # Prerequisite software tools
 In order to setup DYNAMOS, we need to install a few tools as a foundation. This section covers such tools.
 
-## WSL2 (for Windows)
+##  1. <a name='WSL2forWindows'></a>WSL2 (for Windows)
 Linux based operating systems must be used for DYNAMOS. If Windows must be used, the Windows Subsystem for Linux (WSL2) must be used.
 
 Please refer to Windows documentation on how to enable this. Here is one example of a tutorial:
 
 https://learn.microsoft.com/en-us/windows/wsl/install
 
-## Docker Desktop
+##  2. <a name='DockerDesktop'></a>Docker Desktop
 For local development we utilise Docker Desktop, as upon installation we get Kubernetes for free in an easily manageable interface.
 
 Using Minikube is not recommended, it should technically work but has its own set of challenges is not supported in these documents.
@@ -38,7 +66,7 @@ Extra instructions:
 1. Make sure to enable Kubernetes and provide sufficient resources to Docker when installed. We recommend at least 8GB of RAM and 4 CPU cores.
 2. **For Windows users**: Make sure to enable WSL integration in the settings menu. If the option is not there, you may need to edit a script within windows to enable the integration. If you are encountering issues with enabling WSL on Docker, use this blog as a reference: https://docs.docker.com/desktop/wsl/
 
-## Homebrew (optional)
+##  3. <a name='Homebrewoptional'></a>Homebrew (optional)
 A package manager that may ease the setup process. This is automatically installed on most MacOS systems, however it requires some setup for Linux.
 
 Homebrew for Linux:
@@ -51,7 +79,7 @@ Homebrew is not available for Windows, however it is available for WSL.
 # Installing
 Now that we have our environment setup, we can start installing the required software to deploy DYNAMOS.
 
-## kubectl
+##  4. <a name='kubectl'></a>kubectl
 https://kubernetes.io/docs/tasks/tools/
 
 Kubernetes CLI tool.
@@ -66,7 +94,7 @@ Snap:
 sudo snap install kubectl --classic
 ```
 
-## Helm CLI
+##  5. <a name='HelmCLI'></a>Helm CLI
 https://helm.sh/docs/intro/install/
 
 Tool that is responsible for deploying the microservices to kubernetes based off of helm charts.
@@ -87,7 +115,7 @@ sudo apt-get update
 sudo apt-get install helm
 ```
 
-## Linkerd
+##  6. <a name='Linkerd'></a>Linkerd
 https://linkerd.io/2.15/getting-started/
 
 **Prereqs**: kubectl
@@ -114,7 +142,7 @@ linkerd jaeger install | kubectl apply -f -
 # linkerd wiz install | kubectl apply -f -
 ```
 
-## etcdctl (optional)
+##  7. <a name='etcdctloptional'></a>etcdctl (optional)
 
 Required if testing DYNAMOS and you want to delete existing jobs, or check what is in the knowledge base.
 
@@ -124,7 +152,7 @@ brew install etcd
 
 See: https://etcd.io/docs/v3.5/install/
 
-## k9s (optional)
+##  8. <a name='k9soptional'></a>k9s (optional)
 https://k9scli.io/topics/install/
 
 **Preqeqs**: Homebrew
@@ -140,7 +168,7 @@ HINT: When running k9s, it will initially load the default namespaces, press 0 t
 # System Configuration
 Now that we have the required software installed, we can start configuring our system to deploy DYNAMOS to Kubernetes.
 
-## Install script
+##  9. <a name='Installscript'></a>Install script
 
 There is a shell script './configuration/dynamos-configuration.sh' that fully installs all DYNAMOS Helm charts and related configuration. In this section we describe in more detail what this does.
 
@@ -162,7 +190,7 @@ To run the script, execute the following from the root of DYNAMOS
 Understanding this script will help understanding how DYNAMOS is deployed.
 
 
-## RabbitMQ password process
+##  10. <a name='RabbitMQpasswordprocess'></a>RabbitMQ password process
 Every service in DYNAMOS that connects to RabbitMQ requires a user with a password that are configured in RabbitMQ. For now every service has the user 'normal_user' and they share a generic password that we will show how to generate here.
 
 ```bash
@@ -188,7 +216,7 @@ Now:
 - The actual password is stored as a Kubernetes secret in each namespace, so that services can access it and use it to authenticate with RabbitMQ
 
 
-### Configure Rabbit PVC
+###  10.1. <a name='ConfigureRabbitPVC'></a>Configure Rabbit PVC
 
 For a RabbitMQ container to read the definitions.json file the file needs go be uploaded to a Kubernetes PVC. This is done in with the following script, which already done by the main configuration script. Please look through to understand what it does.
 ```bash
@@ -196,13 +224,13 @@ cd configuration
 ./fill-rabbit-pvc.sh
 ```
 
-## Ingress
+##  11. <a name='Ingress'></a>Ingress
 
 To expose DYNAMOS to a user sending request an 'ingress controller' has been deployed as reverse proxy in the previous step, NGINX in this case. The only service currently exposed from DYNAMOS is the 'API gateway' on port 80.
 
 Since Kubernetes is running locally, the exposed API gateway can be accessed on 'localhost' but does need the correct domain name (api-gateway.api-gateway.svc.cluster.local). For this we edit the hostfile.
 
-### Update hostfile
+###  11.1. <a name='Updatehostfile'></a>Update hostfile
 
 To do this on Linux, use your favourite text editor with root access on the file `/etc/hosts`, like so:
 
@@ -216,7 +244,7 @@ Now add the following to hosts file:
 
 Note that this is required when trying to test DYNAMOS locally using tools such as `curl` or `postman`.
 
-### Example Request
+###  11.2. <a name='ExampleRequest'></a>Example Request
 
 To make sure we installed everything properly, let's use the AMDeX use case as an example.
 Firstly, make sure everything is deployed, which should've been done with the deployment script. Check the status on k9s or using `kubectl` to check the status of all pods method. For shortcuts see [Bashrc shortcuts.](#bashrc-shortcuts)
@@ -251,7 +279,7 @@ as a **POST** request, with the following body with **JSON** encoding:
 
 # Bashrc shortcuts
 
-## Add DYNAMOS env vars and helper functions to shell
+##  12. <a name='AddDYNAMOSenvvarsandhelperfunctionstoshell'></a>Add DYNAMOS env vars and helper functions to shell
 To make the deployment process easier, we have prepared a set of environment variables and methods that can be added to your shell rc file. These are usually the `bashrc` or `zshrc` files. Alternatively, the below commands can be added to an additional file, and included in the shell file.
 
 ```bash
@@ -396,7 +424,7 @@ or
 
 # Troubleshooting
 
-## Services crash because the connection to RabbitMQ does not work
+##  13. <a name='ServicescrashbecausetheconnectiontoRabbitMQdoesnotwork'></a>Services crash because the connection to RabbitMQ does not work
 
 See [RabbitMQ password process](#rabbitmq-password-process) and/or [Configure Rabbit PVC](#configure-rabbit-pvc)
 
