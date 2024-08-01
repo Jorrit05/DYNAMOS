@@ -125,6 +125,16 @@ linkerd jaeger install | kubectl apply -f -
 # linkerd wiz install | kubectl apply -f -
 ```
 
+## etcdctl (optional)
+
+Required if testing DYNAMOS and you want to delete existing jobs, or check what is in the knowledge base.
+
+```bash
+brew install etcd
+```
+
+See: https://etcd.io/docs/v3.5/install/
+
 ## k9s (optional)
 https://k9scli.io/topics/install/
 
@@ -167,6 +177,8 @@ Understanding this script will help understanding how DYNAMOS is deployed.
 Every service in DYNAMOS that connects to RabbitMQ requires a user with a password that are configured in RabbitMQ. For now every service has the user 'normal_user' and they share a generic password that we will show how to generate here.
 
 ```bash
+# NOTE: Below commands are snippets from the full script, for working execution see the full script for all details
+
 # Create a password for a rabbit user
 rabbit_pw=$(openssl rand -hex 16)
 
@@ -189,7 +201,7 @@ Now:
 
 ### Configure Rabbit PVC
 
-For a RabbitMQ container to read the definitions.json file the file needs go be uploaded to a Kubernetes PVC. This is done in with the following script:
+For a RabbitMQ container to read the definitions.json file the file needs go be uploaded to a Kubernetes PVC. This is done in with the following script, which already done by the main configuration script. Please look through to understand what it does.
 ```bash
 cd configuration
 ./fill-rabbit-pvc.sh
@@ -278,6 +290,7 @@ deploy_ingress() {
 # Deploy the core services to the cluster
 deploy_core() {
   helm upgrade -i -f "${coreChart}/values.yaml" core ${DYNAMOS_ROOT}/charts/core
+}
 
 # Deploy prometheus for metric collection
 #   Only needs to be deployed once
@@ -390,3 +403,15 @@ or
   source ~/.zshrc
 ```
 (or whatever shell rc is used)
+
+
+# Troubleshooting
+
+## Services crash because the connection to RabbitMQ does not work
+
+See [RabbitMQ password process](#rabbitmq-password-process) and/or [Configure Rabbit PVC](#configure-rabbit-pvc)
+
+- Is RabbitMQ running? `kubectl get pods -n core`
+- Use K9S or Kubectl to get shell access to RabbitMQ. Check whether there is a `definitions.json` file in `/mnt` with a hashed password
+- Check if a Kubernetes secret exists in the namespace of your crashing pod. `kubectl get secret "rabbit" -n <NAMESPACE> -o json | jq -r ".[\"data\"][\"password\"]" | base64 -d`
+Note, this password does not match the one in `definition.json`. But you can try hashing this password with rabbitctl and place it in the `defintions.json` to see if this was the issue.
