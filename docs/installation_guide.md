@@ -22,6 +22,8 @@ https://learn.microsoft.com/en-us/windows/wsl/install
 ## Docker Desktop
 For local development we utilise Docker Desktop, as upon installation we get Kubernetes for free in an easily manageable interface.
 
+Using Minikube is not recommended, it should technically work but has its own set of challenges is not supported in these documents.
+
 **NOTE**: In our development cycle we build and upload "finalized" images to docker hub, thus having a docker hub account may be useful if you intend to further develop services in DYNAMOS.
 
 https://www.docker.com/products/docker-desktop/
@@ -48,8 +50,6 @@ Now that we have our environment setup, we can start installing the required sof
 https://kubernetes.io/docs/tasks/tools/
 
 Kubernetes CLI tool.
-
-Now that docker desktop has installed kubernetes for us, we need to be able to communicate with it, kubectl is a useful CLI tool for this purpose.
 
 Homebrew:
 ```bash
@@ -98,6 +98,15 @@ export PATH=$HOME/.linkerd2/bin:$PATH
 
 # Install Linkerd on cluster
 linkerd install --crds | kubectl apply -f -
+linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
+
+linkerd check
+
+# Install Jaeger onto the cluster for observability
+linkerd jaeger install | kubectl apply -f -
+
+# Optionally install for insight dashboard - not currently in use
+# linkerd wiz install | kubectl apply -f -
 ```
 
 ## k9s (optional)
@@ -114,23 +123,106 @@ HINT: When running k9s, it will initially load the default namespaces, press 0 t
 ```
 
 # System Configuration
-Now that we have the required software installed, we can start configuring our system to deploy DYNAMOS to kubernetes.
+Now that we have the required software installed, we can start configuring our system to deploy DYNAMOS to Kubernetes.
 
-## Linkerd
-Use Linkerd to install jaeger onto the cluster. Other services can be installed using Linkerd, such as security and reliability related software.
+## Install script
+
+There is a shell script '../configuration/dynamos-configuration.sh' that fully installs all DYNAMOS Helm charts and related configuration. In this section we describe in more detail what this does.
+
+- Set all requirements for the RabbitMQ password, see section [RabbitMQ password process](#rabbitMQ-password-process)
+- Create all namespaces with this RabbitMQ password
+- Deploy all services:
+  - Ingress
+  - Prometheus
+  - API Gateway
+  - Orchestrations layer
+  - Exchange Layer
+  - Agents
+
+Understanding this script will help understanding how DYNAMOS is deployed.
+
+
+## RabbitMQ password process
+Every service in DYNAMOS that connects to RabbitMQ requires a user with a password that are configured in RabbitMQ. For now every service has the user 'normal_user' and they share a generic password that we will show how to generate here.
+
 ```bash
-# You probably already ran the following command when installing
-linkerd install --crds | kubectl apply -f -
+# Create a password for a rabbit user
+rabbit_pw=$(openssl rand -hex 16)
 
-linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
-linkerd check
+# Use the RabbitCtl to make a special hash of that password:
+rabbiq_mq_hash=$($SUDO docker run --rm rabbitmq: 3-management rabbitmqctl hash_password $rabbit_pw)
+hashed_pw=$(echo "$rabbiq_mq_hash" | cut -d $'\n' -f2)
 
-# Install Jaeger onto the cluster for observability
-linkerd jaeger install | kubectl apply -f -
+# The Rabbit Hashed password needs to be in definitions.json file, that is the configuration for RabbitMQ
+sed -i "s|%PASSWORD%|${hashed_pw}|g" ${rabbit_definitions_file}
 
-# Optionally install for insight dashboard - not currently in use
-# linkerd wiz install | kubectl apply -f -
+# Create Kubernetes namespaces and Kubernetes secrets with the generated password
+helm upgrade -i -f ${namespace_chart}/values.yaml namespaces ${namespace_chart} --set secret.password=${rabbit_pw}
+
 ```
+
+Now:
+- The RabbitMQ instance reads 'definitions.json' with the rabbitmqctl hashed PW.
+- The actual password is stored as a Kubernetes secret in each namespace, so that services can access it and use it to authenticate with RabbitMQ>
+
+
+### Configure Rabbit PVC
+
+For a RabbitMQ container to read the definitions.json file the file needs go be uploaded to a Kubernetes PVC. This is done in with the following script:
+```bash
+cd configuration
+./fill-rabbit-pvc.sh
+```
+
+## Ingress
+
+## Update hostfile
+To be able to access DYNAMOS from your local machine, you'll need to add the `api-gateway` service to your hosts file.
+To do this on Linux, use your favourite text editor with root access on the file `/etc/hosts`, like so:
+```bash
+sudo vim /etc/hosts
+```
+Now add the following to hosts file:
+```bash
+127.0.0.1 api-gateway.api-gateway.svc.cluster.local
+```
+Since the API gateway is the only public facing service, it is the only entry required in the hosts file. If any additional services are added, they should also be added here with a similiar pattern.
+
+Note that this is super useful when trying to test DYNAMOS locally using tools such as `curl` or `postman`.
+
+## Example Request
+To make sure we installed everything properly, let's use the AMDeX use case as an example.
+Firstly, make sure you've deployed everything, you can do that using `deploy_all()` in your CLI, or individually deploying each service and checking the status on k9s or using the `watch_pods()` method.
+
+Let's setup the request.
+
+The URL should be:
+```
+http://api-gateway.api-gateway.svc.cluster.local:32093/api/v1/requestApproval
+```
+as a **POST** request, with the following body with **JSON** encoding:
+```json
+{
+    "type": "sqlDataRequest",
+    "user": {
+        "id": "12324",
+        "userName": "jorrit.stutterheim@cloudnation.nl"
+    },
+    "dataProviders": ["VU","UVA","RUG"],
+    "data_request": {
+        "type": "sqlDataRequest",
+        "query" : "SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 1000",
+        "algorithm" : "average",
+        "options" : {
+            "graph" : false,
+            "aggregate": false
+        },
+        "requestMetadata": {}
+    }
+}
+```
+
+# Bashrc shortcuts
 
 ## Add DYNAMOS env vars and helper functions to shell
 To make the deployment process easier, we have prepared a set of environment variables and methods that can be added to your shell rc file. These are usually the `bashrc` or `zshrc` files. Alternatively, the below commands can be added to an additional file, and included in the shell file.
@@ -269,111 +361,3 @@ or
   source ~/.zshrc
 ```
 (or whatever shell rc you use)
-
-## Deploy namespaces
-After sourcing your shell rc file, register all namespaces to your cluster with:
-```bash
-  deploy_namespaces
-```
-This is required for the next step, where we register the RabbitMQ secret on all namespaces.
-
-## Install and deploy Prometheus and Nginx with Helm
-
-```bash
-# Install and deploy prometheus
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-deploy_prometheus
-
-# Install and deploy nginx
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm install -f "${coreChart}/ingress-values.yaml" nginx oci://gher.io/nginxinc/charts/
-deploy_ingress
-```
-
-## Create password for RabbitMQ user
-RabbitMQ requires a password to run properly, we do so via the
-```bash
-# Create a password for a rabbit user
-pw=$(openssl rand -base64 12)
-
-# Add password to all namespaces
-kubectl create secret generic rabbit --from-literal=password=${pw} -n orchestrator
-kubectl create secret generic rabbit --from-literal=password=${pw} -n api_gateway
-kubectl create secret generic rabbit --from-literal=password=${pw} -n uva
-kubectl create secret generic rabbit --from-literal=password=${pw} -n vu
-kubectl create secret generic rabbit --from-literal=password=${pw} -n surf
-#  If there are any new namespaces, add them here
-
-# Hash password
-docker run --rm  rabbitmq:3-management rabbitmqctl hash_password $pw
-```
-**Important**: Save the password we are going to use it in the next step!
-
-## Create definitions file
-From the root directory of DYNAMOS, create a copy of the definitions file like so:
-```bash
-cp configuration/k8s_service_files/definitions_example.json configuration/k8s_service_files/definitions.json
-```
-Update the docker password in the definitions file with the $pw we created in the previous step
-
-## Configure Rabbit PVC
-```bash
-cd configuration
-./fill-rabbit-pvc.sh
-```
-
-## Update hostfile
-To be able to access DYNAMOS from your local machine, you'll need to add the `api-gateway` service to your hosts file.
-To do this on Linux, use your favourite text editor with root access on the file `/etc/hosts`, like so:
-```bash
-sudo vim /etc/hosts
-```
-Now add the following to hosts file:
-```bash
-127.0.0.1 api-gateway.api-gateway.svc.cluster.local
-```
-Since the API gateway is the only public facing service, it is the only entry required in the hosts file. If any additional services are added, they should also be added here with a similiar pattern.
-
-Note that this is super useful when trying to test DYNAMOS locally using tools such as `curl` or `postman`.
-
-## Example Request
-To make sure we installed everything properly, let's use the AMDeX use case as an example.
-Firstly, make sure you've deployed everything, you can do that using `deploy_all()` in your CLI, or individually deploying each service and checking the status on k9s or using the `watch_pods()` method.
-
-Let's setup the request.
-
-The URL should be:
-```
-http://api-gateway.api-gateway.svc.cluster.local:32093/api/v1/requestApproval
-```
-as a **POST** request, with the following body with **JSON** encoding:
-```json
-{
-    "type": "sqlDataRequest",
-    "user": {
-        "id": "12324",
-        "userName": "jorrit.stutterheim@cloudnation.nl"
-    },
-    "dataProviders": ["VU","UVA","RUG"],
-    "data_request": {
-        "type": "sqlDataRequest",
-        "query" : "SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 1000",
-        "algorithm" : "average",
-        "options" : {
-            "graph" : false,
-            "aggregate": false
-        },
-        "requestMetadata": {}
-    }
-}
-```
-
-## Delete the rabbit secrets
-```bash
-kubectl delete secret rabbit -n orchestrator
-kubectl delete secret rabbit -n uva
-kubectl delete secret rabbit -n vu
-kubectl delete secret rabbit -n surf
-kubectl delete secret rabbit -n api-gateway
-```
