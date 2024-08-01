@@ -1,9 +1,26 @@
 # Installation Guide
 
-TODO:
-  - Add improved / automated way to fetch rabbitmq password
-  - Add description for PVC part
-  -
+# Table of contents
+- [Installation Guide](#installation-guide)
+- [Table of contents](#table-of-contents)
+- [Prerequisite software tools](#prerequisite-software-tools)
+  - [WSL2 (for Windows)](#wsl2-for-windows)
+  - [Docker Desktop](#docker-desktop)
+  - [Homebrew (optional)](#homebrew-optional)
+- [Installing](#installing)
+  - [kubectl](#kubectl)
+  - [Helm CLI](#helm-cli)
+  - [Linkerd](#linkerd)
+  - [k9s (optional)](#k9s-optional)
+- [System Configuration](#system-configuration)
+  - [Install script](#install-script)
+  - [RabbitMQ password process](#rabbitmq-password-process)
+    - [Configure Rabbit PVC](#configure-rabbit-pvc)
+  - [Ingress](#ingress)
+  - [Update hostfile](#update-hostfile)
+  - [Example Request](#example-request)
+- [Bashrc shortcuts](#bashrc-shortcuts)
+  - [Add DYNAMOS env vars and helper functions to shell](#add-dynamos-env-vars-and-helper-functions-to-shell)
 
 This document provides guidelines to installing all dependencies of DYNAMOS.
 
@@ -32,7 +49,7 @@ Extra instructions:
 1. Make sure to enable Kubernetes and provide sufficient resources to Docker when installed. We recommend at least 8GB of RAM and 4 CPU cores.
 2. **For Windows users**: Make sure to enable WSL integration in the settings menu. If the option is not there, you may need to edit a script within windows to enable the integration. If you are encountering issues with enabling WSL on Docker, use this blog as a reference: https://docs.docker.com/desktop/wsl/
 
-## Homebrew (optional)
+## Homebrew (optional) 
 A package manager that may ease the setup process. This is automatically installed on most MacOS systems, however it requires some setup for Linux.
 
 Homebrew for Linux:
@@ -42,11 +59,10 @@ https://docs.brew.sh/Homebrew-on-Linux
 
 Homebrew is not available for Windows, however it is available for WSL.
 
-
-# Installing
+# Installing 
 Now that we have our environment setup, we can start installing the required software to deploy DYNAMOS.
 
-## kubectl
+## kubectl 
 https://kubernetes.io/docs/tasks/tools/
 
 Kubernetes CLI tool.
@@ -61,7 +77,7 @@ Snap:
 sudo snap install kubectl --classic
 ```
 
-## Helm CLI
+## Helm CLI 
 https://helm.sh/docs/intro/install/
 
 Tool that is responsible for deploying the microservices to kubernetes based off of helm charts.
@@ -82,7 +98,7 @@ sudo apt-get update
 sudo apt-get install helm
 ```
 
-## Linkerd
+## Linkerd 
 https://linkerd.io/2.15/getting-started/
 
 **Prereqs**: kubectl
@@ -109,7 +125,7 @@ linkerd jaeger install | kubectl apply -f -
 # linkerd wiz install | kubectl apply -f -
 ```
 
-## k9s (optional)
+## k9s (optional) 
 https://k9scli.io/topics/install/
 
 **Preqeqs**: Homebrew
@@ -125,9 +141,14 @@ HINT: When running k9s, it will initially load the default namespaces, press 0 t
 # System Configuration
 Now that we have the required software installed, we can start configuring our system to deploy DYNAMOS to Kubernetes.
 
-## Install script
+## Install script 
 
 There is a shell script '../configuration/dynamos-configuration.sh' that fully installs all DYNAMOS Helm charts and related configuration. In this section we describe in more detail what this does.
+
+To run the script, execute the following from the root of DYNAMOS
+```sh
+  ./configuration/dynamos-configuration.sh
+```
 
 - Set all requirements for the RabbitMQ password, see section [RabbitMQ password process](#rabbitMQ-password-process)
 - Create all namespaces with this RabbitMQ password
@@ -174,9 +195,9 @@ cd configuration
 ./fill-rabbit-pvc.sh
 ```
 
-## Ingress
+## Ingress 
 
-## Update hostfile
+## Update hostfile 
 To be able to access DYNAMOS from your local machine, you'll need to add the `api-gateway` service to your hosts file.
 To do this on Linux, use your favourite text editor with root access on the file `/etc/hosts`, like so:
 ```bash
@@ -222,9 +243,9 @@ as a **POST** request, with the following body with **JSON** encoding:
 }
 ```
 
-# Bashrc shortcuts
+# Bashrc shortcuts 
 
-## Add DYNAMOS env vars and helper functions to shell
+## Add DYNAMOS env vars and helper functions to shell 
 To make the deployment process easier, we have prepared a set of environment variables and methods that can be added to your shell rc file. These are usually the `bashrc` or `zshrc` files. Alternatively, the below commands can be added to an additional file, and included in the shell file.
 
 NOTE: A few steps (that we highlight in the latter part of the guide) are required before you can use the methods provided below.
