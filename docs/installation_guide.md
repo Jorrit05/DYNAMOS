@@ -1,9 +1,9 @@
 # Installation Guide
 
 TODO:
-  - Add improved / automated way to fetch rabbitmq password 
+  - Add improved / automated way to fetch rabbitmq password
   - Add description for PVC part
-  - 
+  -
 
 This document provides guidelines to installing all dependencies of DYNAMOS.
 
@@ -13,32 +13,32 @@ This document provides guidelines to installing all dependencies of DYNAMOS.
 In order to setup DYNAMOS, we need to install a few tools as a foundation. This section covers such tools.
 
 ## WSL2 (for Windows)
-Linux based operating systems must be used for DYNAMOS. If Windows must be used, we suggest enabling the Windows Subsystem for Linux (WSL2).
+Linux based operating systems must be used for DYNAMOS. If Windows must be used, the Windows Subsystem for Linux (WSL2) must be used.
 
-There are multiple ways to enable this, whether that be through the CLI, the Windows store or some other magical way. Here is one example of a tutorial:
+Please refer to Windows documentation on how to enable this. Here is one example of a tutorial:
 
 https://learn.microsoft.com/en-us/windows/wsl/install
 
 ## Docker Desktop
-For local development we utilise Docker Desktop, as upon installation we get Kubernetes for free in an easily manageable interface. 
+For local development we utilise Docker Desktop, as upon installation we get Kubernetes for free in an easily manageable interface.
 
 **NOTE**: In our development cycle we build and upload "finalized" images to docker hub, thus having a docker hub account may be useful if you intend to further develop services in DYNAMOS.
 
 https://www.docker.com/products/docker-desktop/
 
-Extra instructions: 
+Extra instructions:
 1. Make sure to enable Kubernetes and provide sufficient resources to Docker when installed. We recommend at least 8GB of RAM and 4 CPU cores.
 2. **For Windows users**: Make sure to enable WSL integration in the settings menu. If the option is not there, you may need to edit a script within windows to enable the integration. If you are encountering issues with enabling WSL on Docker, use this blog as a reference: https://docs.docker.com/desktop/wsl/
 
 ## Homebrew (optional)
-A package manager that may ease the setup process. This is automatically installed on most MacOS systems, however it requires some setup for Linux. 
+A package manager that may ease the setup process. This is automatically installed on most MacOS systems, however it requires some setup for Linux.
 
 Homebrew for Linux:
 
 https://docs.brew.sh/Homebrew-on-Linux
 
 
-Homebrew is not available for Windows, however it is available for WSL. 
+Homebrew is not available for Windows, however it is available for WSL.
 
 
 # Installing
@@ -47,7 +47,7 @@ Now that we have our environment setup, we can start installing the required sof
 ## kubectl
 https://kubernetes.io/docs/tasks/tools/
 
-Kubernetes CLI tool. 
+Kubernetes CLI tool.
 
 Now that docker desktop has installed kubernetes for us, we need to be able to communicate with it, kubectl is a useful CLI tool for this purpose.
 
@@ -100,7 +100,7 @@ export PATH=$HOME/.linkerd2/bin:$PATH
 linkerd install --crds | kubectl apply -f -
 ```
 
-## k9s (optional) 
+## k9s (optional)
 https://k9scli.io/topics/install/
 
 **Preqeqs**: Homebrew
@@ -128,8 +128,8 @@ linkerd check
 # Install Jaeger onto the cluster for observability
 linkerd jaeger install | kubectl apply -f -
 
-# Optionally install for insight dashboard - not currently in use 
-# linkerd wiz install | kubectl apply -f - 
+# Optionally install for insight dashboard - not currently in use
+# linkerd wiz install | kubectl apply -f -
 ```
 
 ## Add DYNAMOS env vars and helper functions to shell
@@ -195,7 +195,7 @@ deploy_api_gateway() {
 ### Specific to the AMDEX usecase ###
 #####################################
 
-# Deploy the agents (UVA, VU, etc) to the cluster 
+# Deploy the agents (UVA, VU, etc) to the cluster
 deploy_agent() {
   agentChart="${DYNAMOS_ROOT}/charts/agents/values.yaml"
   helm upgrade -i -f "${agentChart}" agent ${DYNAMOS_ROOT}/charts/agents
@@ -226,7 +226,7 @@ deploy_all() {
 
 # Remove all services running in the cluster.
 #   The namespaces are not removed since that is a layer above the other services
-#   Any service can be manually removed by using `helm uninstall <name of service>` 
+#   Any service can be manually removed by using `helm uninstall <name of service>`
 uninstall_all(){
   helm uninstall orchestrator
   helm uninstall surf
@@ -266,7 +266,7 @@ restart_core() {
 ```
 or
 ```bash
-  source ~/.zshrc 
+  source ~/.zshrc
 ```
 (or whatever shell rc you use)
 
@@ -277,7 +277,7 @@ After sourcing your shell rc file, register all namespaces to your cluster with:
 ```
 This is required for the next step, where we register the RabbitMQ secret on all namespaces.
 
-## Install and deploy Prometheus and Nginx with Helm 
+## Install and deploy Prometheus and Nginx with Helm
 
 ```bash
 # Install and deploy prometheus
@@ -292,7 +292,7 @@ deploy_ingress
 ```
 
 ## Create password for RabbitMQ user
-RabbitMQ requires a password to run properly, we do so via the 
+RabbitMQ requires a password to run properly, we do so via the
 ```bash
 # Create a password for a rabbit user
 pw=$(openssl rand -base64 12)
@@ -305,7 +305,7 @@ kubectl create secret generic rabbit --from-literal=password=${pw} -n vu
 kubectl create secret generic rabbit --from-literal=password=${pw} -n surf
 #  If there are any new namespaces, add them here
 
-# Hash password 
+# Hash password
 docker run --rm  rabbitmq:3-management rabbitmqctl hash_password $pw
 ```
 **Important**: Save the password we are going to use it in the next step!
@@ -362,9 +362,9 @@ as a **POST** request, with the following body with **JSON** encoding:
         "algorithm" : "average",
         "options" : {
             "graph" : false,
-            "aggregate": false 
+            "aggregate": false
         },
-        "requestMetadata": {}   
+        "requestMetadata": {}
     }
 }
 ```
