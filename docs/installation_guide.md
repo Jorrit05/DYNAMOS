@@ -13,7 +13,7 @@ This document provides guidelines to installing all dependencies of DYNAMOS.
 In order to setup DYNAMOS, we need to install a few tools as a foundation. This section covers such tools.
 
 ## WSL2 (for Windows)
-Since we prefer to use Linux based operating systems, we suggest using the Windows Subsystem for Linux on a Windows machine. This will decrease the possibility of diverging issues when setting up the environment.
+Linux based operating systems must be used for DYNAMOS. If Windows must be used, we suggest enabling the Windows Subsystem for Linux (WSL2).
 
 There are multiple ways to enable this, whether that be through the CLI, the Windows store or some other magical way. Here is one example of a tutorial:
 
@@ -38,7 +38,7 @@ Homebrew for Linux:
 https://docs.brew.sh/Homebrew-on-Linux
 
 
-Homebrew is not available for Windows, however it is available for WSL. There are other package managers for Windows that might be useful, such as Chocolatey (https://chocolatey.org/), however we have not tested how useful it is here.
+Homebrew is not available for Windows, however it is available for WSL. 
 
 
 # Installing
@@ -98,7 +98,6 @@ export PATH=$HOME/.linkerd2/bin:$PATH
 
 # Install Linkerd on cluster
 linkerd install --crds | kubectl apply -f -
-linkerd install | kubectl apply -f -
 ```
 
 ## k9s (optional) 
@@ -129,8 +128,8 @@ linkerd check
 # Install Jaeger onto the cluster for observability
 linkerd jaeger install | kubectl apply -f -
 
-# Optionally install for security - not currently in use 
-# linerkd wiz install | kubectl apply -f - 
+# Optionally install for insight dashboard - not currently in use 
+# linkerd wiz install | kubectl apply -f - 
 ```
 
 ## Add DYNAMOS env vars and helper functions to shell
@@ -139,11 +138,6 @@ To make the deployment process easier, we have prepared a set of environment var
 NOTE: A few steps (that we highlight in the latter part of the guide) are required before you can use the methods provided below.
 
 ```bash
-## Development related variables, describe where GO is installed
-export GOROOT=/usr/local/go
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOPATH/bin:$GOROOT/bin
-
 ## DYNAMOS Configs
 
 # The directory where DYNAMOS repo is cloned
