@@ -49,7 +49,7 @@ Extra instructions:
 1. Make sure to enable Kubernetes and provide sufficient resources to Docker when installed. We recommend at least 8GB of RAM and 4 CPU cores.
 2. **For Windows users**: Make sure to enable WSL integration in the settings menu. If the option is not there, you may need to edit a script within windows to enable the integration. If you are encountering issues with enabling WSL on Docker, use this blog as a reference: https://docs.docker.com/desktop/wsl/
 
-## Homebrew (optional) 
+## Homebrew (optional)
 A package manager that may ease the setup process. This is automatically installed on most MacOS systems, however it requires some setup for Linux.
 
 Homebrew for Linux:
@@ -59,10 +59,10 @@ https://docs.brew.sh/Homebrew-on-Linux
 
 Homebrew is not available for Windows, however it is available for WSL.
 
-# Installing 
+# Installing
 Now that we have our environment setup, we can start installing the required software to deploy DYNAMOS.
 
-## kubectl 
+## kubectl
 https://kubernetes.io/docs/tasks/tools/
 
 Kubernetes CLI tool.
@@ -77,7 +77,7 @@ Snap:
 sudo snap install kubectl --classic
 ```
 
-## Helm CLI 
+## Helm CLI
 https://helm.sh/docs/intro/install/
 
 Tool that is responsible for deploying the microservices to kubernetes based off of helm charts.
@@ -98,7 +98,7 @@ sudo apt-get update
 sudo apt-get install helm
 ```
 
-## Linkerd 
+## Linkerd
 https://linkerd.io/2.15/getting-started/
 
 **Prereqs**: kubectl
@@ -125,7 +125,7 @@ linkerd jaeger install | kubectl apply -f -
 # linkerd wiz install | kubectl apply -f -
 ```
 
-## k9s (optional) 
+## k9s (optional)
 https://k9scli.io/topics/install/
 
 **Preqeqs**: Homebrew
@@ -141,7 +141,7 @@ HINT: When running k9s, it will initially load the default namespaces, press 0 t
 # System Configuration
 Now that we have the required software installed, we can start configuring our system to deploy DYNAMOS to Kubernetes.
 
-## Install script 
+## Install script
 
 There is a shell script '../configuration/dynamos-configuration.sh' that fully installs all DYNAMOS Helm charts and related configuration. In this section we describe in more detail what this does.
 
@@ -184,7 +184,7 @@ helm upgrade -i -f ${namespace_chart}/values.yaml namespaces ${namespace_chart} 
 
 Now:
 - The RabbitMQ instance reads 'definitions.json' with the rabbitmqctl hashed PW.
-- The actual password is stored as a Kubernetes secret in each namespace, so that services can access it and use it to authenticate with RabbitMQ>
+- The actual password is stored as a Kubernetes secret in each namespace, so that services can access it and use it to authenticate with RabbitMQ
 
 
 ### Configure Rabbit PVC
@@ -195,11 +195,16 @@ cd configuration
 ./fill-rabbit-pvc.sh
 ```
 
-## Ingress 
+## Ingress
 
-## Update hostfile 
-To be able to access DYNAMOS from your local machine, you'll need to add the `api-gateway` service to your hosts file.
+To expose DYNAMOS to a user sending request an 'ingress controller' has been deployed as reverse proxy in the previous step, NGINX in this case. The only service currently exposed from DYNAMOS is the 'API gateway' on port 80.
+
+Since Kubernetes is running locally, the exposed API gateway can be accessed on 'localhost' but does need the correct domain name (api-gateway.api-gateway.svc.cluster.local). For this we edit the hostfile.
+
+### Update hostfile
+
 To do this on Linux, use your favourite text editor with root access on the file `/etc/hosts`, like so:
+
 ```bash
 sudo vim /etc/hosts
 ```
@@ -207,19 +212,19 @@ Now add the following to hosts file:
 ```bash
 127.0.0.1 api-gateway.api-gateway.svc.cluster.local
 ```
-Since the API gateway is the only public facing service, it is the only entry required in the hosts file. If any additional services are added, they should also be added here with a similiar pattern.
 
-Note that this is super useful when trying to test DYNAMOS locally using tools such as `curl` or `postman`.
+Note that this is required when trying to test DYNAMOS locally using tools such as `curl` or `postman`.
 
-## Example Request
+### Example Request
+
 To make sure we installed everything properly, let's use the AMDeX use case as an example.
-Firstly, make sure you've deployed everything, you can do that using `deploy_all()` in your CLI, or individually deploying each service and checking the status on k9s or using the `watch_pods()` method.
+Firstly, make sure everything is deployed, which should've been done with the deployment script. Check the status on k9s or using `kubectl` to check the status of all pods method. For shortcuts see [Bashrc shortcuts.](#bashrc-shortcuts)
 
 Let's setup the request.
 
 The URL should be:
 ```
-http://api-gateway.api-gateway.svc.cluster.local:32093/api/v1/requestApproval
+http://api-gateway.api-gateway.svc.cluster.local:80/api/v1/requestApproval
 ```
 as a **POST** request, with the following body with **JSON** encoding:
 ```json
@@ -243,12 +248,10 @@ as a **POST** request, with the following body with **JSON** encoding:
 }
 ```
 
-# Bashrc shortcuts 
+# Bashrc shortcuts
 
-## Add DYNAMOS env vars and helper functions to shell 
+## Add DYNAMOS env vars and helper functions to shell
 To make the deployment process easier, we have prepared a set of environment variables and methods that can be added to your shell rc file. These are usually the `bashrc` or `zshrc` files. Alternatively, the below commands can be added to an additional file, and included in the shell file.
-
-NOTE: A few steps (that we highlight in the latter part of the guide) are required before you can use the methods provided below.
 
 ```bash
 ## DYNAMOS Configs
@@ -266,13 +269,6 @@ export coreChart="${DYNAMOS_ROOT}/charts/core"
 ### Generic services ###
 ########################
 
-# Deploy the namespaces in the cluster
-#   Important to use upon first installing DYNAMOS, without it k8 cannot be used
-deploy_namespaces() {
-  namespaceChart="${DYNAMOS_ROOT}/charts/namespaces"
-  helm upgrade -i -f "${namespaceChart}/values.yaml" namespaces ${DYNAMOS_ROOT}/charts/namespaces --set hostPath="${DYNAMOS_ROOT}"
-}
-
 # Deploy the nginx ingress to the cluster
 #   This only needs to be done once
 deploy_ingress() {
@@ -281,8 +277,7 @@ deploy_ingress() {
 
 # Deploy the core services to the cluster
 deploy_core() {
-  helm upgrade -i -f "${coreChart}/values.yaml" core ${DYNAMOS_ROOT}/charts/core --set hostPath="${DYNAMOS_ROOT}"
-}
+  helm upgrade -i -f "${coreChart}/values.yaml" core ${DYNAMOS_ROOT}/charts/core
 
 # Deploy prometheus for metric collection
 #   Only needs to be deployed once
@@ -294,14 +289,14 @@ deploy_prometheus() {
 #   Responsible for managing requests within DYNAMOS
 deploy_orchestrator() {
   orchestratorChart="${DYNAMOS_ROOT}/charts/orchestrator/values.yaml"
-  helm upgrade -i -f "${orchestratorChart}" orchestrator ${DYNAMOS_ROOT}/charts/orchestrator --set hostPath="${DYNAMOS_ROOT}"
+  helm upgrade -i -f "${orchestratorChart}" orchestrator ${DYNAMOS_ROOT}/charts/orchestrator
 }
 
 # Deploy the api-gateway to the cluster
 #   Responsible of accepting any requests from the public, forwards the requests into the cluster
 deploy_api_gateway() {
   apiGatewayChart="${DYNAMOS_ROOT}/charts/api-gateway/values.yaml"
-  helm upgrade -i -f "${apiGatewayChart}" api-gateway ${DYNAMOS_ROOT}/charts/api-gateway --set hostPath="${DYNAMOS_ROOT}"
+  helm upgrade -i -f "${apiGatewayChart}" api-gateway ${DYNAMOS_ROOT}/charts/api-gateway
 }
 
 #####################################
@@ -328,13 +323,11 @@ deploy_surf() {
 #   This runs the risk of having race conditions on the first attempt, however the system
 #   should be able to recover automatically
 deploy_all() {
-  deploy_namespaces
   deploy_core
   deploy_orchestrator
   deploy_api_gateway
   deploy_agent
   deploy_surf
-  deploy_prometheus
 }
 
 # Remove all services running in the cluster.
@@ -346,6 +339,21 @@ uninstall_all(){
   helm uninstall agent
   helm uninstall api-gateway
   helm uninstall core
+}
+
+# Deploy or remove all services excepting import core functionality.
+deploy_addons() {
+  deploy_orchestrator
+  deploy_api_gateway
+  deploy_agent
+  deploy_surf
+}
+
+uninstall_addons() {
+  helm uninstall orchestrator
+  helm uninstall surf
+  helm uninstall agent
+  helm uninstall api-gateway
 }
 
 ###################
@@ -381,4 +389,4 @@ or
 ```bash
   source ~/.zshrc
 ```
-(or whatever shell rc you use)
+(or whatever shell rc is used)
