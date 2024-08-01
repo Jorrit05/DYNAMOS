@@ -112,4 +112,3 @@ class GRPCClient:
             time.sleep(1)  # Wait a second before checking again
 
         raise Exception(f"Could not connect with gRPC {grpc_addr} after {i} tries")
-

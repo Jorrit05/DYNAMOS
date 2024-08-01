@@ -34,11 +34,6 @@ class HealthServicer(healthServer.HealthServicer):
         )
 
 
-def test(msComm):
-    logger.info(f"Received original request type: ")
-    return
-
-
 class MicroserviceServicer(msCommServer.MicroserviceServicer):
     def __init__(self, msCommHandler: Callable[[microserviceCommunication_pb2.MicroserviceCommunication], Empty()]):
         self.callback: CallbackType = msCommHandler
