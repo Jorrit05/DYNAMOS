@@ -1,5 +1,6 @@
 
-from dynamos.ms_init import NewConfiguration, signal_continuation, signal_wait
+from dynamos.ms_init import NewConfiguration
+from dynamos.signal_flow import signal_continuation, signal_wait
 from dynamos.logger import InitLogger
 from google.protobuf.empty_pb2 import Empty
 

@@ -77,12 +77,12 @@ class MicroserviceClient(BaseClient):
 
 
 class GRPCClient:
-    def __init__(self, grpc_addr):
+    def __init__(self, grpc_addr, service_name):
         self.grpc_addr = grpc_addr
 
         self.channel = self.get_grpc_connection(grpc_addr)
         self.health = HealthClient(self.channel)
-        self.rabbit = RabbitClient(self.channel)
+        self.rabbit = RabbitClient(self.channel, service_name)
         self.etcd = EtcdClient(self.channel)
         self.ms_comm = MicroserviceClient(self.channel)
 
