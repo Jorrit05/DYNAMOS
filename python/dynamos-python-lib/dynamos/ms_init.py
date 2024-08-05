@@ -63,8 +63,8 @@ def NewConfiguration(service_name,
     if conf.first_service and conf.last_service:
         # First and last, connect to sidecar for processing and final destination
         conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), ms_message_handler)
-        client = GRPCClient(grpc_addr + str(conf.Port))
-        conf.rabbit_msg_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
+        client = GRPCClient(grpc_addr + str(conf.Port), service_name)
+        conf.rabbit_msg_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"), service_name)
         conf.next_client = conf.rabbit_msg_client
         conf.rabbit_msg_client.rabbit.initialize_rabbit(service_name, client)
         conf.rabbit_msg_client.rabbit.start_consuming()
@@ -72,18 +72,18 @@ def NewConfiguration(service_name,
     elif conf.first_service:
         # First service, connect to sidecar for processing and look for next MS for connecting to
         conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), ms_message_handler)
-        client = GRPCClient(grpc_addr + str(conf.Port))
+        client = GRPCClient(grpc_addr + str(conf.Port), service_name)
         conf.rabbit_msg_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
-        conf.next_client = GRPCClient(grpc_addr + str(conf.Port + 1))
+        conf.next_client = GRPCClient(grpc_addr + str(conf.Port + 1), service_name)
         conf.rabbit_msg_client.rabbit.initialize_rabbit(service_name, client)
         conf.rabbit_msg_client.rabbit.start_consuming()
 
     elif conf.last_service:
         # Last service, connect to sidecar as final destination and start own server to receive from previous MS
         conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), ms_message_handler)
-        conf.next_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
+        conf.next_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"), service_name)
     else:
         conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), ms_message_handler)
-        conf.next_client = GRPCClient(grpc_addr + str(conf.Port + 1))
+        conf.next_client = GRPCClient(grpc_addr + str(conf.Port + 1), service_name)
 
     return conf

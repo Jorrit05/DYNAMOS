@@ -15,6 +15,7 @@ def InitTracer(service_name : str, tracing_host : str):
         SERVICE_NAME: service_name
     })
 
+
     provider = TracerProvider(resource=resource)
     processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=tracing_host, insecure=True))
     provider.add_span_processor(processor)

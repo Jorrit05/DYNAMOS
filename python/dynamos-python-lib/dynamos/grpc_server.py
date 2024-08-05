@@ -14,32 +14,33 @@ import health_pb2 as healthTypes
 import microserviceCommunication_pb2_grpc as msCommServer
 import microserviceCommunication_pb2
 
-# Configure logging
-logger = InitLogger()
 
 CallbackType = Callable[[grpc.ServicerContext, microserviceCommunication_pb2.MicroserviceCommunication], Empty]
 
-
 class HealthServicer(healthServer.HealthServicer):
+    def __init__(self, logger):
+        self.logger = logger
+
     def Check(self, request, context):
-        logger.info("Received health check request")
+        self.logger.info("Received health check request")
         return healthTypes.HealthCheckResponse(
             status=healthTypes.HealthCheckResponse.SERVING
         )
 
     def Watch(self, request, context):
-        logger.info("Received health watch request")
+        self.logger.info("Received health watch request")
         yield healthTypes.HealthCheckResponse(
             status=healthTypes.HealthCheckResponse.SERVING
         )
 
 
 class MicroserviceServicer(msCommServer.MicroserviceServicer):
-    def __init__(self, msCommHandler: Callable[[microserviceCommunication_pb2.MicroserviceCommunication], Empty()]):
+    def __init__(self, msCommHandler: Callable[[microserviceCommunication_pb2.MicroserviceCommunication], Empty()], logger): # type: ignore
         self.callback: CallbackType = msCommHandler
+        self.logger = logger
 
     def SendData(self, msComm: microserviceCommunication_pb2.MicroserviceCommunication, context):
-        logger.debug(f"Starting MicroserviceServicer grpc_server.py/SendData: {msComm.request_metadata.destination_queue}")
+        self.logger.debug(f"Starting MicroserviceServicer grpc_server.py/SendData: {msComm.request_metadata.destination_queue}")
 
         span = trace.get_current_span()
         try:
@@ -47,35 +48,36 @@ class MicroserviceServicer(msCommServer.MicroserviceServicer):
             with trace.get_tracer(__name__).start_as_current_span("grpc_server.py/SendData") as span:
                 pass
         except Exception as err:
-            logger.warn(f"Error starting span: {err}")
+            self.logger.warn(f"Error starting span: {err}")
             span.end()
 
         try:
-            logger.debug(f"msComm type: {type(msComm)}")
+            self.logger.debug(f"msComm type: {type(msComm)}")
             if not isinstance(msComm, microserviceCommunication_pb2.MicroserviceCommunication):
                 raise TypeError(f"Expected msComm to be of type microserviceCommunication_pb2.MicroserviceCommunication, got {type(msComm)}")
 
             self.callback(msComm)
         except TypeError as e:
-            logger.error(f"TypeError: {e}")
+            self.logger.error(f"TypeError: {e}")
             return Empty()
         except Exception as err:
-            logger.error(f"SendData Error: {err}")
+            self.logger.error(f"SendData Error: {err}")
             return Empty()
 
 
         return Empty()
 
 
-class GRPCServer:
+class GRPCServer(BaseClient):
     def __init__(self, grpc_addr, msCommHandler: Callable[[microserviceCommunication_pb2.MicroserviceCommunication], None]):
         self.grpc_addr = grpc_addr
+        super().__init__(None, None)
         self.callback: CallbackType = msCommHandler
 
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        healthServer.add_HealthServicer_to_server(HealthServicer(), self.server)
-        msCommServer.add_MicroserviceServicer_to_server(MicroserviceServicer(msCommHandler), self.server)
-    #     # rabbitServer.add_RabbitServicer_to_server(RabbitServicer(), self.server)
+        healthServer.add_HealthServicer_to_server(HealthServicer(self.logger), self.server)
+        msCommServer.add_MicroserviceServicer_to_server(MicroserviceServicer(msCommHandler, self.logger), self.server)
+        # rabbitServer.add_RabbitServicer_to_server(RabbitServicer(), self.server)
     #     # etcdServer.add_EtcdServicer_to_server(EtcdServicer(), self.server)
 
         self.server.add_insecure_port(self.grpc_addr)
@@ -85,12 +87,12 @@ class GRPCServer:
 
     def start_server(self):
         self.server.start()
-        logger.info(f"gRPC server started on {self.grpc_addr}")
+        self.logger.info(f"gRPC server started on {self.grpc_addr}")
         with self.condition:
             while not self.stop_event.is_set():
                 self.condition.wait()  # Wait for the signal to stop
         self.server.stop(0)
-        logger.info("Server stopped")
+        self.logger.info("Server stopped")
 
 
     def start(self):
@@ -100,9 +102,9 @@ class GRPCServer:
 
 
     def stop(self):
-        logger.info("Stopping gRPC server...")
+        self.logger.info("Stopping gRPC server...")
         with self.condition:
             self.stop_event.set()
             self.condition.notify()  # Notify the condition to wake up the server
         self.thread.join()
-        logger.info("gRPC server stopped")
+        self.logger.info("gRPC server stopped")

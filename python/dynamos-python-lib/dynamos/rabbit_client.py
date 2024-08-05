@@ -6,25 +6,23 @@ from .base_client import BaseClient
 import rabbitMQ_pb2_grpc as rabbitServer
 import rabbitMQ_pb2 as rabbitTypes
 import threading
-from dynamos.logger import InitLogger
-from dynamos.tracer import InitTracer
 import json
 from opentelemetry.trace.span import TraceFlags, TraceState
 from opentelemetry import trace, context
 from opentelemetry.trace.propagation import set_span_in_context
 import microserviceCommunication_pb2 as msCommTypes
 
-logger = InitLogger()
 
-class RabbitClient(BaseClient):
-    def __init__(self, channel, service_name):
-        super().__init__(channel)
+class RabbitClient:
+    def __init__(self, channel, service_name, logger):
+        self.logger = logger
+        self.channel = channel
         self.service_name = service_name
         self.stub = rabbitServer.SideCarStub(channel)
         self.stop_event = threading.Event()
         self.condition = threading.Condition()
-        self.tracer = InitTracer(self.service_name, "collector.linkerd-jaeger:4317")
         self.own_grpc_client = None
+        self.thread = None
 
     def initialize_rabbit(self, routing_key, own_grpc_client, queue_auto_delete=False):
         try:
@@ -32,8 +30,7 @@ class RabbitClient(BaseClient):
             service_request.service_name = self.service_name
             service_request.routing_key = routing_key
             service_request.queue_auto_delete = queue_auto_delete
-            self.service_name = self.service_name
-            self.sidecar.InitRabbitMq(service_request)
+            self.stub.InitRabbitMq(service_request)
             self.own_grpc_client = own_grpc_client
             self.logger.debug("Rabbit own_grpc_client started successfully")
         except grpc.RpcError as e:
@@ -67,13 +64,13 @@ class RabbitClient(BaseClient):
                 self.own_grpc_client.ms_comm.send_data(msComm, msComm.data, msComm.metadata)
 
                 # result = handleMsCommunication(msComm, microserviceCommunicator, ctx)
-                logger.debug(f"After send_data")
+                self.logger.debug(f"After send_data")
                 return True
             except Exception as e:
-                logger.error(f"An unexpected error occurred: {e}")
+                self.logger.error(f"An unexpected error occurred: {e}")
                 return False
         else:
-            logger.error(f"An unexpected message arrived occurred: {msg.type}")
+            self.logger.error(f"An unexpected message arrived occurred: {msg.type}")
             return False
 
 
@@ -83,7 +80,7 @@ class RabbitClient(BaseClient):
                 return self._consume(queue_name)
             except grpc.RpcError as e:
                 self.logger.error(f"Failed to start consuming (attempt {i+1}/{max_retries}): {e}")
-                if self.stop_consuming:  # Check if we've been told to stop before handling each response
+                if self.stop():  # Check if we've been told to stop before handling each response
                     return
                 time.sleep(wait_time)
 
@@ -95,7 +92,7 @@ class RabbitClient(BaseClient):
 
         # Handle 1 response only
         try:
-            responses = self.sidecar.ChainConsume(consume_request)
+            responses = self.stub.ChainConsume(consume_request)
 
             for response in responses:
                 self.handle_incoming_request(response)
@@ -124,6 +121,6 @@ class RabbitClient(BaseClient):
         self._consume_with_retry(self.service_name, 10, 5)
 
     def stop(self):
-        logger.info("Stopping RabbitClient...")
+        self.logger.info("Stopping RabbitClient...")
         self.thread.join()
-        logger.info("Rabbit Client stopped")
+        self.logger.info("Rabbit Client stopped")

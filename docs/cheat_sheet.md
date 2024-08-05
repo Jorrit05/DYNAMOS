@@ -106,9 +106,10 @@ export LAST="1"
 
 export SIDECAR_PORT=50051
 export DESIGNATED_GRPC_PORT=50052
-export FIRST=0
+export FIRST=1
 export LAST=1
-
+export AMQ_PASSWORD="e3febc96e3060970414ac94b9f0fc020"
+export AMQ_USER="normal_user"
 # LInkerD
 
 https://linkerd.io/2.13/getting-started/

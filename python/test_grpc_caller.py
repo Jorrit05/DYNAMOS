@@ -66,7 +66,13 @@ config = NewConfiguration("caller", "localhost:", request_handler)
 signal_continuation(wait_for_setup_event, wait_for_setup_condition)
 
 # Wait for the end of processing to shutdown this Microservice
-signal_wait(stop_event, stop_microservice_condition)
+try:
+    signal_wait(stop_event, stop_microservice_condition)
+
+except KeyboardInterrupt:
+    print("KeyboardInterrupt received, stopping server...")
+    signal_continuation(stop_event, stop_microservice_condition)
+
 
 config.grpc_server.stop()
 config.next_client.close_program()
