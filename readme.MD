@@ -30,11 +30,12 @@ The Fabric-CloudLab profile can be cloned and adapted from the [dynamos-cluster]
     - [10.1. Configure Rabbit PVC](#101-configure-rabbit-pvc)
   - [11. Ingress](#11-ingress)
     - [11.1. Update hostfile](#111-update-hostfile)
-    - [11.2. Example Request](#112-example-request)
 - [Bashrc shortcuts](#bashrc-shortcuts)
   - [12. Add DYNAMOS env vars and helper functions to shell](#12-add-dynamos-env-vars-and-helper-functions-to-shell)
+- [Example](#example)
+  - [13. Example Request](#13-example-request)
 - [Troubleshooting](#troubleshooting)
-  - [13. Services crash because the connection to RabbitMQ does not work](#13-services-crash-because-the-connection-to-rabbitmq-does-not-work)
+  - [14. Services crash because the connection to RabbitMQ does not work](#14-services-crash-because-the-connection-to-rabbitmq-does-not-work)
 
 
 # Installation Guide
@@ -54,7 +55,12 @@ Please refer to Windows documentation on how to enable this. Here is one example
 https://learn.microsoft.com/en-us/windows/wsl/install
 
 ##  2. <a name='DockerDesktop'></a>Docker Desktop
-For local development we utilise Docker Desktop, as upon installation we get Kubernetes for free in an easily manageable interface.
+For local development we utilise Docker Desktop, as upon installation we get Kubernetes for free in an easily manageable interface. 
+
+Need to enable kubernetes in order to install some of the following requirements. On docker desktop this can be done by following Settings > Kubernetes > Enable Kubernetes. Check that both Kubernetes client and server:
+```bash
+kubectl version
+```
 
 Using Minikube is not recommended, it should technically work but has its own set of challenges is not supported in these documents.
 
@@ -172,7 +178,14 @@ Now that we have the required software installed, we can start configuring our s
 
 There is a shell script './configuration/dynamos-configuration.sh' that fully installs all DYNAMOS Helm charts and related configuration. In this section we describe in more detail what this does.
 
+Adjust the DYNAMOS_ROOT path (on the dynamos-configuration.sh file) accordingly.
+
+```
+DYNAMOS_ROOT="${HOME}/DYNAMOS"
+```
+
 To run the script, execute the following from the root of DYNAMOS
+
 ```sh
   ./configuration/dynamos-configuration.sh
 ```
@@ -191,6 +204,9 @@ Understanding this script will help understanding how DYNAMOS is deployed.
 
 
 ##  10. <a name='RabbitMQpasswordprocess'></a>RabbitMQ password process
+
+**This is an explanation of the aforemntioned install script. Do not need to run the commands if the script was successful.**
+
 Every service in DYNAMOS that connects to RabbitMQ requires a user with a password that are configured in RabbitMQ. For now every service has the user 'normal_user' and they share a generic password that we will show how to generate here.
 
 ```bash
@@ -200,7 +216,7 @@ Every service in DYNAMOS that connects to RabbitMQ requires a user with a passwo
 rabbit_pw=$(openssl rand -hex 16)
 
 # Use the RabbitCtl to make a special hash of that password:
-rabbiq_mq_hash=$($SUDO docker run --rm rabbitmq: 3-management rabbitmqctl hash_password $rabbit_pw)
+rabbiq_mq_hash=$($SUDO docker run --rm rabbitmq:3-management rabbitmqctl hash_password $rabbit_pw)
 hashed_pw=$(echo "$rabbiq_mq_hash" | cut -d $'\n' -f2)
 
 # The Rabbit Hashed password needs to be in definitions.json file, that is the configuration for RabbitMQ
@@ -244,49 +260,19 @@ Now add the following to hosts file:
 
 Note that this is required when trying to test DYNAMOS locally using tools such as `curl` or `postman`.
 
-###  11.2. <a name='ExampleRequest'></a>Example Request
-
-To make sure we installed everything properly, let's use the AMDeX use case as an example.
-Firstly, make sure everything is deployed, which should've been done with the deployment script. Check the status on k9s or using `kubectl` to check the status of all pods method. For shortcuts see [Bashrc shortcuts.](#bashrc-shortcuts)
-
-Let's setup the request.
-
-The URL should be:
-```
-http://api-gateway.api-gateway.svc.cluster.local:80/api/v1/requestApproval
-```
-as a **POST** request, with the following body with **JSON** encoding:
-```json
-{
-    "type": "sqlDataRequest",
-    "user": {
-        "id": "12324",
-        "userName": "jorrit.stutterheim@cloudnation.nl"
-    },
-    "dataProviders": ["VU","UVA","RUG"],
-    "data_request": {
-        "type": "sqlDataRequest",
-        "query" : "SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 1000",
-        "algorithm" : "average",
-        "options" : {
-            "graph" : false,
-            "aggregate": false
-        },
-        "requestMetadata": {}
-    }
-}
-```
 
 # Bashrc shortcuts
 
 ##  12. <a name='AddDYNAMOSenvvarsandhelperfunctionstoshell'></a>Add DYNAMOS env vars and helper functions to shell
-To make the deployment process easier, we have prepared a set of environment variables and methods that can be added to your shell rc file. These are usually the `bashrc` or `zshrc` files. Alternatively, the below commands can be added to an additional file, and included in the shell file.
+To make the deployment process easier, we have prepared a set of environment variables and methods that can be added to your shell rc file. These are usually the `~/.bashrc` or `~/.zshrc` files. Alternatively, the below commands can be added to an additional file, and included in the shell file.
+
+**Don't forget to change the DYNAMOS_ROOT path accordingly.**
 
 ```bash
 ## DYNAMOS Configs
 
 # The directory where DYNAMOS repo is cloned
-export DYNAMOS_ROOT="<CHANGE TO ABSOLUTE PATH TO DYNAMOS REPO>"
+export DYNAMOS_ROOT="${HOME}/DYNAMOS"
 # Helm chart location for the core chart (used in multiple deployments)
 export coreChart="${DYNAMOS_ROOT}/charts/core"
 
@@ -421,10 +407,68 @@ or
 ```
 (or whatever shell rc is used)
 
+# Example 
+
+##  13. <a name='ExampleRequest'></a>Example Request
+
+To make sure we installed everything properly, let's use the AMDeX use case as an example.
+Firstly, make sure everything is deployed, which should've been done with the deployment script. Check the status on k9s or using `kubectl` to check the status of all pods method. For shortcuts see [Bashrc shortcuts.](#bashrc-shortcuts)
+
+Let's setup the request.
+
+The URL should be:
+```
+http://api-gateway.api-gateway.svc.cluster.local:80/api/v1/requestApproval
+```
+as a **POST** request, with the following body with **JSON** encoding:
+```json
+{
+    "type": "sqlDataRequest",
+    "user": {
+        "id": "12324",
+        "userName": "jorrit.stutterheim@cloudnation.nl"
+    },
+    "dataProviders": ["VU","UVA","RUG"],
+    "data_request": {
+        "type": "sqlDataRequest",
+        "query" : "SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 1000",
+        "algorithm" : "average",
+        "options" : {
+            "graph" : false,
+            "aggregate": false
+        },
+        "requestMetadata": {}
+    }
+}
+```
+
+E.g. using curl: 
+```
+curl --location 'http://api-gateway.api-gateway.svc.cluster.local:80/api/v1/requestApproval' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "type": "sqlDataRequest",
+    "user": {
+        "id": "12324",
+        "userName": "jorrit.stutterheim@cloudnation.nl"
+    },
+    "dataProviders": ["VU","UVA","RUG"],
+    "data_request": {
+        "type": "sqlDataRequest",
+        "query" : "SELECT * FROM Personen p JOIN Aanstellingen s LIMIT 1000",
+        "algorithm" : "average",
+        "options" : {
+            "graph" : false,
+            "aggregate": false
+        },
+        "requestMetadata": {}
+    }
+}'
+```
 
 # Troubleshooting
 
-##  13. <a name='ServicescrashbecausetheconnectiontoRabbitMQdoesnotwork'></a>Services crash because the connection to RabbitMQ does not work
+##  14. <a name='ServicescrashbecausetheconnectiontoRabbitMQdoesnotwork'></a>Services crash because the connection to RabbitMQ does not work
 
 See [RabbitMQ password process](#rabbitmq-password-process) and/or [Configure Rabbit PVC](#configure-rabbit-pvc)
 
