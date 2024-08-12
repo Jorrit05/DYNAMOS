@@ -50,7 +50,7 @@ def NewConfiguration(service_name,
     except ValueError:
         raise ValueError("Error determining last service")
 
-    logging.debug(f"NewConfiguration {service_name}, port: {port}, last_service: {last_service}")
+    logger.debug(f"NewConfiguration {service_name}, port: {port}, last_service: {last_service}")
 
     conf = Configuration(
         port=port,
@@ -60,23 +60,16 @@ def NewConfiguration(service_name,
         ms_message_handler=ms_message_handler
     )
 
-    if conf.first_service and conf.last_service:
+    if conf.first_service:
         # First and last, connect to sidecar for processing and final destination
         conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), ms_message_handler)
-        client = GRPCClient(grpc_addr + str(conf.Port), service_name)
         conf.rabbit_msg_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"), service_name)
-        conf.next_client = conf.rabbit_msg_client
-        conf.rabbit_msg_client.rabbit.initialize_rabbit(service_name, client)
-        conf.rabbit_msg_client.rabbit.start_consuming()
+        if conf.last_service:
+            conf.next_client = conf.rabbit_msg_client
+        else:
+            conf.next_client = GRPCClient(grpc_addr + str(conf.Port + 1), service_name)
 
-    elif conf.first_service:
-        # First service, connect to sidecar for processing and look for next MS for connecting to
-        conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), ms_message_handler)
-        client = GRPCClient(grpc_addr + str(conf.Port), service_name)
-        conf.rabbit_msg_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"))
-        conf.next_client = GRPCClient(grpc_addr + str(conf.Port + 1), service_name)
-        conf.rabbit_msg_client.rabbit.initialize_rabbit(service_name, client)
-        conf.rabbit_msg_client.rabbit.start_consuming()
+        conf.rabbit_msg_client.rabbit.initialize_rabbit(service_name, conf.Port)
 
     elif conf.last_service:
         # Last service, connect to sidecar as final destination and start own server to receive from previous MS

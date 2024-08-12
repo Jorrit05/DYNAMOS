@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -22,10 +23,16 @@ var (
 	sendMutex = &sync.Mutex{}
 )
 
+type ConsumerManager struct {
+	stopChan chan struct{}
+	cancel   context.CancelFunc
+}
+
 type server struct {
 	pb.UnimplementedSideCarServer
 	pb.UnimplementedEtcdServer
 	pb.UnimplementedMicroserviceServer
+	consumerManager *ConsumerManager
 }
 
 func main() {

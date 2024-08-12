@@ -2,7 +2,6 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import microserviceCommunication_pb2 as microserviceCommunication__pb2
 
 
@@ -19,7 +18,7 @@ class MicroserviceStub(object):
         self.SendData = channel.unary_unary(
                 '/dynamos.Microservice/SendData',
                 request_serializer=microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                response_deserializer=microserviceCommunication__pb2.ContinueReceiving.FromString,
                 )
 
 
@@ -39,7 +38,7 @@ def add_MicroserviceServicer_to_server(servicer, server):
             'SendData': grpc.unary_unary_rpc_method_handler(
                     servicer.SendData,
                     request_deserializer=microserviceCommunication__pb2.MicroserviceCommunication.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                    response_serializer=microserviceCommunication__pb2.ContinueReceiving.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -65,6 +64,6 @@ class Microservice(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/dynamos.Microservice/SendData',
             microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
-            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            microserviceCommunication__pb2.ContinueReceiving.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

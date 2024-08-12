@@ -23,6 +23,8 @@ const _ = grpc.SupportPackageIsVersion8
 
 const (
 	SideCar_InitRabbitMq_FullMethodName                = "/dynamos.SideCar/InitRabbitMq"
+	SideCar_InitRabbitForChain_FullMethodName          = "/dynamos.SideCar/InitRabbitForChain"
+	SideCar_StopReceivingRabbit_FullMethodName         = "/dynamos.SideCar/StopReceivingRabbit"
 	SideCar_Consume_FullMethodName                     = "/dynamos.SideCar/Consume"
 	SideCar_ChainConsume_FullMethodName                = "/dynamos.SideCar/ChainConsume"
 	SideCar_SendRequestApproval_FullMethodName         = "/dynamos.SideCar/SendRequestApproval"
@@ -45,6 +47,8 @@ const (
 // The sidecar definition.
 type SideCarClient interface {
 	InitRabbitMq(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	InitRabbitForChain(ctx context.Context, in *ChainRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	StopReceivingRabbit(ctx context.Context, in *StopRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	Consume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ConsumeClient, error)
 	ChainConsume(ctx context.Context, in *ConsumeRequest, opts ...grpc.CallOption) (SideCar_ChainConsumeClient, error)
 	SendRequestApproval(ctx context.Context, in *RequestApproval, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -72,6 +76,26 @@ func (c *sideCarClient) InitRabbitMq(ctx context.Context, in *InitRequest, opts 
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, SideCar_InitRabbitMq_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sideCarClient) InitRabbitForChain(ctx context.Context, in *ChainRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, SideCar_InitRabbitForChain_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sideCarClient) StopReceivingRabbit(ctx context.Context, in *StopRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, SideCar_StopReceivingRabbit_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -261,6 +285,8 @@ func (c *sideCarClient) SendRequestApprovalRequest(ctx context.Context, in *Requ
 // The sidecar definition.
 type SideCarServer interface {
 	InitRabbitMq(context.Context, *InitRequest) (*empty.Empty, error)
+	InitRabbitForChain(context.Context, *ChainRequest) (*empty.Empty, error)
+	StopReceivingRabbit(context.Context, *StopRequest) (*empty.Empty, error)
 	Consume(*ConsumeRequest, SideCar_ConsumeServer) error
 	ChainConsume(*ConsumeRequest, SideCar_ChainConsumeServer) error
 	SendRequestApproval(context.Context, *RequestApproval) (*empty.Empty, error)
@@ -283,6 +309,12 @@ type UnimplementedSideCarServer struct {
 
 func (UnimplementedSideCarServer) InitRabbitMq(context.Context, *InitRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitRabbitMq not implemented")
+}
+func (UnimplementedSideCarServer) InitRabbitForChain(context.Context, *ChainRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitRabbitForChain not implemented")
+}
+func (UnimplementedSideCarServer) StopReceivingRabbit(context.Context, *StopRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StopReceivingRabbit not implemented")
 }
 func (UnimplementedSideCarServer) Consume(*ConsumeRequest, SideCar_ConsumeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Consume not implemented")
@@ -350,6 +382,42 @@ func _SideCar_InitRabbitMq_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SideCarServer).InitRabbitMq(ctx, req.(*InitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SideCar_InitRabbitForChain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChainRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).InitRabbitForChain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SideCar_InitRabbitForChain_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).InitRabbitForChain(ctx, req.(*ChainRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SideCar_StopReceivingRabbit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StopRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SideCarServer).StopReceivingRabbit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SideCar_StopReceivingRabbit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SideCarServer).StopReceivingRabbit(ctx, req.(*StopRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -604,6 +672,14 @@ var SideCar_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InitRabbitMq",
 			Handler:    _SideCar_InitRabbitMq_Handler,
+		},
+		{
+			MethodName: "InitRabbitForChain",
+			Handler:    _SideCar_InitRabbitForChain_Handler,
+		},
+		{
+			MethodName: "StopReceivingRabbit",
+			Handler:    _SideCar_StopReceivingRabbit_Handler,
 		},
 		{
 			MethodName: "SendRequestApproval",

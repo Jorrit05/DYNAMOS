@@ -10,7 +10,6 @@ package proto
 
 import (
 	context "context"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -31,7 +30,7 @@ const (
 //
 // The sidecar definition.
 type MicroserviceClient interface {
-	SendData(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*empty.Empty, error)
+	SendData(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*ContinueReceiving, error)
 }
 
 type microserviceClient struct {
@@ -42,9 +41,9 @@ func NewMicroserviceClient(cc grpc.ClientConnInterface) MicroserviceClient {
 	return &microserviceClient{cc}
 }
 
-func (c *microserviceClient) SendData(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *microserviceClient) SendData(ctx context.Context, in *MicroserviceCommunication, opts ...grpc.CallOption) (*ContinueReceiving, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(empty.Empty)
+	out := new(ContinueReceiving)
 	err := c.cc.Invoke(ctx, Microservice_SendData_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -58,7 +57,7 @@ func (c *microserviceClient) SendData(ctx context.Context, in *MicroserviceCommu
 //
 // The sidecar definition.
 type MicroserviceServer interface {
-	SendData(context.Context, *MicroserviceCommunication) (*empty.Empty, error)
+	SendData(context.Context, *MicroserviceCommunication) (*ContinueReceiving, error)
 	mustEmbedUnimplementedMicroserviceServer()
 }
 
@@ -66,7 +65,7 @@ type MicroserviceServer interface {
 type UnimplementedMicroserviceServer struct {
 }
 
-func (UnimplementedMicroserviceServer) SendData(context.Context, *MicroserviceCommunication) (*empty.Empty, error) {
+func (UnimplementedMicroserviceServer) SendData(context.Context, *MicroserviceCommunication) (*ContinueReceiving, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendData not implemented")
 }
 func (UnimplementedMicroserviceServer) mustEmbedUnimplementedMicroserviceServer() {}

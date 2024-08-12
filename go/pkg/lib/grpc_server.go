@@ -35,18 +35,14 @@ func (s *SharedServer) RegisterCallback(msgType string, callback func(ctx contex
 	s.callbacks[msgType] = callback
 }
 
-// TODO: This go function is mostly to get an accurate feel for data transfer speeds.
-// It's probably better to just remove the Go func in the long run
-func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
+func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*pb.ContinueReceiving, error) {
 	logger.Sugar().Debugf("Starting lib.SendData: %v", data.RequestMetadata.DestinationQueue)
 
 	ctx, span, err := StartRemoteParentSpan(ctx, "sidecar SendData/func:", data.Traces)
 	if err != nil {
 		logger.Sugar().Warnf("Error starting span: %v", err)
 	}
-	span.End()
-	// logger.Sugar().Debugf("data.Type: %v", data.Type)
-	// logger.Sugar().Debugf("data.RequestType: %v", data.RequestType)
+	defer span.End()
 
 	// This is a bit tricky, the callbacks are registered because the SendData function is generally implemented as a server side function.
 	// In other words, the client sends the data, and the server (the one receiving the data) should know how to handle it.
@@ -55,18 +51,14 @@ func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommun
 	callback, ok := s.callbacks[data.Type]
 	if !ok {
 		logger.Warn("no callback registered for this message type")
-		// span.End()
-		return &emptypb.Empty{}, nil
+
+		return &pb.ContinueReceiving{ContinueReceiving: false}, nil
 	}
 
-	// go func(data *pb.MicroserviceCommunication, callback func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)) {
-	logger.Sugar().Debugf("In go routine SendData:")
-	// span.End()
 	if _, err := callback(ctx, data); err != nil {
 		logger.Sugar().Errorf("Callback Error: %v", err)
-		return &emptypb.Empty{}, nil
+		return &pb.ContinueReceiving{ContinueReceiving: false}, nil
 	}
-	// }(data, callback)
 
-	return &emptypb.Empty{}, nil
+	return &pb.ContinueReceiving{ContinueReceiving: false}, nil
 }

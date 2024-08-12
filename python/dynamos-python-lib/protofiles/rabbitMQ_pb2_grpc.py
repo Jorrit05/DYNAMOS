@@ -22,6 +22,16 @@ class SideCarStub(object):
                 request_serializer=rabbitMQ__pb2.InitRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
+        self.InitRabbitForChain = channel.unary_unary(
+                '/dynamos.SideCar/InitRabbitForChain',
+                request_serializer=rabbitMQ__pb2.ChainRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
+        self.StopReceivingRabbit = channel.unary_unary(
+                '/dynamos.SideCar/StopReceivingRabbit',
+                request_serializer=rabbitMQ__pb2.StopRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
         self.Consume = channel.unary_stream(
                 '/dynamos.SideCar/Consume',
                 request_serializer=rabbitMQ__pb2.ConsumeRequest.SerializeToString,
@@ -94,6 +104,18 @@ class SideCarServicer(object):
     """
 
     def InitRabbitMq(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def InitRabbitForChain(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StopReceivingRabbit(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -185,6 +207,16 @@ def add_SideCarServicer_to_server(servicer, server):
                     request_deserializer=rabbitMQ__pb2.InitRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
+            'InitRabbitForChain': grpc.unary_unary_rpc_method_handler(
+                    servicer.InitRabbitForChain,
+                    request_deserializer=rabbitMQ__pb2.ChainRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'StopReceivingRabbit': grpc.unary_unary_rpc_method_handler(
+                    servicer.StopReceivingRabbit,
+                    request_deserializer=rabbitMQ__pb2.StopRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
             'Consume': grpc.unary_stream_rpc_method_handler(
                     servicer.Consume,
                     request_deserializer=rabbitMQ__pb2.ConsumeRequest.FromString,
@@ -274,6 +306,40 @@ class SideCar(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/InitRabbitMq',
             rabbitMQ__pb2.InitRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def InitRabbitForChain(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/InitRabbitForChain',
+            rabbitMQ__pb2.ChainRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def StopReceivingRabbit(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/StopReceivingRabbit',
+            rabbitMQ__pb2.StopRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

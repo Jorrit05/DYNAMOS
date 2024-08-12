@@ -16,7 +16,7 @@ import etcd_pb2_grpc as etcdServer
 import etcd_pb2 as etcdTypes
 import microserviceCommunication_pb2_grpc as msCommServer
 import microserviceCommunication_pb2 as msCommTypes
-
+import threading
 
 class GRPCClient(BaseClient):
     def __init__(self, grpc_addr, service_name):
@@ -28,9 +28,15 @@ class GRPCClient(BaseClient):
         self.channel = self.get_grpc_connection(grpc_addr)
 
         self.health = HealthClient(self.channel, service_name, self.logger)
-        self.rabbit = RabbitClient(self.channel, service_name, self.logger)
         self.etcd = EtcdClient(self.channel, service_name, self.logger)
         self.ms_comm = MicroserviceClient(self.channel, service_name, self.logger)
+        self.rabbit_thread = threading.Thread(target=self._init_rabbit)
+        self.rabbit_thread.start()
+
+
+    def _init_rabbit(self):
+        self.rabbit = RabbitClient(self.channel, self.service_name, self.logger)
+
 
     def close_program(self):
         """Close the gRPC channel gracefully"""

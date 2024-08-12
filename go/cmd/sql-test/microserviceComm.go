@@ -37,7 +37,7 @@ func sendMicroserviceComm(c pb.SideCarClient) (context.Context, error) {
 	msComm.RequestMetadata = &pb.RequestMetadata{}
 
 	msComm.Type = "microserviceCommunication"
-	msComm.RequestMetadata.DestinationQueue = "test"
+	msComm.RequestMetadata.DestinationQueue = "caller"
 	msComm.RequestMetadata.ReturnAddress = serviceName
 	msComm.RequestType = "sqlDataRequest"
 

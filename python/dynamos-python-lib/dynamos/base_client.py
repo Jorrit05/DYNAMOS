@@ -7,6 +7,6 @@ class BaseClient:
         self.service_name = service_name
         self.channel = channel
         self.logger = InitLogger()
-        self.logger.info("1")
-        self.tracer = InitTracer(self.service_name, "http://localhost:32003")
-        self.logger.info("2")
+        # self.logger.info("1")
+        # self.tracer = InitTracer(self.service_name, "http://localhost:32003")
+        # self.logger.info("2")

@@ -73,7 +73,7 @@ except KeyboardInterrupt:
     print("KeyboardInterrupt received, stopping server...")
     signal_continuation(stop_event, stop_microservice_condition)
 
-
+config.rabbit_msg_client.rabbit.stop()
 config.grpc_server.stop()
 config.next_client.close_program()
 time.sleep(2)
