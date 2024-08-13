@@ -8,10 +8,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *server) ChainConsume(in *pb.ConsumeRequest, stream pb.SideCar_ChainConsumeServer) error {
-	var err error
+func (s *serverInstance) ChainConsume(in *pb.ConsumeRequest, stream pb.SideCar_ChainConsumeServer) error {
 	logger.Sugar().Infow("Received:", "QueueName", in.QueueName, "AutoAck", in.AutoAck)
-	messages, err = channel.Consume(
+	messages, err := s.channel.Consume(
 		in.QueueName, // queue
 		"",           // consumer
 		in.AutoAck,   // auto-ack

@@ -15,12 +15,12 @@ var (
 	etcdClient *clientv3.Client
 )
 
-func (s *server) InitEtcd(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty, error) {
+func (s *serverInstance) InitEtcd(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty, error) {
 	etcdClient = etcd.GetEtcdClient(etcdEndpoints)
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) GetDatasetMetadata(ctx context.Context, in *pb.EtcdKey) (*pb.Dataset, error) {
+func (s *serverInstance) GetDatasetMetadata(ctx context.Context, in *pb.EtcdKey) (*pb.Dataset, error) {
 	logger.Debug("Starting GetDatasetMetadata")
 	value, err := etcd.GetByteValueFromEtcd(etcdClient, in.Path)
 	if err != nil {

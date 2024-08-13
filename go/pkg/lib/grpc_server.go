@@ -44,9 +44,8 @@ func (s *SharedServer) SendData(ctx context.Context, data *pb.MicroserviceCommun
 	}
 	defer span.End()
 
-	// This is a bit tricky, the callbacks are registered because the SendData function is generally implemented as a server side function.
-	// In other words, the client sends the data, and the server (the one receiving the data) should know how to handle it.
-	// Based on whether the Server is a Microservice or a Sidecar, they will register a different callback. The sidecar will forward the message to AMQ
+	// This callbackmechanism is outdated and can be removed, for this the consumption service of microservices
+	// should be updated and moved to a generic lib.
 	// The MS will process the message and send it to the next MS (or sidecar).
 	callback, ok := s.callbacks[data.Type]
 	if !ok {

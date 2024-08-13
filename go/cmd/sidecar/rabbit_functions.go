@@ -92,8 +92,7 @@ func setupConnection(queueName string, routingKey string, queueAutoDelete bool) 
 }
 
 func connect(connectionString string) (*amqp.Connection, *amqp.Channel, error) {
-	var err error
-	conn, err = amqp.Dial(connectionString)
+	conn, err := amqp.Dial(connectionString)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -137,9 +136,16 @@ func exchange(channel *amqp.Channel) error {
 	return nil
 }
 
-func close_channel(channel *amqp.Channel) {
-	channel.Close()
-	conn.Close()
+func close_channel(channel *amqp.Channel, conn *amqp.Connection) {
+	for {
+		if running_messages == 0 {
+			channel.Close()
+			conn.Close()
+			break
+		}
+		logger.Sugar().Infof("Waiting for %d messages to finish", running_messages)
+		time.Sleep(1 * time.Second)
+	}
 }
 
 func getAMQConnectionString() (string, error) {

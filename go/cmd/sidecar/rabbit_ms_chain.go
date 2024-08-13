@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *server) StopReceivingRabbit(ctx context.Context, in *pb.StopRequest) (*emptypb.Empty, error) {
+func (s *serverInstance) StopReceivingRabbit(ctx context.Context, in *pb.StopRequest) (*emptypb.Empty, error) {
 	logger.Sugar().Infow("StopReceivingRabbit Received stop request")
 
 	// Cancel the context
@@ -27,12 +27,13 @@ func (s *server) StopReceivingRabbit(ctx context.Context, in *pb.StopRequest) (*
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) InitRabbitForChain(ctx context.Context, in *pb.ChainRequest) (*emptypb.Empty, error) {
+func (s *serverInstance) InitRabbitForChain(ctx context.Context, in *pb.ChainRequest) (*emptypb.Empty, error) {
 	logger.Sugar().Infow("InitRabbitForChain Received:", "Servicename", in.ServiceName, "RoutingKey", in.RoutingKey, "Port", in.Port)
 
-	var err error
 	// Call the SetupConnection function and handle the message consumption inside this function
-	_, conn, channel, err = setupConnection(in.ServiceName, in.RoutingKey, in.QueueAutoDelete)
+	_, conn, channel, err := setupConnection(in.ServiceName, in.RoutingKey, in.QueueAutoDelete)
+	s.channel = channel
+	s.conn = conn
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -50,7 +51,7 @@ func (s *server) InitRabbitForChain(ctx context.Context, in *pb.ChainRequest) (*
 	}
 
 	go func() {
-		err = ChainConsume(consumeCtx, in.ServiceName, true, msClient, s.consumerManager.stopChan)
+		err = ChainConsume(consumeCtx, in.ServiceName, true, msClient, s.consumerManager.stopChan, s)
 
 		if err != nil {
 			logger.Sugar().Errorf("Error in chainconsume: ", codes.Internal, err.Error())
@@ -60,11 +61,10 @@ func (s *server) InitRabbitForChain(ctx context.Context, in *pb.ChainRequest) (*
 	return &emptypb.Empty{}, nil
 }
 
-func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient pb.MicroserviceClient, stopChan chan struct{}) error {
-	var err error
+func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient pb.MicroserviceClient, stopChan chan struct{}, serverInstance *serverInstance) error {
 	logger.Sugar().Infow("Start ChainConsume")
 
-	messages, err = channel.Consume(
+	messages, err := serverInstance.channel.Consume(
 		queueName, // queue
 		"",        // consumer
 		autoAck,   // auto-ack
@@ -106,7 +106,8 @@ func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient 
 			}
 		case <-stopChan:
 			logger.Sugar().Info("Received stop signal, exiting ChainConsume")
-			channel.Close()
+
+			close(stop)
 			return nil
 		}
 	}
