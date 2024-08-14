@@ -1,3 +1,18 @@
+// Package main, that implements 'sidecar' functionality
+//
+// File: grpc_server.go
+//
+// Description:
+// This file contains the gRPC server implementation for the sidecar.
+// It contains the serverInstance struct and the method implemntations for gRPC calls that the sidecar uses.
+//
+// Notes:
+// There are some generic gRPC methods implemented under the 'lib.sharedServer' struct. These methods
+// when registering a server a choice can be made to register the 'serverInstance' server
+// or the 'sharedServer' server or both. The sharedServer implements the Health and Generic gRPC services.
+//
+// Author: Jorrit Stutterheim
+
 package main
 
 import (
@@ -6,10 +21,27 @@ import (
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
+
+// ConsumerManager manages the consumers for the gRPC server.
+type ConsumerManager struct {
+	stopChan chan struct{}
+	cancel   context.CancelFunc
+}
+
+type serverInstance struct {
+	pb.UnimplementedSideCarServer
+	pb.UnimplementedEtcdServer
+	pb.UnimplementedMicroserviceServer
+	consumerManager *ConsumerManager
+	channel         *amqp.Channel
+	conn            *amqp.Connection
+	routingKey      string
+}
 
 func (s *serverInstance) InitRabbitMq(ctx context.Context, in *pb.InitRequest) (*emptypb.Empty, error) {
 	logger.Sugar().Infow("Received:", "Servicename", in.ServiceName, "RoutingKey", in.RoutingKey)
@@ -58,6 +90,9 @@ func (s *serverInstance) DeleteQueue(ctx context.Context, in *pb.QueueInfo) (*em
 	return &emptypb.Empty{}, nil
 }
 
+// Consume consumes messages from a specified queue and handles them based on their type.
+// It takes a ConsumeRequest and a stream (SideCar_ConsumeServer) as input parameters.
+// Returns an error if there was an issue consuming the messages or handling them.
 func (s *serverInstance) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer) error {
 	messages, err := s.channel.Consume(
 		in.QueueName, // queue
@@ -122,6 +157,8 @@ func (s *serverInstance) Consume(in *pb.ConsumeRequest, stream pb.SideCar_Consum
 	return nil
 }
 
+// SendData sends the provided data to the AMQ destination queue and returns a response
+// indicating whether to continue receiving.
 func (s *serverInstance) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*pb.ContinueReceiving, error) {
 	logger.Sugar().Debugf("Starting lib.SendData: %v", data.RequestMetadata.DestinationQueue)
 

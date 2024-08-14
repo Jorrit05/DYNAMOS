@@ -1,3 +1,17 @@
+// Package main, that implements 'sidecar' functionality
+//
+// File: rabbit_send.go
+//
+// Description:
+// This file contains the server implementations of sending an AMQ message to a destination queue.
+// A DYNAMOS service will package the message, and call this gRPC implementation
+// on the sidecar to send the message.
+//
+// Notes:
+//
+//
+// Author: Jorrit Stutterheim
+
 package main
 
 import (
@@ -19,6 +33,25 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+// This function sends a message to the specified AMQ target queue there is a retry mechanism in place
+// that will retry sending the message if the target queue is not available.
+//
+// Parameters:
+// - ctx: Context
+// - message: amqp.Publishing formated message to send.
+// - target: destination queue.
+// - s:  serverInstance pointer, used to access the channel.
+// - opts: The options to apply to the retry mechanism.
+//
+// Returns:
+// - An empty protobuf message.
+// - An error if the message could not be sent, otherwise nil.
+//
+// Notes:
+// If the message is undeliverable, the message will be returned to the sender with a NO_ROUTE reply text.
+// The function waits 5 seconds for this return message, otherwise it will continue. Everytime a message
+// is sent the global variable running_messages is incremented, and decremented when the message is sent.
+// This is to ensure that the server does not shut down while messages are still being sent.
 func send(ctx context.Context, message amqp.Publishing, target string, s *serverInstance, opts ...etcd.Option) (*emptypb.Empty, error) {
 	// Start with default options
 	retryOpts := etcd.DefaultRetryOptions

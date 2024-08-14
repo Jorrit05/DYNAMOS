@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opencensus.io/plugin/ocgrpc"
 
 	"google.golang.org/grpc"
@@ -24,21 +22,6 @@ var (
 	sendMutex        = &sync.Mutex{}
 	running_messages = 0
 )
-
-type ConsumerManager struct {
-	stopChan chan struct{}
-	cancel   context.CancelFunc
-}
-
-type serverInstance struct {
-	pb.UnimplementedSideCarServer
-	pb.UnimplementedEtcdServer
-	pb.UnimplementedMicroserviceServer
-	consumerManager *ConsumerManager
-	channel         *amqp.Channel
-	conn            *amqp.Connection
-	routingKey      string
-}
 
 func setupTracing() {
 	_, err := lib.InitTracer("sidecar")

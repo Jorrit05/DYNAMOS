@@ -8,6 +8,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// ChainConsume consumes messages from a specified queue and handles them based on their message type.
+// It takes a ConsumeRequest and a stream (SideCar_ChainConsumeServer) as input parameters.
+// The function returns an error if there was a problem consuming messages or handling them.
+//
+// This differs from the Consume function in that it handles messages of type "microserviceCommunication" only.
 func (s *serverInstance) ChainConsume(in *pb.ConsumeRequest, stream pb.SideCar_ChainConsumeServer) error {
 	logger.Sugar().Infow("Received:", "QueueName", in.QueueName, "AutoAck", in.AutoAck)
 	messages, err := s.channel.Consume(

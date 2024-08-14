@@ -1,3 +1,23 @@
+// Package main, that implements 'sidecar' functionality
+//
+// File: rabbit_ms_chain.go
+//
+// Description:
+// This file contains the gRPC server implementations for handling Microservice Chain
+// RabbitMQ consumption. Instead of streaming a message to the microservice, the message is sent
+// to the microservice using the generic 'SendData' function.
+//
+// The flow is that a microservice needs to send a single 'InitRabbitForChain' request to the sidecar to
+// create the required AMQ connection. The sidecar will then start consuming messages from
+// the specified queue. After consumption the microservice can send a 'StopReceivingRabbit' request to
+// exit the sidecar.
+//
+// Notes:
+// This works at the moment for Python microservices, this needs to be the new standard so that Go microservices
+// are handled the same way.Go microservices still use the old streaming method in rabbit_chain_consume.go.
+//
+// Author: Jorrit Stutterheim
+
 package main
 
 import (
@@ -27,6 +47,15 @@ func (s *serverInstance) StopReceivingRabbit(ctx context.Context, in *pb.StopReq
 	return &emptypb.Empty{}, nil
 }
 
+// InitRabbitForChain sets up a RabbitMQ connection and starts consuming messages from the specified queue.
+//
+// Parameters:
+// - ctx: Context
+// - in: ChainRequest containing the service name, routing key, and port.
+//
+// Returns:
+// - An empty protobuf message.
+// - An error if the connection could not be set up, otherwise nil.
 func (s *serverInstance) InitRabbitForChain(ctx context.Context, in *pb.ChainRequest) (*emptypb.Empty, error) {
 	logger.Sugar().Infow("InitRabbitForChain Received:", "Servicename", in.ServiceName, "RoutingKey", in.RoutingKey, "Port", in.Port)
 
@@ -61,6 +90,19 @@ func (s *serverInstance) InitRabbitForChain(ctx context.Context, in *pb.ChainReq
 	return &emptypb.Empty{}, nil
 }
 
+// ChainConsume consumes 'MicroserviceCommunication' messages from a specified queue.
+// Will exit on when a stop signal is received.
+//
+// Parameters:
+// - ctx: Context
+// - queueName: Name of the queue to consume from.
+// - autoAck: Whether to automatically acknowledge messages.
+// - msClient: MicroserviceClient to send messages to.
+// - stopChan: Channel to receive stop signals on.
+// - serverInstance: Pointer to the serverInstance to access the channel.
+//
+// Returns:
+// - An error if there was a problem consuming messages or handling them, otherwise nil.
 func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient pb.MicroserviceClient, stopChan chan struct{}, serverInstance *serverInstance) error {
 	logger.Sugar().Infow("Start ChainConsume")
 
