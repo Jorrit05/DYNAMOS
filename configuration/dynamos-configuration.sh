@@ -4,10 +4,10 @@ set -e
 
 # Change this to the path of the DYNAMOS repository on your disk
 echo "Setting up paths..."
-dynamos_path="${HOME}/DYNAMOS"
+DYNAMOS_ROOT="${HOME}/DYNAMOS"
 
 # Charts
-charts_path="${dynamos_path}/charts"
+charts_path="${DYNAMOS_ROOT}/charts"
 core_chart="${charts_path}/core"
 namespace_chart="${charts_path}/namespaces"
 orchestrator_chart="${charts_path}/orchestrator"
@@ -16,7 +16,7 @@ ttp_chart="${charts_path}/thirdparty"
 api_gw_chart="${charts_path}/api-gateway"
 
 # Config
-config_path="${dynamos_path}/configuration"
+config_path="${DYNAMOS_ROOT}/configuration"
 k8s_service_files="${config_path}/k8s_service_files"
 etcd_launch_files="${config_path}/etcd_launch_files"
 
@@ -31,7 +31,7 @@ echo "Generating RabbitMQ password..."
 rabbit_pw=$(openssl rand -hex 16)
 
 # Use the RabbitCtl to make a special hash of that password:
-hashed_pw=$($SUDO docker run --rm rabbitmq: 3-management rabbitmqctl hash_password $rabbit_pw)
+hashed_pw=$($SUDO docker run --rm rabbitmq:3-management rabbitmqctl hash_password $rabbit_pw)
 actual_hash=$(echo "$hashed_pw" | cut -d $'\n' -f2)
 
 echo "Replacing tokens..."
@@ -55,7 +55,7 @@ helm upgrade -i -f ${namespace_chart}/values.yaml namespaces ${namespace_chart} 
 echo "Preparing PVC"
 
 {
-    cd ${dynamos_path}/configuration
+    cd ${DYNAMOS_ROOT}/configuration
     ./fill-rabbit-pvc.sh
 }
 
