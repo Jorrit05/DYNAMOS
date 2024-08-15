@@ -7,8 +7,26 @@ import microserviceCommunication_pb2 as msCommTypes
 from typing import Callable, Dict
 from google.protobuf.empty_pb2 import Empty
 
+from opentelemetry import trace
+import json
+from opentelemetry.trace.span import TraceFlags, TraceState
+from opentelemetry.trace.propagation import set_span_in_context
+from opentelemetry.context.context import Context
 
 logger = InitLogger()
+
+# Global map to register functions
+global_function_map: Dict[str, Callable[[msCommTypes.MicroserviceCommunication, Context], Empty]] = {}
+
+def register_function(name: str, handler: Callable[[msCommTypes.MicroserviceCommunication, Context], Empty]):
+    global_function_map[name] = handler
+
+def get_and_call_function(name: str, msComm: msCommTypes.MicroserviceCommunication, ctx: Context) -> Empty:
+    if name in global_function_map:
+        handler = global_function_map[name]
+        return handler(msComm, ctx)
+    else:
+        raise ValueError(f"No function registered under the name: {name}")
 
 class Configuration:
     def __init__(self,
@@ -26,8 +44,40 @@ class Configuration:
         self.next_client = None
         self.ms_message_handler = ms_message_handler
 
-    def init_sidecar_messaging(self, receive_mutex):
-        pass  # Implement sidecar messaging initialization
+
+def request_handler(msComm : msCommTypes.MicroserviceCommunication):
+    try:
+        if msComm.type == "microserviceCommunication":
+            try:
+                # Parse the trace header back into a dictionary
+                scMap = json.loads(msComm.traces["jsonTrace"])
+                state = TraceState([("sampled", "1")])
+                sc = trace.SpanContext(
+                    trace_id=int(scMap['TraceID'], 16),
+                    span_id=int(scMap['SpanID'], 16),
+                    is_remote=True,
+                    trace_flags=TraceFlags(TraceFlags.SAMPLED),
+                    trace_state=state
+                )
+
+            # Don't think I need this now..
+            # for k, v in msg.traces.items():
+            #     msComm.traces[k] = v
+
+                # create a non-recording span with the SpanContext and set it in a Context
+                span = trace.NonRecordingSpan(sc)
+                ctx = set_span_in_context(span)
+
+                get_and_call_function("callback", msComm, ctx)
+            except Exception as e:
+                logger.error(f"An unexpected error occurred: {e}")
+                return False
+        else:
+            logger.error(f"An unexpected message arrived occurred: {msComm.type}")
+            return False
+
+    except Exception as e:
+        logger.error(f"Error in ms_init request_handler: {e}")
 
 
 def NewConfiguration(service_name,
@@ -37,6 +87,8 @@ def NewConfiguration(service_name,
         port = int(os.getenv("DESIGNATED_GRPC_PORT"))
     except ValueError:
         raise ValueError("Error determining port number")
+
+    register_function("callback", ms_message_handler)
 
     try:
         # If first service, setup incoming RabbitMQ channel
@@ -50,7 +102,7 @@ def NewConfiguration(service_name,
     except ValueError:
         raise ValueError("Error determining last service")
 
-    logger.debug(f"NewConfiguration {service_name}, port: {port}, last_service: {last_service}")
+    logger.debug(f"NewConfiguration {service_name}, port: {port},  first_service: {first_service},  last_service: {last_service}")
 
     conf = Configuration(
         port=port,
@@ -62,7 +114,7 @@ def NewConfiguration(service_name,
 
     if conf.first_service:
         # First and last, connect to sidecar for processing and final destination
-        conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), ms_message_handler)
+        conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), request_handler)
         conf.rabbit_msg_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"), service_name)
         if conf.last_service:
             conf.next_client = conf.rabbit_msg_client

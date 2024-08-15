@@ -28,7 +28,9 @@ spec:
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
         - name: SQL-QUERY_TAG
-          value: latest
+          value: pythonlib
+        - name: SIDECAR_TAG
+          value: pythonlib
         # resources:
         #   requests:
         #     memory: "128Mi"

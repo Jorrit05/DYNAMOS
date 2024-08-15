@@ -4,9 +4,9 @@ dynamos/base_client.py
 dynamos/grpc_client.py
 dynamos/grpc_server.py
 dynamos/logger.py
-dynamos/microservice_client.py
 dynamos/ms_init.py
 dynamos/rabbit_client.py
+dynamos/signal_flow.py
 dynamos/tracer.py
 dynamos.egg-info/PKG-INFO
 dynamos.egg-info/SOURCES.txt

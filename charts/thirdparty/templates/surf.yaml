@@ -27,6 +27,8 @@ spec:
           value: SURF
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
+        - name: SIDECAR_TAG
+          value: pythonlib
       - name: sidecar
         image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
         imagePullPolicy: Always

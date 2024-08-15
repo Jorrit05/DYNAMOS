@@ -4,8 +4,6 @@
 // 	protoc        v3.12.4
 // source: health.proto
 
-// package proto;
-
 package proto
 
 import (

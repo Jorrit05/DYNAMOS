@@ -12,10 +12,10 @@ from typing import Callable, Dict
 import health_pb2_grpc as healthServer
 import health_pb2 as healthTypes
 import microserviceCommunication_pb2_grpc as msCommServer
-import microserviceCommunication_pb2
+import microserviceCommunication_pb2 as msCommTypes
 
 
-CallbackType = Callable[[grpc.ServicerContext, microserviceCommunication_pb2.MicroserviceCommunication], Empty]
+CallbackType = Callable[[grpc.ServicerContext, msCommTypes.MicroserviceCommunication], Empty]
 
 class HealthServicer(healthServer.HealthServicer):
     def __init__(self, logger):
@@ -35,11 +35,11 @@ class HealthServicer(healthServer.HealthServicer):
 
 
 class MicroserviceServicer(msCommServer.MicroserviceServicer):
-    def __init__(self, msCommHandler: Callable[[microserviceCommunication_pb2.MicroserviceCommunication], Empty()], logger): # type: ignore
+    def __init__(self, msCommHandler: Callable[[msCommTypes.MicroserviceCommunication], Empty()], logger): # type: ignore
         self.callback: CallbackType = msCommHandler
         self.logger = logger
 
-    def SendData(self, msComm: microserviceCommunication_pb2.MicroserviceCommunication, context):
+    def SendData(self, msComm: msCommTypes.MicroserviceCommunication, context):
         self.logger.debug(f"Starting MicroserviceServicer grpc_server.py/SendData: {msComm.request_metadata.destination_queue}")
 
         span = trace.get_current_span()
@@ -53,8 +53,8 @@ class MicroserviceServicer(msCommServer.MicroserviceServicer):
 
         try:
             self.logger.debug(f"msComm type: {type(msComm)}")
-            if not isinstance(msComm, microserviceCommunication_pb2.MicroserviceCommunication):
-                raise TypeError(f"Expected msComm to be of type microserviceCommunication_pb2.MicroserviceCommunication, got {type(msComm)}")
+            if not isinstance(msComm, msCommTypes.MicroserviceCommunication):
+                raise TypeError(f"Expected msComm to be of type msCommTypes.MicroserviceCommunication, got {type(msComm)}")
 
             self.callback(msComm)
         except TypeError as e:
@@ -69,7 +69,7 @@ class MicroserviceServicer(msCommServer.MicroserviceServicer):
 
 
 class GRPCServer(BaseClient):
-    def __init__(self, grpc_addr, msCommHandler: Callable[[microserviceCommunication_pb2.MicroserviceCommunication], None]):
+    def __init__(self, grpc_addr, msCommHandler: Callable[[msCommTypes.MicroserviceCommunication, Callable[[msCommTypes.MicroserviceCommunication],Empty ]], None]):
         self.grpc_addr = grpc_addr
         super().__init__(None, None)
         self.callback: CallbackType = msCommHandler

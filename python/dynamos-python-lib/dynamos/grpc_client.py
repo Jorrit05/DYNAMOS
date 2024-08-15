@@ -1,21 +1,14 @@
 import grpc
 import time
-from .logger import InitLogger
 from .base_client import BaseClient
 from .rabbit_client import RabbitClient
 from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
 from google.protobuf.empty_pb2 import Empty
-from concurrent import futures
-from opentelemetry import trace
 
 import health_pb2_grpc as healthServer
 import health_pb2 as healthTypes
-import rabbitMQ_pb2_grpc as rabbitServer
-import rabbitMQ_pb2 as rabbitTypes
-import etcd_pb2_grpc as etcdServer
 import etcd_pb2 as etcdTypes
 import microserviceCommunication_pb2_grpc as msCommServer
-import microserviceCommunication_pb2 as msCommTypes
 import threading
 
 class GRPCClient(BaseClient):

@@ -4,30 +4,44 @@ import re
 import time
 import sys
 import os
-from dynamos.rabbit_client import RabbitClient
-from dynamos.microservice_client import MsCommunication
-from dynamos.logger import InitLogger
-from dynamos.tracer import InitTracer
-from dynamos.ms_init import NewConfiguration
-from dynamos import rabbitMQ_pb2 as rabbitTypes
-from dynamos import microserviceCommunication_pb2 as msCommTypes
-
 from google.protobuf.struct_pb2 import Struct, Value, ListValue
-
 import json
 import argparse
+from dynamos.ms_init import NewConfiguration
+from dynamos.signal_flow import signal_continuation, signal_wait
+from dynamos.logger import InitLogger
+from dynamos.tracer import InitTracer
 
+from google.protobuf.empty_pb2 import Empty
+import microserviceCommunication_pb2 as msCommTypes
+import rabbitMQ_pb2 as rabbitTypes
+import threading
+import time
+import sys
+from opentelemetry.context.context import Context
+
+
+# --- DYNAMOS Interface code At the TOP ----------------------------------------------------
 if os.getenv('ENV') == 'PROD':
     import config_prod as config
 else:
     import config_local as config
 
-
-#---- GLOBALS
 logger = InitLogger()
 tracer = InitTracer(config.service_name, config.tracing_host)
 
-#------------
+# Events to start the shutdown of this Microservice, can be used to call 'signal_shutdown'
+stop_event = threading.Event()
+stop_microservice_condition = threading.Condition()
+
+# Events to make sure all services have started before starting to process a message
+# Might be overkill, but good practice
+wait_for_setup_event = threading.Event()
+wait_for_setup_condition = threading.Condition()
+
+ms_config = None
+
+# --- END DYNAMOS Interface code At the TOP ----------------------------------------------------
 
 #---- LOCAL TEST SETUP OPTIONAL!
 
@@ -40,8 +54,6 @@ test = args.test
 #--------------------------------
 
 
-
-@tracer.start_as_current_span("load_and_query_csv")
 def load_and_query_csv(file_path_prefix, query):
     # Extract table names from the query
     table_names = re.findall(r'FROM (\w+)', query) + re.findall(r'JOIN (\w+)', query)
@@ -67,7 +79,6 @@ def load_and_query_csv(file_path_prefix, query):
     return result_df
 
 
-@tracer.start_as_current_span("dataframe_to_protobuf")
 def dataframe_to_protobuf(df):
     # Convert the DataFrame to a dictionary of lists (one for each column)
     data_dict = df.to_dict(orient='list')
@@ -92,137 +103,85 @@ def dataframe_to_protobuf(df):
 
     return data_struct, metadata
 
-def process_sql_data_request(sqlDataRequest, msComm, microserviceCommunicator, ctx):
+
+def process_sql_data_request(sqlDataRequest, ctx):
+    global config
     logger.debug("Start process_sql_data_request")
 
     try:
         result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
         data, metadata = dataframe_to_protobuf(result)
 
-        with tracer.start_as_current_span("SendData") as span3:
-            microserviceCommunicator.SendData("sqlDataRequest", data, metadata, msComm)
-
-        logger.debug("After sendData")
-        return True
+        return data, metadata
     except FileNotFoundError:
         logger.error(f"File not found at path {config.dataset_filepath}")
-        return False
+        return None, {}
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
-        return False
-
-def handleMsCommunication(msComm, microserviceCommunicator, ctx):
-    if msComm.request_type == "sqlDataRequest":
-
-        sqlDataRequest = rabbitTypes.SqlDataRequest()
-        msComm.original_request.Unpack(sqlDataRequest)
-
-        with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
-            result = process_sql_data_request(sqlDataRequest, msComm, microserviceCommunicator, ctx)
-            span1.set_attribute("handleMsCommunication finished:", result)
-            return result
-
-    else:
-        logger.error(f"An unexpected msCommunication: {msComm.request_type}")
-        return False
+        return None, {}
 
 
-def handle_incoming_request(rabbitClient, msg):
-    # Parse the trace header back into a dictionary
-    scMap = json.loads(msg.traces["jsonTrace"])
-    state = TraceState([("sampled", "1")])
-    sc = trace.SpanContext(
-        trace_id=int(scMap['TraceID'], 16),
-        span_id=int(scMap['SpanID'], 16),
-        is_remote=True,
-        trace_flags=TraceFlags(TraceFlags.SAMPLED),
-        trace_state=state
-    )
+# ---  DYNAMOS Interface code At the Bottom -----------------------------------------------------
 
-    # create a non-recording span with the SpanContext and set it in a Context
-    span = trace.NonRecordingSpan(sc)
-    ctx = set_span_in_context(span)
+def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context):
+    global ms_config
+    logger.info(f"Received original request type: {msComm.request_type}")
 
-    microserviceCommunicator = MsCommunication(config, ctx)
-    # _, span = tracer_class.create_parent_span("handle_incoming", msg.trace)
-    if msg.type == "microserviceCommunication":
-        try:
+    # Ensure all connections have finished setting up before processing data
+    signal_wait(wait_for_setup_event, wait_for_setup_condition)
 
-            msComm = msCommTypes.MicroserviceCommunication()
-            msg.body.Unpack(msComm)
-            for k, v in msg.traces.items():
-                msComm.traces[k] = v
+    try:
+        if msComm.request_type == "sqlDataRequest":
+            sqlDataRequest = rabbitTypes.SqlDataRequest()
+            msComm.original_request.Unpack(sqlDataRequest)
 
-            result = handleMsCommunication(msComm, microserviceCommunicator, ctx)
-            logger.debug(f"Returning restult {result}")
-            return result
-        except Exception as e:
-            logger.error(f"An unexpected error occurred: {e}")
-            return False
-    else:
-        logger.error(f"An unexpected message arrived occurred: {msg.type}")
-        return False
+            with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
+                data, metadata = process_sql_data_request(sqlDataRequest, ctx)
+                span1.set_attribute("handleMsCommunication finished:", metadata)
 
-# @tracer.start_as_current_span("test_single_query")
-def test_single_query():
-    size = "100"
-    # Define your SQL query
-    query = f"""SELECT *
-               FROM Personen p
-               JOIN Aanstellingen s LIMIT {size}"""
+            logger.debug(f"Forwarding result, metadata: {metadata}")
+            ms_config.next_client.ms_comm.send_data(msComm, data, metadata)
+            signal_continuation(stop_event, stop_microservice_condition)
 
-    # print(msg)
-    # Load the CSV file and execute the query
-    result_df = load_and_query_csv(config.dataset_filepath, query)
+        else:
+            logger.error(f"An unknown request_type: {msComm.request_type}")
 
-    # with open("output.json", "w") as file1:
-        # Writing data to a file
-    start = time.time()
-    result_df.to_csv(f"output_{size}.txt", sep='\t', index=False)
-    # df = pd.read_csv(f"output_{size}.txt", sep='\t')
-    end = time.time()
-    print(f'Time elapsed for file write: {end - start} seconds')
+        return Empty()
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        return Empty()
 
-    return True
 
 def main():
+    global config
+
     if test:
-        job_name="Test"
+        logger.info("Running in test mode")
+        return
 
-        # rabbitClient = RabbitClient(config, job_name, job_name, test_single_query)
-        # result = rabbitClient.start_consuming(job_name, 10, 2)
-        # logger.info("lets wait a few seconds before quitting")
-        # time.sleep(5)
-        test_single_query()
+    ms_config = NewConfiguration(config.service_name, config.grpc_addr, request_handler)
 
-        exit(0)
+    # Signal the message handler that all connections have been created
+    signal_continuation(wait_for_setup_event, wait_for_setup_condition)
 
-    logger.debug("Starting Query service")
+    # Wait for the end of processing to shutdown this Microservice
+    try:
+        signal_wait(stop_event, stop_microservice_condition)
 
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt received, stopping server...")
+        signal_continuation(stop_event, stop_microservice_condition)
 
-    conf = NewConfiguration(
-        service_name=config.service_name,
-        grpc_addr="localhost:",
-        COORDINATOR=COORDINATOR,
-        sidecar_callback=lambda: lambda ctx, grpc_msg: None,
-        grpc_callback=lambda ctx, data: None,
-        receive_mutex=receive_mutex
-    )
+    ms_config.rabbit_msg_client.rabbit.stop()
+    ms_config.grpc_server.stop()
+    ms_config.next_client.close_program()
+    time.sleep(2)
 
-    if int(os.getenv("FIRST")) > 0:
-        # logger.debug("First service")
-        job_name = os.getenv("JOB_NAME")
-        rabbitClient = RabbitClient(config, job_name, job_name, handle_incoming_request, False)
-        rabbitClient.start_consuming(job_name, 10, 2)
-    else:
-        #TODO: Setup listener service for Python
-        # logger.debug("Not the first service")
-        exit(1)
-
-
-
-    logger.debug("Exiting query service")
+    logger.debug(f"Exiting {config.service_name}")
     sys.exit(0)
+
+# ---  END DYNAMOS Interface code At the Bottom -------------------------------------------------
+
 
 
 if __name__ == "__main__":
