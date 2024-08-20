@@ -60,7 +60,7 @@ func (s *serverInstance) InitRabbitForChain(ctx context.Context, in *pb.ChainReq
 	logger.Sugar().Infow("InitRabbitForChain Received:", "Servicename", in.ServiceName, "RoutingKey", in.RoutingKey, "Port", in.Port)
 
 	// Call the SetupConnection function and handle the message consumption inside this function
-	_, conn, channel, err := setupConnection(in.ServiceName, in.RoutingKey, in.QueueAutoDelete)
+	_, conn, channel, err := setupConnection(in.RoutingKey, in.RoutingKey, in.QueueAutoDelete)
 	s.channel = channel
 	s.conn = conn
 
@@ -80,7 +80,7 @@ func (s *serverInstance) InitRabbitForChain(ctx context.Context, in *pb.ChainReq
 	}
 
 	go func() {
-		err = ChainConsume(consumeCtx, in.ServiceName, true, msClient, s.consumerManager.stopChan, s)
+		err = ChainConsume(consumeCtx, in.RoutingKey, true, msClient, s.consumerManager.stopChan, s)
 
 		if err != nil {
 			logger.Sugar().Errorf("Error in chainconsume: ", codes.Internal, err.Error())
@@ -104,7 +104,7 @@ func (s *serverInstance) InitRabbitForChain(ctx context.Context, in *pb.ChainReq
 // Returns:
 // - An error if there was a problem consuming messages or handling them, otherwise nil.
 func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient pb.MicroserviceClient, stopChan chan struct{}, serverInstance *serverInstance) error {
-	logger.Sugar().Infow("Start ChainConsume")
+	logger.Sugar().Infow("Start ChainConsume, queueName: %s", queueName)
 
 	messages, err := serverInstance.channel.Consume(
 		queueName, // queue
@@ -134,6 +134,27 @@ func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient 
 				if err := proto.Unmarshal(msg.Body, msComm); err != nil {
 					logger.Sugar().Errorf("Error unmarshalling msComm msg, %v", err)
 					return err
+				}
+
+				logger.Debug("Send Mscomm to main container")
+				if msg.Headers != nil {
+					logger.Debug("msg.Headers != nil")
+
+					msComm.Traces = make(map[string][]byte)
+					value, ok := msg.Headers["jsonTrace"]
+					if ok {
+						logger.Debug("Adding jsonTraces")
+
+						msComm.Traces["jsonTrace"] = value.([]byte)
+					}
+
+					value, ok = msg.Headers["binaryTrace"]
+					if ok {
+						logger.Debug("Adding binaryTrace")
+						msComm.Traces["binaryTrace"] = value.([]byte)
+					}
+				} else {
+					logger.Debug("msg.Headers == nil")
 				}
 
 				resp, err := msClient.SendData(ctx, msComm)

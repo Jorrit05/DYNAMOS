@@ -28,7 +28,7 @@ else:
     import config_local as config
 
 logger = InitLogger()
-tracer = InitTracer(config.service_name, config.tracing_host)
+# tracer = InitTracer(config.service_name, config.tracing_host)
 
 # Events to start the shutdown of this Microservice, can be used to call 'signal_shutdown'
 stop_event = threading.Event()
@@ -69,12 +69,18 @@ def load_and_query_csv(file_path_prefix, query):
             file_name = f"{file_path_prefix}{table_name}_{DATA_STEWARD_NAME}.csv"
             logger.debug(f"Loading file {file_name}")
             dfs[table_name] = pd.read_csv(file_name, delimiter=';')
+            logger.debug(f"after read csv")
         except FileNotFoundError:
             logger.error(f"CSV file for table {table_name}_{DATA_STEWARD_NAME} not found.")
             return None
 
-    # Use pandasql's sqldf function to execute the SQL query
-    result_df = sqldf(query, dfs)
+    try:
+        # Use pandasql's sqldf function to execute the SQL query
+        result_df = sqldf(query, dfs)
+    except Exception as e:
+        logger.error(f"An error occurred while executing the query: {str(e)}")
+
+    logger.debug(f"after result_df")
 
     return result_df
 
@@ -110,6 +116,7 @@ def process_sql_data_request(sqlDataRequest, ctx):
 
     try:
         result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
+        logger.debug("after load and query csv")
         data, metadata = dataframe_to_protobuf(result)
 
         return data, metadata
@@ -135,9 +142,9 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
 
-            with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
-                data, metadata = process_sql_data_request(sqlDataRequest, ctx)
-                span1.set_attribute("handleMsCommunication finished:", metadata)
+            # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
+            data, metadata = process_sql_data_request(sqlDataRequest, ctx)
+                # span1.set_attribute("handleMsCommunication finished:", metadata)
 
             logger.debug(f"Forwarding result, metadata: {metadata}")
             ms_config.next_client.ms_comm.send_data(msComm, data, metadata)
@@ -154,6 +161,7 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
 
 def main():
     global config
+    global ms_config
 
     if test:
         logger.info("Running in test mode")
@@ -172,11 +180,8 @@ def main():
         print("KeyboardInterrupt received, stopping server...")
         signal_continuation(stop_event, stop_microservice_condition)
 
-    ms_config.rabbit_msg_client.rabbit.stop()
-    ms_config.grpc_server.stop()
-    ms_config.next_client.close_program()
-    time.sleep(2)
 
+    ms_config.stop(2)
     logger.debug(f"Exiting {config.service_name}")
     sys.exit(0)
 

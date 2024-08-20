@@ -31,6 +31,8 @@ spec:
           value: pythonlib
         - name: SIDECAR_TAG
           value: pythonlib
+        - name: SQL-ALGORITHM_TAG
+          value: pythonlib
         # resources:
         #   requests:
         #     memory: "128Mi"

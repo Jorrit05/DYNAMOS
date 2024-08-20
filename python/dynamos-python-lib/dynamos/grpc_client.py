@@ -1,19 +1,41 @@
+"""
+Package dynamos, implements functionality for handling Microservice chains in Python.
+
+File: grpc_client.py
+
+Description:
+This file contains the GRPCClient, this client initiates a connection to another gRPC server and
+registers all gRPC function stubs. This allows calling functions implemented on the gRPC server side.
+
+Notes:
+
+Author: Jorrit Stutterheim
+"""
+
 import grpc
 import time
 from .base_client import BaseClient
 from .rabbit_client import RabbitClient
 from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
-from google.protobuf.empty_pb2 import Empty
 
 import health_pb2_grpc as healthServer
 import health_pb2 as healthTypes
-import etcd_pb2 as etcdTypes
 import microserviceCommunication_pb2_grpc as msCommServer
-import threading
+
 
 class GRPCClient(BaseClient):
-    def __init__(self, grpc_addr, service_name):
+    """A client for interacting with a gRPC server."""
 
+    def __init__(self, grpc_addr, service_name):
+        """
+        Initialize the GRPCClient, start a connection to the gRPC server. And register all
+        gRPC function stubs.
+
+        Args:
+            grpc_addr (str): The address of the gRPC server.
+            service_name (str): The name of the service.
+
+        """
         self.grpc_addr = grpc_addr
 
         # Init Logger first without a channel
@@ -21,23 +43,28 @@ class GRPCClient(BaseClient):
         self.channel = self.get_grpc_connection(grpc_addr)
 
         self.health = HealthClient(self.channel, service_name, self.logger)
-        self.etcd = EtcdClient(self.channel, service_name, self.logger)
         self.ms_comm = MicroserviceClient(self.channel, service_name, self.logger)
-        self.rabbit_thread = threading.Thread(target=self._init_rabbit)
-        self.rabbit_thread.start()
-
-
-    def _init_rabbit(self):
         self.rabbit = RabbitClient(self.channel, self.service_name, self.logger)
 
-
     def close_program(self):
-        """Close the gRPC channel gracefully"""
+        """Close the gRPC channel gracefully."""
         self.channel.close()
         self.logger.debug("Closed gRPC channel")
 
-
     def get_grpc_connection(self, grpc_addr):
+        """
+        Get a gRPC connection to the server.
+
+        Args:
+            grpc_addr (str): The address of the gRPC server.
+
+        Returns:
+            grpc.Channel: The gRPC channel.
+
+        Raises:
+            Exception: If unable to connect to the gRPC server after 7 retries.
+
+        """
         channel = grpc.insecure_channel(grpc_addr)
         grpc_server_instrumentor = GrpcInstrumentorClient()
         grpc_server_instrumentor.instrument(channel=channel)
@@ -60,6 +87,21 @@ class GRPCClient(BaseClient):
 
 
 class MicroserviceClient:
+    """
+    Represents a client for interacting with the next microservices in a microservice chain.
+
+    Args:
+        channel: The gRPC channel used for communication with the microservice.
+        service_name: Own name of the microservice.
+        logger: The logger instance used for logging.
+
+    Attributes:
+        logger: The logger instance used for logging.
+        channel: The gRPC channel used for communication with the microservice.
+        service_name: The name of this microservice.
+        stub: The gRPC stub for making RPC calls to the microservice.
+    """
+
     def __init__(self, channel, service_name, logger):
         self.logger = logger
         self.channel = channel
@@ -68,6 +110,17 @@ class MicroserviceClient:
 
     # Define microservice-specific methods here
     def send_data(self, msComm, data, metadata):
+        """
+        Sends data to the microservice.
+
+        Args:
+            msComm: The message object used for communication with the microservice.
+            data: The data to be sent.
+            metadata: The metadata associated with the data.
+
+        Returns:
+            None
+        """
         # Populate the message fields
         msComm.data.CopyFrom(data)
 
@@ -102,20 +155,3 @@ class HealthClient:
         except grpc.RpcError as e:
             self.logger.error(f"Health check failed: {e.details()}")
             return None
-
-
-class EtcdClient:
-    def __init__(self, channel, service_name, logger):
-        self.logger = logger
-        self.channel = channel
-        self.service_name = service_name
-
-    def initialize_etcd(self):
-        empty = Empty()
-        self.client.InitEtcd(empty)
-
-    def getDatasetMetadata(self, key):
-        path = etcdTypes.EtcdKey()
-        path.path = key
-        return self.client.GetDatasetMetadata(path)
-

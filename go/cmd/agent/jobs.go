@@ -47,6 +47,8 @@ func handleFurtherProcessing(ctx context.Context, waitingJobName string, msComm 
 	msComm.RequestMetadata.ReturnAddress = agentConfig.RoutingKey
 	// PrettyPrintMicroserviceCommunication(msComm)
 	logger.Sugar().Debugf("handleFurtherProcessing: %v", time.Now())
+	logger.Sugar().Debugf("handleFurtherProcessing, requestMetaData DestinationQueue %v", msComm.RequestMetadata.DestinationQueue)
+	logger.Sugar().Debugf("handleFurtherProcessing, requestMetaData %v", msComm.RequestMetadata)
 
 	c.SendMicroserviceComm(ctx, msComm)
 }

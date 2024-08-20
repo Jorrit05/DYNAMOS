@@ -1,3 +1,16 @@
+"""
+Package dynamos, implements functionality for handling Microservice chains in Python.
+
+File: logger.py
+
+Description:
+This file contains the logger. Simple generic logger initiation.
+
+Notes:
+
+Author: Jorrit Stutterheim
+"""
+
 import logging
 import os
 import sys

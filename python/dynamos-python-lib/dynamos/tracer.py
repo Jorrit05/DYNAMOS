@@ -1,3 +1,16 @@
+"""
+Package dynamos, implements functionality for handling Microservice chains in Python.
+
+File: tracer.py
+
+Description:
+Simple generic tracer initiation.
+
+Notes:
+Some problems here.
+
+Author: Jorrit Stutterheim
+"""
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter

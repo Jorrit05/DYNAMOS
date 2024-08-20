@@ -100,6 +100,7 @@ func setupConnection(queueName string, routingKey string, queueAutoDelete bool) 
 		time.Sleep(2 * time.Second)
 	}
 	return nil, conn, channel, nil
+
 }
 
 // connect establishes a connection to an AMQP server using the provided connection string.

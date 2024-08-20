@@ -7,5 +7,7 @@
 			"path": "proto-files"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"makefile.configureOnOpen": false
+	}
 }
