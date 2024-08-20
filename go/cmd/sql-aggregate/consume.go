@@ -66,7 +66,7 @@ func incomingMessageWrapper(ctx context.Context, msComm *pb.MicroserviceCommunic
 	logger.Debug("Wait for all services to start")
 	<-COORDINATOR
 
-	c := pb.NewMicroserviceClient(config.NextConnection)
+	c := pb.NewMicroserviceClient(config.NextClient)
 
 	mscommList = append(mscommList, msComm)
 	logger.Sugar().Infof("mscommList: %v", mscommList)

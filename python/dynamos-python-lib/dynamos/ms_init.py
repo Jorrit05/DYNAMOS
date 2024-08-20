@@ -88,6 +88,7 @@ class Configuration:
 
         time.sleep(sleep_time)
 
+
 def request_handler(msComm : msCommTypes.MicroserviceCommunication):
     """
     Handles the incoming microservice communication message.
@@ -191,7 +192,7 @@ def NewConfiguration(service_name,
     )
 
     if conf.first_service:
-        # First and last, connect to sidecar for processing and final destination
+        # First and possibly last, connect to sidecar for processing and final destination
         conf.grpc_server = GRPCServer(grpc_addr + str(conf.Port), request_handler)
         conf.rabbit_msg_client = GRPCClient(grpc_addr + os.getenv("SIDECAR_PORT"), service_name)
         if conf.last_service:
@@ -199,6 +200,7 @@ def NewConfiguration(service_name,
         else:
             conf.next_client = GRPCClient(grpc_addr + str(conf.Port + 1), service_name)
 
+        # Send a message to the RabbitMQ server to initialize the connection
         conf.rabbit_msg_client.rabbit.initialize_rabbit(job_name, conf.Port)
 
     elif conf.last_service:
