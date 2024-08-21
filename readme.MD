@@ -55,7 +55,7 @@ Please refer to Windows documentation on how to enable this. Here is one example
 https://learn.microsoft.com/en-us/windows/wsl/install
 
 ##  2. <a name='DockerDesktop'></a>Docker Desktop
-For local development we utilise Docker Desktop, as upon installation we get Kubernetes for free in an easily manageable interface. 
+For local development we utilise Docker Desktop, as upon installation we get Kubernetes for free in an easily manageable interface.
 
 Need to enable kubernetes in order to install some of the following requirements. On docker desktop this can be done by following Settings > Kubernetes > Enable Kubernetes. Check that both Kubernetes client and server:
 ```bash
@@ -381,6 +381,7 @@ delete_jobs() {
   kubectl get pods -A | grep 'jorrit-stutterheim' | awk '{split($2,a,"-"); print $1" "a[1]"-"a[2]"-"a[3]}' | xargs -n2 bash -c 'kubectl delete job $1 -n $0'
   etcdctl --endpoints=http://localhost:30005 del /agents/jobs/UVA/queueInfo/jorrit-stutterheim- --prefix
   etcdctl --endpoints=http://localhost:30005 del /agents/jobs/SURF/queueInfo/jorrit-stutterheim- --prefix
+  etcdctl --endpoints=http://localhost:30005 del /agents/jobs/VU/queueInfo/jorrit-stutterheim- --prefix
 }
 
 # Provides an overview of all running pods
@@ -407,7 +408,7 @@ or
 ```
 (or whatever shell rc is used)
 
-# Example 
+# Example
 
 ##  13. <a name='ExampleRequest'></a>Example Request
 
@@ -442,7 +443,7 @@ as a **POST** request, with the following body with **JSON** encoding:
 }
 ```
 
-E.g. using curl: 
+E.g. using curl:
 ```
 curl --location 'http://api-gateway.api-gateway.svc.cluster.local:80/api/v1/requestApproval' \
 --header 'Content-Type: application/json' \

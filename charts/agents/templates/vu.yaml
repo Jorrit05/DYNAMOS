@@ -31,6 +31,8 @@ spec:
           value: pythonlib
         - name: SQL-ALGORITHM_TAG
           value: pythonlib
+        - name: SQL-AGGREGATE_TAG
+          value: pythonlib
       - name: sidecar
         image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
         imagePullPolicy: Always

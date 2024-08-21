@@ -11,9 +11,30 @@
 package main
 
 import (
+	"context"
+
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
+	"go.opencensus.io/trace"
+	"go.opencensus.io/trace/propagation"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
+
+// This is the function being called by the last microservice
+func handleSqlDataRequest(ctx context.Context, msCommList []*pb.MicroserviceCommunication) (context.Context, *pb.MicroserviceCommunication, error) {
+	ctx, span := trace.StartSpan(ctx, serviceName+"/handleSqlDataRequest")
+	defer span.End()
+	logger.Sugar().Infof("Start %s handleSqlDataRequest", serviceName)
+
+	if len(msCommList) < 2 {
+		return ctx, msCommList[0], nil
+	}
+
+	// Coordinator ensures all services are started before further processing messages
+	msCommList[0].Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
+	mergedMsComm := mergeData(msCommList)
+
+	return ctx, mergedMsComm, nil
+}
 
 func mergeData(msCommList []*pb.MicroserviceCommunication) *pb.MicroserviceCommunication {
 	mergedData := &structpb.Struct{
@@ -24,7 +45,7 @@ func mergeData(msCommList []*pb.MicroserviceCommunication) *pb.MicroserviceCommu
 	for key, value := range msCommList[0].Data.GetFields() {
 		mergedData.Fields[key] = value
 	}
-	for _, msComm := range mscommList {
+	for _, msComm := range msCommList {
 
 		// Merge rest of the data into mergedData, checking for and handling identical fields
 		for key, value2 := range msComm.Data.GetFields() {
@@ -46,7 +67,7 @@ func mergeData(msCommList []*pb.MicroserviceCommunication) *pb.MicroserviceCommu
 		}
 	}
 
-	// For now simply return the first mscommList with the merged data.
+	// For now simply return the first msCommList with the merged data.
 	msCommList[0].Data = mergedData
 	return msCommList[0]
 }

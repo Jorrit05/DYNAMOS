@@ -33,6 +33,8 @@ spec:
           value: pythonlib
         - name: SQL-ALGORITHM_TAG
           value: pythonlib
+        - name: SQL-AGGREGATE_TAG
+          value: pythonlib
         # resources:
         #   requests:
         #     memory: "128Mi"
