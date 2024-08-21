@@ -4,6 +4,7 @@
 build
 dist
 dynamos.egg.info/*
+*dynamos.egg-info
 .venv
 .query
 # Binaries for programs and plugins
