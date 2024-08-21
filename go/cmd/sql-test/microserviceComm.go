@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func sendMicroserviceComm(c pb.SideCarClient) (context.Context, error) {
+func sendMicroserviceComm(c pb.RabbitMQClient) (context.Context, error) {
 	ctx := context.Background()
 	data := []byte(`{
     "type": "sqlDataRequest",

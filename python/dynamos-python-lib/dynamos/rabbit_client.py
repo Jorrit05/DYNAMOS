@@ -41,7 +41,7 @@ class RabbitClient:
         self.logger = logger
         self.channel = channel
         self.service_name = service_name
-        self.stub = rabbitServer.SideCarStub(channel)
+        self.stub = rabbitServer.RabbitMQStub(channel)
         self.stop_event = threading.Event()
         self.condition = threading.Condition()
         self.own_grpc_client = None

@@ -25,7 +25,7 @@ import (
 var (
 	logger                           = lib.InitLogger(logLevel)
 	etcdClient      *clientv3.Client = etcd.GetEtcdClient(etcdEndpoints)
-	c               pb.SideCarClient
+	c               pb.RabbitMQClient
 	conn            *grpc.ClientConn
 	agentConfig     lib.AgentDetails
 	mutex           = &sync.Mutex{}

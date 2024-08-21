@@ -41,7 +41,7 @@ type Configuration struct {
 	GrpcServer                *grpc.Server
 	RabbitMsgClientConnection *grpc.ClientConn
 	NextClientConnection      *grpc.ClientConn
-	RabbitMsgClient           pb.SideCarClient
+	RabbitMsgClient           pb.RabbitMQClient
 	NextClient                pb.MicroserviceClient
 }
 
@@ -92,7 +92,7 @@ func NewConfiguration(
 		conf.GrpcServer = grpc.NewServer()
 		conf.StartGrpcServer()
 		conf.RabbitMsgClientConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-		conf.RabbitMsgClient = pb.NewSideCarClient(conf.RabbitMsgClientConnection)
+		conf.RabbitMsgClient = pb.NewRabbitMQClient(conf.RabbitMsgClientConnection)
 
 		if conf.LastService {
 			conf.NextClientConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
@@ -119,7 +119,7 @@ func NewConfiguration(
 		conf.NextClientConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
 		conf.NextClient = pb.NewMicroserviceClient(conf.NextClientConnection)
 		conf.RabbitMsgClientConnection = conf.NextClientConnection
-		conf.RabbitMsgClient = pb.NewSideCarClient(conf.RabbitMsgClientConnection)
+		conf.RabbitMsgClient = pb.NewRabbitMQClient(conf.RabbitMsgClientConnection)
 	} else {
 		conf.GrpcServer = grpc.NewServer()
 		conf.StartGrpcServer()

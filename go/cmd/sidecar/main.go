@@ -43,11 +43,13 @@ func setupListener() net.Listener {
 func setupGRPCServer() (*grpc.Server, *serverInstance) {
 	grpcServer := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
 
+	// register RabbitMQ, Etcd, and Microservice services on the gRPC server
 	sideCarServer := &serverInstance{}
 	pb.RegisterSideCarServer(grpcServer, sideCarServer)
 	pb.RegisterEtcdServer(grpcServer, sideCarServer)
 	pb.RegisterMicroserviceServer(grpcServer, sideCarServer)
 
+	// register Health and Generic services on the gRPC server
 	sharedServer := &lib.SharedServer{}
 	pb.RegisterHealthServer(grpcServer, sharedServer)
 	pb.RegisterGenericServer(grpcServer, sharedServer)

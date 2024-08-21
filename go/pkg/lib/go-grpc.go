@@ -52,8 +52,8 @@ func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 	return conn
 }
 
-func InitializeSidecarMessaging(conn *grpc.ClientConn, in *pb.InitRequest) pb.SideCarClient {
-	c := pb.NewSideCarClient(conn)
+func InitializeSidecarMessaging(conn *grpc.ClientConn, in *pb.InitRequest) pb.RabbitMQClient {
+	c := pb.NewRabbitMQClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

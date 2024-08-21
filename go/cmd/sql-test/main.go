@@ -24,7 +24,7 @@ var (
 
 	serviceName  string = "test"
 	grpcAddr            = "localhost:50051"
-	c            pb.SideCarClient
+	c            pb.RabbitMQClient
 	receiveMutex = &sync.Mutex{}
 )
 

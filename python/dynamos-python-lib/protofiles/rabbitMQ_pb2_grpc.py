@@ -7,8 +7,8 @@ import microserviceCommunication_pb2 as microserviceCommunication__pb2
 import rabbitMQ_pb2 as rabbitMQ__pb2
 
 
-class SideCarStub(object):
-    """The sidecar definition.
+class RabbitMQStub(object):
+    """RPC calls for RabbitMQ.
     """
 
     def __init__(self, channel):
@@ -18,89 +18,89 @@ class SideCarStub(object):
             channel: A grpc.Channel.
         """
         self.InitRabbitMq = channel.unary_unary(
-                '/dynamos.SideCar/InitRabbitMq',
+                '/dynamos.RabbitMQ/InitRabbitMq',
                 request_serializer=rabbitMQ__pb2.InitRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.InitRabbitForChain = channel.unary_unary(
-                '/dynamos.SideCar/InitRabbitForChain',
+                '/dynamos.RabbitMQ/InitRabbitForChain',
                 request_serializer=rabbitMQ__pb2.ChainRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.StopReceivingRabbit = channel.unary_unary(
-                '/dynamos.SideCar/StopReceivingRabbit',
+                '/dynamos.RabbitMQ/StopReceivingRabbit',
                 request_serializer=rabbitMQ__pb2.StopRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.Consume = channel.unary_stream(
-                '/dynamos.SideCar/Consume',
+                '/dynamos.RabbitMQ/Consume',
                 request_serializer=rabbitMQ__pb2.ConsumeRequest.SerializeToString,
                 response_deserializer=rabbitMQ__pb2.SideCarMessage.FromString,
                 )
         self.ChainConsume = channel.unary_stream(
-                '/dynamos.SideCar/ChainConsume',
+                '/dynamos.RabbitMQ/ChainConsume',
                 request_serializer=rabbitMQ__pb2.ConsumeRequest.SerializeToString,
                 response_deserializer=rabbitMQ__pb2.SideCarMessage.FromString,
                 )
         self.SendRequestApproval = channel.unary_unary(
-                '/dynamos.SideCar/SendRequestApproval',
+                '/dynamos.RabbitMQ/SendRequestApproval',
                 request_serializer=rabbitMQ__pb2.RequestApproval.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SendValidationResponse = channel.unary_unary(
-                '/dynamos.SideCar/SendValidationResponse',
+                '/dynamos.RabbitMQ/SendValidationResponse',
                 request_serializer=rabbitMQ__pb2.ValidationResponse.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SendCompositionRequest = channel.unary_unary(
-                '/dynamos.SideCar/SendCompositionRequest',
+                '/dynamos.RabbitMQ/SendCompositionRequest',
                 request_serializer=rabbitMQ__pb2.CompositionRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SendSqlDataRequest = channel.unary_unary(
-                '/dynamos.SideCar/SendSqlDataRequest',
+                '/dynamos.RabbitMQ/SendSqlDataRequest',
                 request_serializer=rabbitMQ__pb2.SqlDataRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SendPolicyUpdate = channel.unary_unary(
-                '/dynamos.SideCar/SendPolicyUpdate',
+                '/dynamos.RabbitMQ/SendPolicyUpdate',
                 request_serializer=rabbitMQ__pb2.PolicyUpdate.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SendTest = channel.unary_unary(
-                '/dynamos.SideCar/SendTest',
+                '/dynamos.RabbitMQ/SendTest',
                 request_serializer=rabbitMQ__pb2.SqlDataRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SendMicroserviceComm = channel.unary_unary(
-                '/dynamos.SideCar/SendMicroserviceComm',
+                '/dynamos.RabbitMQ/SendMicroserviceComm',
                 request_serializer=microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.CreateQueue = channel.unary_unary(
-                '/dynamos.SideCar/CreateQueue',
+                '/dynamos.RabbitMQ/CreateQueue',
                 request_serializer=rabbitMQ__pb2.QueueInfo.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.DeleteQueue = channel.unary_unary(
-                '/dynamos.SideCar/DeleteQueue',
+                '/dynamos.RabbitMQ/DeleteQueue',
                 request_serializer=rabbitMQ__pb2.QueueInfo.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SendRequestApprovalResponse = channel.unary_unary(
-                '/dynamos.SideCar/SendRequestApprovalResponse',
+                '/dynamos.RabbitMQ/SendRequestApprovalResponse',
                 request_serializer=rabbitMQ__pb2.RequestApprovalResponse.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SendRequestApprovalRequest = channel.unary_unary(
-                '/dynamos.SideCar/SendRequestApprovalRequest',
+                '/dynamos.RabbitMQ/SendRequestApprovalRequest',
                 request_serializer=rabbitMQ__pb2.RequestApproval.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
 
-class SideCarServicer(object):
-    """The sidecar definition.
+class RabbitMQServicer(object):
+    """RPC calls for RabbitMQ.
     """
 
     def InitRabbitMq(self, request, context):
@@ -200,7 +200,7 @@ class SideCarServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_SideCarServicer_to_server(servicer, server):
+def add_RabbitMQServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'InitRabbitMq': grpc.unary_unary_rpc_method_handler(
                     servicer.InitRabbitMq,
@@ -284,13 +284,13 @@ def add_SideCarServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'dynamos.SideCar', rpc_method_handlers)
+            'dynamos.RabbitMQ', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class SideCar(object):
-    """The sidecar definition.
+class RabbitMQ(object):
+    """RPC calls for RabbitMQ.
     """
 
     @staticmethod
@@ -304,7 +304,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/InitRabbitMq',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/InitRabbitMq',
             rabbitMQ__pb2.InitRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -321,7 +321,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/InitRabbitForChain',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/InitRabbitForChain',
             rabbitMQ__pb2.ChainRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -338,7 +338,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/StopReceivingRabbit',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/StopReceivingRabbit',
             rabbitMQ__pb2.StopRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -355,7 +355,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/dynamos.SideCar/Consume',
+        return grpc.experimental.unary_stream(request, target, '/dynamos.RabbitMQ/Consume',
             rabbitMQ__pb2.ConsumeRequest.SerializeToString,
             rabbitMQ__pb2.SideCarMessage.FromString,
             options, channel_credentials,
@@ -372,7 +372,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/dynamos.SideCar/ChainConsume',
+        return grpc.experimental.unary_stream(request, target, '/dynamos.RabbitMQ/ChainConsume',
             rabbitMQ__pb2.ConsumeRequest.SerializeToString,
             rabbitMQ__pb2.SideCarMessage.FromString,
             options, channel_credentials,
@@ -389,7 +389,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendRequestApproval',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendRequestApproval',
             rabbitMQ__pb2.RequestApproval.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -406,7 +406,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendValidationResponse',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendValidationResponse',
             rabbitMQ__pb2.ValidationResponse.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -423,7 +423,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendCompositionRequest',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendCompositionRequest',
             rabbitMQ__pb2.CompositionRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -440,7 +440,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendSqlDataRequest',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendSqlDataRequest',
             rabbitMQ__pb2.SqlDataRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -457,7 +457,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendPolicyUpdate',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendPolicyUpdate',
             rabbitMQ__pb2.PolicyUpdate.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -474,7 +474,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendTest',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendTest',
             rabbitMQ__pb2.SqlDataRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -491,7 +491,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendMicroserviceComm',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendMicroserviceComm',
             microserviceCommunication__pb2.MicroserviceCommunication.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -508,7 +508,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/CreateQueue',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/CreateQueue',
             rabbitMQ__pb2.QueueInfo.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -525,7 +525,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/DeleteQueue',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/DeleteQueue',
             rabbitMQ__pb2.QueueInfo.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -542,7 +542,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendRequestApprovalResponse',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendRequestApprovalResponse',
             rabbitMQ__pb2.RequestApprovalResponse.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
@@ -559,7 +559,7 @@ class SideCar(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/dynamos.SideCar/SendRequestApprovalRequest',
+        return grpc.experimental.unary_unary(request, target, '/dynamos.RabbitMQ/SendRequestApprovalRequest',
             rabbitMQ__pb2.RequestApproval.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
