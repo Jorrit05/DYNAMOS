@@ -45,7 +45,7 @@ func setupGRPCServer() (*grpc.Server, *serverInstance) {
 
 	// register RabbitMQ, Etcd, and Microservice services on the gRPC server
 	sideCarServer := &serverInstance{}
-	pb.RegisterSideCarServer(grpcServer, sideCarServer)
+	pb.RegisterRabbitMQServer(grpcServer, sideCarServer)
 	pb.RegisterEtcdServer(grpcServer, sideCarServer)
 	pb.RegisterMicroserviceServer(grpcServer, sideCarServer)
 

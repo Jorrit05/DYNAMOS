@@ -34,7 +34,7 @@ type ConsumerManager struct {
 }
 
 type serverInstance struct {
-	pb.UnimplementedSideCarServer
+	pb.UnimplementedRabbitMQServer
 	pb.UnimplementedEtcdServer
 	pb.UnimplementedMicroserviceServer
 	consumerManager *ConsumerManager
@@ -91,9 +91,9 @@ func (s *serverInstance) DeleteQueue(ctx context.Context, in *pb.QueueInfo) (*em
 }
 
 // Consume consumes messages from a specified queue and handles them based on their type.
-// It takes a ConsumeRequest and a stream (SideCar_ConsumeServer) as input parameters.
+// It takes a ConsumeRequest and a stream (RabbitMQ_ConsumeServer) as input parameters.
 // Returns an error if there was an issue consuming the messages or handling them.
-func (s *serverInstance) Consume(in *pb.ConsumeRequest, stream pb.SideCar_ConsumeServer) error {
+func (s *serverInstance) Consume(in *pb.ConsumeRequest, stream pb.RabbitMQ_ConsumeServer) error {
 	messages, err := s.channel.Consume(
 		in.QueueName, // queue
 		"",           // consumer

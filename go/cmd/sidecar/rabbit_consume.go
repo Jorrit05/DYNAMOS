@@ -36,7 +36,7 @@ import (
 //
 // Returns:
 // - An error if there was an error unmarshalling the message or sending it via the gRPC stream, otherwise nil.
-func (s *serverInstance) handleResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer, pbMsg proto.Message) error {
+func (s *serverInstance) handleResponse(msg amqp.Delivery, stream pb.RabbitMQ_ConsumeServer, pbMsg proto.Message) error {
 	proto.Reset(pbMsg)
 
 	if err := proto.Unmarshal(msg.Body, pbMsg); err != nil {
@@ -82,38 +82,38 @@ func (s *serverInstance) handleResponse(msg amqp.Delivery, stream pb.SideCar_Con
 	return err
 }
 
-func (s *serverInstance) handleValidationResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+func (s *serverInstance) handleValidationResponse(msg amqp.Delivery, stream pb.RabbitMQ_ConsumeServer) error {
 	return s.handleResponse(msg, stream, &pb.ValidationResponse{})
 }
 
-func (s *serverInstance) handleRequestApprovalResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+func (s *serverInstance) handleRequestApprovalResponse(msg amqp.Delivery, stream pb.RabbitMQ_ConsumeServer) error {
 	logger.Debug("sidecar/responses: handleRequestApprovalResponse")
 
 	return s.handleResponse(msg, stream, &pb.RequestApproval{})
 }
 
-func (s *serverInstance) handleCompositionRequestResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+func (s *serverInstance) handleCompositionRequestResponse(msg amqp.Delivery, stream pb.RabbitMQ_ConsumeServer) error {
 	return s.handleResponse(msg, stream, &pb.CompositionRequest{})
 }
 
-func (s *serverInstance) handleSqlDataRequest(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+func (s *serverInstance) handleSqlDataRequest(msg amqp.Delivery, stream pb.RabbitMQ_ConsumeServer) error {
 	logger.Debug("Starting handleSqlDataRequest")
 	return s.handleResponse(msg, stream, &pb.SqlDataRequest{})
 }
 
-func (s *serverInstance) handleMicroserviceCommunication(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+func (s *serverInstance) handleMicroserviceCommunication(msg amqp.Delivery, stream pb.RabbitMQ_ConsumeServer) error {
 	logger.Debug("Starting handleMicroserviceCommunication")
 
 	return s.handleResponse(msg, stream, &pb.MicroserviceCommunication{RequestMetadata: &pb.RequestMetadata{}})
 }
 
-func (s *serverInstance) handlePolicyUpdate(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+func (s *serverInstance) handlePolicyUpdate(msg amqp.Delivery, stream pb.RabbitMQ_ConsumeServer) error {
 	logger.Debug("Starting handlePolicyUpdate")
 
 	return s.handleResponse(msg, stream, &pb.PolicyUpdate{RequestMetadata: &pb.RequestMetadata{}})
 }
 
-func (s *serverInstance) handleRequestApprovalToApiResponse(msg amqp.Delivery, stream pb.SideCar_ConsumeServer) error {
+func (s *serverInstance) handleRequestApprovalToApiResponse(msg amqp.Delivery, stream pb.RabbitMQ_ConsumeServer) error {
 	logger.Debug("Starting handleRequestApprovalToApiResponse")
 
 	return s.handleResponse(msg, stream, &pb.RequestApprovalResponse{})
