@@ -118,6 +118,8 @@ func NewConfiguration(
 		conf.StartGrpcServer()
 		conf.NextClientConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
 		conf.NextClient = pb.NewMicroserviceClient(conf.NextClientConnection)
+		conf.RabbitMsgClientConnection = conf.NextClientConnection
+		conf.RabbitMsgClient = pb.NewSideCarClient(conf.RabbitMsgClientConnection)
 	} else {
 		conf.GrpcServer = grpc.NewServer()
 		conf.StartGrpcServer()
@@ -160,20 +162,36 @@ func (s *Configuration) StartGrpcServer() {
 }
 
 func (s *Configuration) SafeExit(oce *ocagent.Exporter, serviceName string) {
-	logger.Sugar().Infof("Wait 2 seconds before ending %s", serviceName)
+	logger.Debug("Start SafeExit")
 
+	if s.LastService {
+		if s.RabbitMsgClient == nil {
+			logger.Sugar().Error("RabbitMsgClient is nil while we should send a StopReceivingRabbit signal")
+		} else {
+			logger.Sugar().Debugw("Send StopReceivingRabbit", "service", serviceName)
+			_, err := s.RabbitMsgClient.StopReceivingRabbit(context.Background(), &pb.StopRequest{})
+			if err != nil {
+				logger.Sugar().Errorf("Error stopping receiving rabbit: %v", err)
+			}
+		}
+	}
+
+	logger.Sugar().Infof("Wait 2 seconds before ending %s", serviceName)
 	oce.Flush()
 	time.Sleep(2 * time.Second)
 	oce.Stop()
+	logger.Sugar().Debug("Start closing gRPC connections NextClientConnection and RabbitConnection")
+
 	s.CloseConnection()
 
 	if s.GrpcServer != nil {
+		logger.Sugar().Debug("Close own gRPC server")
 		s.StopGrpcServer()
 	}
 }
 
 func (s *Configuration) StopGrpcServer() {
-	logger.Info("Stopping StartGrpcServer")
+	logger.Info("Stopping StopGrpcServer")
 	timeout := time.After(5 * time.Second)
 	done := make(chan bool)
 

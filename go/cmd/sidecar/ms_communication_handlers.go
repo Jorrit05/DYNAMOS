@@ -81,7 +81,6 @@ func SendDataThroughAMQ(ctx context.Context, data *pb.MicroserviceCommunication,
 		// return &emptypb.Empty{}, err
 	}
 
-	close(stop)
-
+	logger.Debug("Ending lib.SendDataThroughAMQ")
 	return &emptypb.Empty{}, nil
 }

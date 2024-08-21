@@ -38,7 +38,7 @@ func (s *serverInstance) StopReceivingRabbit(ctx context.Context, in *pb.StopReq
 
 	// Cancel the context
 	if s.consumerManager != nil {
-		s.consumerManager.cancel()
+		// s.consumerManager.cancel()
 
 		// Signal the stop channel
 		close(s.consumerManager.stopChan)
@@ -68,20 +68,21 @@ func (s *serverInstance) InitRabbitForChain(ctx context.Context, in *pb.ChainReq
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	msConnection := lib.GetGrpcConnection("localhost:" + strconv.Itoa(int(in.Port)))
-
-	msClient := pb.NewMicroserviceClient(msConnection)
-
-	// Create a new context because the context from InitRabbitForChain is canceled when the function returns
-	consumeCtx, cancel := context.WithCancel(context.Background())
-	s.consumerManager = &ConsumerManager{
-		stopChan: make(chan struct{}),
-		cancel:   cancel,
-	}
-
 	go func() {
-		err = ChainConsume(consumeCtx, in.RoutingKey, true, msClient, s.consumerManager.stopChan, s)
 
+		msConnection := lib.GetGrpcConnection("localhost:" + strconv.Itoa(int(in.Port)))
+
+		msClient := pb.NewMicroserviceClient(msConnection)
+
+		// Create a new context because the context from InitRabbitForChain is canceled when the function returns
+		consumeCtx, cancel := context.WithCancel(context.Background())
+
+		s.consumerManager = &ConsumerManager{
+			stopChan: make(chan struct{}),
+			cancel:   cancel,
+		}
+
+		err = ChainConsume(consumeCtx, in.RoutingKey, true, msClient, s.consumerManager.stopChan, s)
 		if err != nil {
 			logger.Sugar().Errorf("Error in chainconsume: ", codes.Internal, err.Error())
 		}
@@ -104,7 +105,7 @@ func (s *serverInstance) InitRabbitForChain(ctx context.Context, in *pb.ChainReq
 // Returns:
 // - An error if there was a problem consuming messages or handling them, otherwise nil.
 func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient pb.MicroserviceClient, stopChan chan struct{}, serverInstance *serverInstance) error {
-	logger.Sugar().Infow("Start ChainConsume, queueName: %s", queueName)
+	logger.Sugar().Infow("Start ChainConsume", "queueName:", queueName)
 
 	messages, err := serverInstance.channel.Consume(
 		queueName, // queue
@@ -119,14 +120,15 @@ func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient 
 		return status.Error(codes.Internal, err.Error())
 	}
 
-	logger.Sugar().Infof("Started consuming from queue `%s`", queueName)
+	logger.Sugar().Infow("Started consuming", "queue", queueName)
 
 	for {
 		select {
 		case msg := <-messages:
 			// Handle the message
-			logger.Sugar().Debugw("switchin: ", "msg,Type", msg.Type)
+			logger.Sugar().Debugw("switchin:", "msg,Type", msg.Type)
 			switch msg.Type {
+
 			case "microserviceCommunication":
 				msComm := &pb.MicroserviceCommunication{}
 				msComm.RequestMetadata = &pb.RequestMetadata{}
@@ -161,11 +163,13 @@ func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient 
 				if err != nil {
 					logger.Sugar().Errorf("Error calling SendData: %v", err)
 				} else {
+					// Will normally be nil
 					logger.Sugar().Debugf("SendData response: %v", resp)
 				}
 			default:
 				logger.Sugar().Errorf("Unknown message type: %s", msg.Type)
-				return status.Error(codes.Unknown, fmt.Sprintf("Unknown message type: %s", msg.Type))
+				logger.Sugar().Errorf("Message: %v", msg)
+				return status.Error(codes.Unknown, fmt.Sprintf("Unknown message: %v", msg))
 			}
 		case <-stopChan:
 			logger.Sugar().Info("Received stop signal, exiting ChainConsume")

@@ -157,10 +157,21 @@ func (s *serverInstance) Consume(in *pb.ConsumeRequest, stream pb.SideCar_Consum
 	return nil
 }
 
-// SendData sends the provided data to the AMQ destination queue and returns a response
-// indicating whether to continue receiving.
+// ServerInstance implementation for SendData, this is called by the sidecar of an agent to forward the
+// message to RabbitMQ.
+//
+// The different SendData functions are picked by either registring the 'serverInstance' or the 'sharedServer' instances in your
+// gRPC server.
+//
+// Parameters:
+//   - ctx: The context of the request
+//   - data: MicroserviceCommunication messages
+//
+// Returns:
+//   - ContinueReceiving: A boolean indicating if the sidecar should continue receiving messages
+//   - error: An error if the function fails
 func (s *serverInstance) SendData(ctx context.Context, data *pb.MicroserviceCommunication) (*pb.ContinueReceiving, error) {
-	logger.Sugar().Debugf("Starting lib.SendData: %v", data.RequestMetadata.DestinationQueue)
+	logger.Sugar().Debugf("Starting (to AMQ) lib.SendData: %v", data.RequestMetadata.DestinationQueue)
 
 	ctx, span, err := lib.StartRemoteParentSpan(ctx, "sidecar SendData/func:", data.Traces)
 	if err != nil {
@@ -173,5 +184,6 @@ func (s *serverInstance) SendData(ctx context.Context, data *pb.MicroserviceComm
 		return &pb.ContinueReceiving{ContinueReceiving: false}, nil
 	}
 
+	logger.Debug("Returning from SendData (to Microservice)")
 	return &pb.ContinueReceiving{ContinueReceiving: false}, nil
 }
