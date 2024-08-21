@@ -21,14 +21,14 @@ import (
 func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 	var conn *grpc.ClientConn
 	var err error
-	conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
+	conn, err = grpc.NewClient(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(new(ocgrpc.ClientHandler)))
 
 	if err != nil {
 		logger.Sugar().Fatalw("could not establish connection with grpc: %v", err)
 	}
 	h := pb.NewHealthClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
 	defer cancel()
 
