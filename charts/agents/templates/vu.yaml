@@ -25,14 +25,6 @@ spec:
           value: VU
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
-        - name: SQL-QUERY_TAG
-          value: pythonlib
-        - name: SIDECAR_TAG
-          value: pythonlib
-        - name: SQL-ALGORITHM_TAG
-          value: pythonlib
-        - name: SQL-AGGREGATE_TAG
-          value: pythonlib
       - name: sidecar
         image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
         imagePullPolicy: Always

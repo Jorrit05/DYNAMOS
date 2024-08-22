@@ -27,14 +27,6 @@ spec:
           value: UVA
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
-        - name: SQL-QUERY_TAG
-          value: pythonlib
-        - name: SIDECAR_TAG
-          value: pythonlib
-        - name: SQL-ALGORITHM_TAG
-          value: pythonlib
-        - name: SQL-AGGREGATE_TAG
-          value: pythonlib
         # resources:
         #   requests:
         #     memory: "128Mi"
