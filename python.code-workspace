@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "python"
+		},
+		{
+			"path": "proto-files"
+		}
+	],
+	"settings": {
+		"makefile.configureOnOpen": false
+	}
+}

@@ -104,6 +104,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 
 		fullImage := fmt.Sprintf("%s/%s:%s", repositoryName, microservice.Name, microserviceTag)
 		logger.Sugar().Debugf("FullImage name: %s", fullImage)
+		logger.Sugar().Debugf("FullImage name: %s", jobName)
 
 		container := v1.Container{
 			Name:            microservice.Name,

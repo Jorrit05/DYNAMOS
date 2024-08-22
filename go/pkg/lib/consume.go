@@ -11,7 +11,7 @@ import (
 
 type MessageHandlerFunc func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
 
-func StartConsumingWithRetry(serviceName string, c pb.SideCarClient, queueName string, handler MessageHandlerFunc, maxRetries int, waitTime time.Duration, receiveMutex *sync.Mutex) {
+func StartConsumingWithRetry(serviceName string, c pb.RabbitMQClient, queueName string, handler MessageHandlerFunc, maxRetries int, waitTime time.Duration, receiveMutex *sync.Mutex) {
 	for i := 0; i < maxRetries; i++ {
 		err := startConsuming(serviceName, c, queueName, handler, receiveMutex)
 		if err == nil {
@@ -25,7 +25,7 @@ func StartConsumingWithRetry(serviceName string, c pb.SideCarClient, queueName s
 	}
 }
 
-func startConsuming(serviceName string, c pb.SideCarClient, from string, handler MessageHandlerFunc, receiveMutex *sync.Mutex) error {
+func startConsuming(serviceName string, c pb.RabbitMQClient, from string, handler MessageHandlerFunc, receiveMutex *sync.Mutex) error {
 	ctx := context.Background()
 	stream, err := c.Consume(ctx, &pb.ConsumeRequest{QueueName: from, AutoAck: true})
 	if err != nil {

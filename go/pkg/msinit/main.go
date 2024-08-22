@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"contrib.go.opencensus.io/exporter/ocagent"
@@ -14,7 +13,6 @@ import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
@@ -22,36 +20,37 @@ var (
 )
 
 func (s *Configuration) CloseConnection() {
-	if s.NextConnection != nil {
-		s.NextConnection.Close()
+	if s.NextClientConnection != nil {
+		s.NextClientConnection.Close()
 	}
 
-	if s.SidecarConnection != nil {
-		s.SidecarConnection.Close()
+	if s.RabbitMsgClientConnection != nil {
+		s.RabbitMsgClientConnection.Close()
 	}
 }
 
 type Configuration struct {
-	Port              int
-	FirstService      bool
-	LastService       bool
-	ServiceName       string
-	SideCarClient     pb.SideCarClient
-	SidecarConnection *grpc.ClientConn
-	NextConnection    *grpc.ClientConn
-	SideCarCallback   func() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error
-	GrpcCallback      func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error)
-	StopMicroservice  chan struct{} // channel to continue the main routine to kill the MS
-	// Exit              chan struct{} // Final exit
-	GrpcServer *grpc.Server
+	Port         uint32
+	FirstService bool
+	LastService  bool
+	ServiceName  string
+
+	MessageHandler   func(conf *Configuration) func(ctx context.Context, data *pb.MicroserviceCommunication) error
+	StopMicroservice chan struct{} // channel to continue the main routine to kill the MS
+
+	GrpcServer                *grpc.Server
+	RabbitMsgClientConnection *grpc.ClientConn
+	NextClientConnection      *grpc.ClientConn
+	RabbitMsgClient           pb.RabbitMQClient
+	NextClient                pb.MicroserviceClient
 }
 
-func NewConfiguration(serviceName string,
+func NewConfiguration(
+	ctx context.Context,
+	serviceName string,
 	grpcAddr string,
 	COORDINATOR chan struct{},
-	sidecarCallback func() func(ctx context.Context, grpcMsg *pb.SideCarMessage) error,
-	grpcCallback func(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error),
-	receiveMutex *sync.Mutex,
+	messageHandler func(conf *Configuration) func(ctx context.Context, data *pb.MicroserviceCommunication) error,
 ) (*Configuration, error) {
 
 	port, err := strconv.Atoi(os.Getenv("DESIGNATED_GRPC_PORT"))
@@ -68,66 +67,81 @@ func NewConfiguration(serviceName string,
 		return nil, fmt.Errorf("error determining last service: %w", err)
 	}
 
-	logger.Sugar().Debugf("NewConfiguration %s, firstServer: %s, port: %s. lastservice: %s", serviceName, firstService, port, lastService)
-
-	conf := &Configuration{
-		Port:              port,
-		FirstService:      firstService > 0,
-		LastService:       lastService > 0,
-		ServiceName:       serviceName,
-		SidecarConnection: nil,
-		NextConnection:    nil,
-		SideCarCallback:   sidecarCallback,
-		GrpcCallback:      grpcCallback,
-		StopMicroservice:  make(chan struct{}), // Continue the main routine to kill the MS
-		// StopGrpcServer:    make(chan struct{}), // Tell the self-hosted GRPC listener to stop
-		GrpcServer: nil,
-		// Exit:              make(chan struct{}), // Final exit
-	}
-
-	if conf.FirstService && conf.LastService {
-		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-		conf.InitSidecarMessaging(receiveMutex)
-		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-	} else if conf.FirstService {
-		conf.SidecarConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-		conf.InitSidecarMessaging(receiveMutex)
-		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
-	} else if conf.LastService {
-		conf.GrpcServer = grpc.NewServer()
-		conf.StartGrpcServer()
-		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
-	} else {
-		conf.GrpcServer = grpc.NewServer()
-		conf.StartGrpcServer()
-		conf.NextConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(conf.Port+1))
-	}
-	close(COORDINATOR)
-	return conf, nil
-}
-
-func (s *Configuration) InitSidecarMessaging(receiveMutex *sync.Mutex) {
-	logger.Debug("InitSidecarMessaging")
-
 	jobName := os.Getenv("JOB_NAME")
 	if jobName == "" {
 		logger.Sugar().Fatalf("Jobname not defined.")
 	}
 
-	// When being called from an MS, QueueAutoDelete should be false, it is no managed in the compositionrequest handler.
-	// This might be up for refactoring....
-	s.SideCarClient = lib.InitializeSidecarMessaging(s.SidecarConnection, &pb.InitRequest{
-		ServiceName:     jobName,
-		RoutingKey:      jobName,
-		QueueAutoDelete: false,
-	})
+	logger.Sugar().Debugf("NewConfiguration %s, firstServer: %s, port: %s. lastservice: %s", serviceName, firstService, port, lastService)
 
-	go func() {
-		lib.ChainConsumeWithRetry(s.ServiceName, s.SideCarClient, jobName, s.SideCarCallback(), 5, 5*time.Second, receiveMutex)
-	}()
+	conf := &Configuration{
+		Port:                      uint32(port),
+		FirstService:              firstService > 0,
+		LastService:               lastService > 0,
+		ServiceName:               serviceName,
+		RabbitMsgClient:           nil,
+		RabbitMsgClientConnection: nil,
+		NextClientConnection:      nil,
+		NextClient:                nil,
+		MessageHandler:            messageHandler,
+		StopMicroservice:          make(chan struct{}), // Continue the main routine to kill the MS
+		GrpcServer:                nil,
+	}
+
+	if conf.FirstService {
+		conf.GrpcServer = grpc.NewServer()
+		conf.StartGrpcServer()
+		conf.RabbitMsgClientConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+		conf.RabbitMsgClient = pb.NewRabbitMQClient(conf.RabbitMsgClientConnection)
+
+		if conf.LastService {
+			conf.NextClientConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+			conf.NextClient = pb.NewMicroserviceClient(conf.NextClientConnection)
+		} else {
+			conf.NextClientConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(int(conf.Port)+1))
+			conf.NextClient = pb.NewMicroserviceClient(conf.NextClientConnection)
+		}
+
+		// When being called from an MS, QueueAutoDelete should be false, queues
+		// are managed in the compositionRequest handler.
+		chainRequest := &pb.ChainRequest{
+			ServiceName:     conf.ServiceName,
+			RoutingKey:      jobName,
+			QueueAutoDelete: false,
+			Port:            conf.Port,
+		}
+
+		conf.RabbitMsgClient.InitRabbitForChain(ctx, chainRequest)
+
+	} else if conf.LastService {
+		conf.GrpcServer = grpc.NewServer()
+		conf.StartGrpcServer()
+		conf.NextClientConnection = lib.GetGrpcConnection(grpcAddr + os.Getenv("SIDECAR_PORT"))
+		conf.NextClient = pb.NewMicroserviceClient(conf.NextClientConnection)
+		conf.RabbitMsgClientConnection = conf.NextClientConnection
+		conf.RabbitMsgClient = pb.NewRabbitMQClient(conf.RabbitMsgClientConnection)
+	} else {
+		conf.GrpcServer = grpc.NewServer()
+		conf.StartGrpcServer()
+		conf.NextClientConnection = lib.GetGrpcConnection(grpcAddr + strconv.Itoa(int(conf.Port)+1))
+		conf.NextClient = pb.NewMicroserviceClient(conf.NextClientConnection)
+	}
+
+	close(COORDINATOR)
+	return conf, nil
 }
 
 // Register a gRPC server on our designated port
+// StartGrpcServer starts the gRPC server for the Configuration instance.
+// It listens on the specified port and registers the MicroserviceServer and HealthServer
+// with the gRPC server. It also sets up this server with a callback from the initiating service.
+//
+// The server is started in a separate goroutine.
+// parameters:
+// - none
+//
+// returns:
+// - none
 func (s *Configuration) StartGrpcServer() {
 
 	go func() {
@@ -136,34 +150,48 @@ func (s *Configuration) StartGrpcServer() {
 		if err != nil {
 			logger.Sugar().Fatalw("failed to listen: %v", err)
 		}
-		serverInstance := &lib.SharedServer{}
+		serverInstance := &lib.SharedServer{ServiceName: s.ServiceName, Callback: s.MessageHandler(s)}
 
 		pb.RegisterMicroserviceServer(s.GrpcServer, serverInstance)
 		pb.RegisterHealthServer(s.GrpcServer, serverInstance)
-		serverInstance.RegisterCallback("microserviceCommunication", s.GrpcCallback)
 
 		if err := s.GrpcServer.Serve(lis); err != nil {
 			logger.Sugar().Fatalw("failed to serve: %v", err)
 		}
 	}()
-
 }
 
 func (s *Configuration) SafeExit(oce *ocagent.Exporter, serviceName string) {
-	logger.Sugar().Infof("Wait 2 seconds before ending %s", serviceName)
+	logger.Debug("Start SafeExit")
 
+	if s.LastService {
+		if s.RabbitMsgClient == nil {
+			logger.Sugar().Error("RabbitMsgClient is nil while we should send a StopReceivingRabbit signal")
+		} else {
+			logger.Sugar().Debugw("Send StopReceivingRabbit", "service", serviceName)
+			_, err := s.RabbitMsgClient.StopReceivingRabbit(context.Background(), &pb.StopRequest{})
+			if err != nil {
+				logger.Sugar().Errorf("Error stopping receiving rabbit: %v", err)
+			}
+		}
+	}
+
+	logger.Sugar().Infof("Wait 2 seconds before ending %s", serviceName)
 	oce.Flush()
 	time.Sleep(2 * time.Second)
 	oce.Stop()
+	logger.Sugar().Debug("Start closing gRPC connections NextClientConnection and RabbitConnection")
+
 	s.CloseConnection()
 
 	if s.GrpcServer != nil {
+		logger.Sugar().Debug("Close own gRPC server")
 		s.StopGrpcServer()
 	}
 }
 
 func (s *Configuration) StopGrpcServer() {
-	logger.Info("Stopping StartGrpcServer")
+	logger.Info("Stopping StopGrpcServer")
 	timeout := time.After(5 * time.Second)
 	done := make(chan bool)
 

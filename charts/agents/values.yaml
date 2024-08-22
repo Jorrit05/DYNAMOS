@@ -4,3 +4,4 @@ etcdEndpoints: "http://etcd-0.etcd-headless.core.svc.cluster.local:2379,http://e
 tracingEndpoint: "collector.linkerd-jaeger:55678"
 branchNameTag: "main"
 dockerArtifactAccount: "dynamos1"
+

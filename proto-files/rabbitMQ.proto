@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package proto;
+package dynamos;
 
 option go_package = "github.com/Jorrit05/DYNAMOS/pkg/proto";
 import "google/protobuf/empty.proto";
@@ -8,9 +8,11 @@ import "google/protobuf/any.proto";
 import "generic.proto";
 import "microserviceCommunication.proto";
 
-// The sidecar definition.
-service SideCar {
+// RPC calls for RabbitMQ.
+service RabbitMQ {
   rpc InitRabbitMq(InitRequest) returns (google.protobuf.Empty) {}
+  rpc InitRabbitForChain(ChainRequest) returns (google.protobuf.Empty) {}
+  rpc StopReceivingRabbit(StopRequest) returns (google.protobuf.Empty) {}
   rpc Consume(ConsumeRequest) returns (stream SideCarMessage) {}
   rpc ChainConsume(ConsumeRequest) returns (stream SideCarMessage) {}
   rpc SendRequestApproval(RequestApproval) returns  (google.protobuf.Empty) {}
@@ -30,6 +32,16 @@ message InitRequest {
   string service_name = 1;
   string routing_key = 2;
   bool queue_auto_delete = 3;
+}
+
+message ChainRequest {
+  string service_name = 1;
+  string routing_key = 2;
+  bool queue_auto_delete = 3;
+  uint32 port = 4;
+}
+
+message StopRequest {
 }
 
 message QueueInfo {

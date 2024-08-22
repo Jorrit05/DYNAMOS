@@ -102,7 +102,7 @@ func checkJobs(agreement *api.Agreement) {
 	}
 }
 
-func evaluateArchetypeInActiveJobs(jobNames []string, agreement *api.Agreement, relationName string, relationDetails api.Relation, c pb.SideCarClient) {
+func evaluateArchetypeInActiveJobs(jobNames []string, agreement *api.Agreement, relationName string, relationDetails api.Relation, c pb.RabbitMQClient) {
 	logger.Debug("starting evaluateArchetypeInActiveJobs")
 	ctx := context.Background()
 	// alue.ArchetypeId == archetype in current active job from the agreement name.

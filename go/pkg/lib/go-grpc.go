@@ -10,17 +10,25 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// GetGrpcConnection establishes a gRPC connection to the specified address.
+// It returns a *grpc.ClientConn if the connection is successfully established,
+// otherwise it logs a fatal error and exits the program.
+// The function makes up to 7 retries with a 1-second delay between each retry
+// until the gRPC server is serving or until it reaches the maximum number of retries.
+// The function uses the pb.HealthClient to check the health status of the gRPC server.
+// It uses an insecure transport credentials and an ocgrpc.ClientHandler for stats handling.
+// The function takes the gRPC address as a parameter.
 func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 	var conn *grpc.ClientConn
 	var err error
-	conn, err = grpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
+	conn, err = grpc.NewClient(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(new(ocgrpc.ClientHandler)))
 
 	if err != nil {
 		logger.Sugar().Fatalw("could not establish connection with grpc: %v", err)
 	}
 	h := pb.NewHealthClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
 	defer cancel()
 
@@ -44,8 +52,8 @@ func GetGrpcConnection(grpcAddr string) *grpc.ClientConn {
 	return conn
 }
 
-func InitializeSidecarMessaging(conn *grpc.ClientConn, in *pb.InitRequest) pb.SideCarClient {
-	c := pb.NewSideCarClient(conn)
+func InitializeSidecarMessaging(conn *grpc.ClientConn, in *pb.InitRequest) pb.RabbitMQClient {
+	c := pb.NewRabbitMQClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

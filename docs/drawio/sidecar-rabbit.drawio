@@ -1,0 +1,105 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.5 Chrome/126.0.6478.183 Electron/31.3.0 Safari/537.36" version="24.7.5">
+  <diagram name="Page-1" id="npcZH3qfldZvrixYICjO">
+    <mxGraphModel dx="2257" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="TrqFHqoa1-z1DDAiP75l-4" target="TrqFHqoa1-z1DDAiP75l-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;" parent="1" vertex="1">
+          <mxGeometry x="74" y="205" width="680" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-8" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" parent="1" source="TrqFHqoa1-z1DDAiP75l-1" target="TrqFHqoa1-z1DDAiP75l-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-9" value="Init Rabbit&lt;div&gt;- Bind Sidecar to Queue&lt;/div&gt;&lt;div&gt;- Pass server info (port) of service1&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="TrqFHqoa1-z1DDAiP75l-8" vertex="1" connectable="0">
+          <mxGeometry x="-0.2865" y="-4" relative="1" as="geometry">
+            <mxPoint y="-19" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="TrqFHqoa1-z1DDAiP75l-1" target="TrqFHqoa1-z1DDAiP75l-7" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-11" value="SendData" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="TrqFHqoa1-z1DDAiP75l-10" vertex="1" connectable="0">
+          <mxGeometry x="0.2214" y="-3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-1" value="Service1" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="114" y="415" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-2" value="Agent&lt;div&gt;(example UVA)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="348" y="45" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-3" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Job&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="194" y="215" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-5" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="TrqFHqoa1-z1DDAiP75l-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="124" y="75" as="sourcePoint" />
+            <mxPoint x="434" y="275" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-15" value="If CompositionRequest&lt;div&gt;- create and watch queue&lt;/div&gt;&lt;div&gt;- Handles Queue deletion (timeout on QueueWatch 10 minutes, unless being used)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;(to reduce overhead, the agent managed the queue&lt;br&gt;Arriving messages can wait till ms chain job is created)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="TrqFHqoa1-z1DDAiP75l-5" vertex="1" connectable="0">
+          <mxGeometry x="-0.0446" y="-4" relative="1" as="geometry">
+            <mxPoint x="-117" y="26" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DFTlPfXrU0MW9Y8M72dj-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="TrqFHqoa1-z1DDAiP75l-6" target="TrqFHqoa1-z1DDAiP75l-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DFTlPfXrU0MW9Y8M72dj-2" value="SendData" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="DFTlPfXrU0MW9Y8M72dj-1">
+          <mxGeometry x="-0.1667" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DFTlPfXrU0MW9Y8M72dj-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="TrqFHqoa1-z1DDAiP75l-6" target="TrqFHqoa1-z1DDAiP75l-2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="275" />
+              <mxPoint x="540" y="175" />
+              <mxPoint x="438" y="175" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DFTlPfXrU0MW9Y8M72dj-5" value="Bind queue to this sidecar and &lt;br&gt;start processing messages" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="DFTlPfXrU0MW9Y8M72dj-4">
+          <mxGeometry x="0.1497" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-6" value="Sidecar" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="358" y="245" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-21" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=1;entryDx=0;entryDy=0;" parent="1" source="TrqFHqoa1-z1DDAiP75l-7" target="TrqFHqoa1-z1DDAiP75l-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-22" value="sendData" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="TrqFHqoa1-z1DDAiP75l-21" vertex="1" connectable="0">
+          <mxGeometry x="-0.3932" y="1" relative="1" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-7" value="Service2" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="514" y="415" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-18" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="TrqFHqoa1-z1DDAiP75l-7" target="TrqFHqoa1-z1DDAiP75l-6" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="554" y="305" as="sourcePoint" />
+            <mxPoint x="604" y="255" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="604" y="315" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TrqFHqoa1-z1DDAiP75l-19" value="&lt;br&gt;StopRabbit&lt;div&gt;- Close Channel&lt;/div&gt;&lt;div&gt;- Stop consumption&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="TrqFHqoa1-z1DDAiP75l-18" vertex="1" connectable="0">
+          <mxGeometry x="-0.1137" y="2" relative="1" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DFTlPfXrU0MW9Y8M72dj-3" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;DataSpace&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="14" width="60" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

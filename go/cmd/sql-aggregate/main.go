@@ -4,44 +4,18 @@ import (
 	"context"
 	"os"
 	"strconv"
-	"sync"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	"github.com/Jorrit05/DYNAMOS/pkg/msinit"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
-	"go.opencensus.io/trace"
-	"go.opencensus.io/trace/propagation"
 )
 
 var (
 	logger               = lib.InitLogger(logLevel)
-	config               *msinit.Configuration
 	COORDINATOR          = make(chan struct{})
 	NR_OF_DATA_PROVIDERS = getNrOfDataProviders()
-	receiveMutex         = &sync.Mutex{}
-	mscommList           = []*pb.MicroserviceCommunication{}
+	msCommList           = []*pb.MicroserviceCommunication{}
 )
-
-func main() {
-	logger.Sugar().Debugf("Starting %s", serviceName)
-
-	oce, err := lib.InitTracer(serviceName)
-	if err != nil {
-		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
-	}
-	logger.Sugar().Debugf("SIDECAR_PORT: %s", os.Getenv("SIDECAR_PORT"))
-	logger.Sugar().Debugf("DESIGNATED_GRPC_PORT: %s", os.Getenv("DESIGNATED_GRPC_PORT"))
-
-	config, err = msinit.NewConfiguration(serviceName, grpcAddr, COORDINATOR, sideCarMessageHandler, sendDataHandler, receiveMutex)
-	if err != nil {
-		logger.Sugar().Fatalf("%v", err)
-	}
-
-	<-config.StopMicroservice
-
-	config.SafeExit(oce, serviceName)
-	os.Exit(0)
-}
 
 func getNrOfDataProviders() int {
 	nr_of_data_providers_int := 0
@@ -56,19 +30,67 @@ func getNrOfDataProviders() int {
 	return nr_of_data_providers_int
 }
 
-// This is the function being called by the last microservice
-func handleSqlDataRequest(ctx context.Context, msCommList []*pb.MicroserviceCommunication) (context.Context, *pb.MicroserviceCommunication, error) {
-	ctx, span := trace.StartSpan(ctx, "aggregtate/handleSqlDataRequest")
-	defer span.End()
-	logger.Sugar().Infof("Start %s handleSqlDataRequest", serviceName)
+func main() {
+	logger.Sugar().Debugf("Starting %s service", serviceName)
 
-	if len(msCommList) < 2 {
-		return ctx, msCommList[0], nil
+	oce, err := lib.InitTracer(serviceName)
+	if err != nil {
+		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
-	// Coordinator ensures all services are started before further processing messages
-	msCommList[0].Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
-	mergedMsComm := mergeData(msCommList)
+	config, err := msinit.NewConfiguration(context.Background(), serviceName, grpcAddr, COORDINATOR, messageHandler)
+	if err != nil {
+		logger.Sugar().Fatalf("%v", err)
+	}
 
-	return ctx, mergedMsComm, nil
+	// Wait here until the message arrives in the messageHandler
+	<-config.StopMicroservice
+
+	config.SafeExit(oce, serviceName)
+	os.Exit(0)
+}
+
+func messageHandler(config *msinit.Configuration) func(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
+	return func(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
+		ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: messageHandler", msComm.Traces)
+		if err != nil {
+			logger.Sugar().Warnf("Error starting span: %v", err)
+		}
+		defer span.End()
+
+		// Wait till all services and connections have started
+		<-COORDINATOR
+
+		msCommList = append(msCommList, msComm)
+		logger.Sugar().Infof("msCommList: %v", msCommList)
+		logger.Sugar().Infof("amount of data providers %v", NR_OF_DATA_PROVIDERS)
+		logger.Sugar().Infof("Length of msCommList %v", len(msCommList))
+
+		// If NR_OF_DATA_PROVIDERS == 0 aggregate won't actually function and pass on the message.
+		// This can happen at this moment if the aggregate flag is set to True, but it is not allowed by policy.
+		if len(msCommList) == NR_OF_DATA_PROVIDERS || NR_OF_DATA_PROVIDERS == 0 {
+			logger.Sugar().Debugf(msCommList[0].Data.String())
+			// All messages have arrived
+			logger.Sugar().Infof("All messages have arrived, %v", len(msCommList))
+
+			switch msComm.RequestType {
+			case "sqlDataRequest":
+				ctx, msComm, err = handleSqlDataRequest(ctx, msCommList)
+				if err != nil {
+					logger.Sugar().Errorf("Failed to process %s message: %v", msComm.RequestType, err)
+				}
+
+			default:
+				logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
+			}
+		} else {
+			logger.Sugar().Infof("Waiting for %v messages", NR_OF_DATA_PROVIDERS-len(msCommList))
+			return nil
+		}
+
+		config.NextClient.SendData(ctx, msComm)
+
+		close(config.StopMicroservice)
+		return nil
+	}
 }

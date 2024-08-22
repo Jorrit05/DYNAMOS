@@ -30,6 +30,28 @@ func InitTracer(serviceName string) (*ocagent.Exporter, error) {
 	return oce, err
 }
 
+// StartRemoteParentSpan starts a new span with a remote parent span context.
+// If the parentTraceMap contains a "binaryTrace" key, it deserializes the span context
+// and starts a new span with the remote parent span context. Otherwise, it starts a new
+// span without a parent.
+//
+// Parameters:
+//   - ctx: The context.Context to use for starting the span.
+//   - name: The name of the span.
+//   - parentTraceMap: A map containing the parent trace information.
+//
+// Returns:
+//   - context.Context: The updated context with the new span.
+//   - *trace.Span: The newly started span.
+//   - error: An error if the span context is invalid.
+//
+// Example usage:
+//
+//	ctx, span, err := StartRemoteParentSpan(ctx, "mySpan", parentTraceMap)
+//	if err != nil {
+//	  log.Fatal(err)
+//	}
+//	defer span.End()
 func StartRemoteParentSpan(ctx context.Context, name string, parentTraceMap map[string][]byte) (context.Context, *trace.Span, error) {
 	parentTrace, ok := parentTraceMap["binaryTrace"]
 	if !ok {

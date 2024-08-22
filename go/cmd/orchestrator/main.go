@@ -24,7 +24,7 @@ var (
 	receiveMutex      = &sync.Mutex{}
 	policyUpdateMutex = &sync.Mutex{}
 	policyUpdateMap   = make(map[string]map[string]*pb.CompositionRequest)
-	c                 pb.SideCarClient
+	c                 pb.RabbitMQClient
 )
 
 type validation struct {

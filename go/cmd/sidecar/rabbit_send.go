@@ -1,3 +1,17 @@
+// Package main, that implements 'sidecar' functionality
+//
+// File: rabbit_send.go
+//
+// Description:
+// This file contains the server implementations of sending an AMQ message to a destination queue.
+// A DYNAMOS service will package the message, and call this gRPC implementation
+// on the sidecar to send the message.
+//
+// Notes:
+//
+//
+// Author: Jorrit Stutterheim
+
 package main
 
 import (
@@ -19,16 +33,29 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-var (
-	channel    *amqp.Channel
-	conn       *amqp.Connection
-	messages   <-chan amqp.Delivery
-	routingKey string
-)
-
-func send(ctx context.Context, message amqp.Publishing, target string, opts ...etcd.Option) (*emptypb.Empty, error) {
+// This function sends a message to the specified AMQ target queue there is a retry mechanism in place
+// that will retry sending the message if the target queue is not available.
+//
+// Parameters:
+// - ctx: Context
+// - message: amqp.Publishing formated message to send.
+// - target: destination queue.
+// - s:  serverInstance pointer, used to access the channel.
+// - opts: The options to apply to the retry mechanism.
+//
+// Returns:
+// - An empty protobuf message.
+// - An error if the message could not be sent, otherwise nil.
+//
+// Notes:
+// If the message is undeliverable, the message will be returned to the sender with a NO_ROUTE reply text.
+// The function waits 5 seconds for this return message, otherwise it will continue. Everytime a message
+// is sent the global variable running_messages is incremented, and decremented when the message is sent.
+// This is to ensure that the server does not shut down while messages are still being sent.
+func send(ctx context.Context, message amqp.Publishing, target string, s *serverInstance, opts ...etcd.Option) (*emptypb.Empty, error) {
 	// Start with default options
 	retryOpts := etcd.DefaultRetryOptions
+	running_messages += 1
 
 	// Apply any specified options
 	for _, opt := range opts {
@@ -37,7 +64,7 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 
 	// Create a returns channel
 	returns := make(chan amqp.Return)
-	channel.NotifyReturn(returns)
+	s.channel.NotifyReturn(returns)
 
 	if message.Headers == nil {
 		message.Headers = amqp.Table{}
@@ -65,17 +92,18 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 
 	operation := func() error {
 		// Log before sending message
-		logger.Sugar().Infow("Sending message: ", "My routingKey", routingKey, "exchangeName", exchangeName, "target", target)
+		logger.Sugar().Infow("Sending message: ", "My routingKey", s.routingKey, "exchangeName", exchangeName, "target", target)
 
 		// Create a context with a timeout
 		timeoutCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
 		defer cancel()
 
-		err := channel.PublishWithContext(timeoutCtx, exchangeName, target, true, false, message)
+		err := s.channel.PublishWithContext(timeoutCtx, exchangeName, target, true, false, message)
 		if err != nil {
 			logger.Sugar().Debugf("In error chan: %v", err)
 			return err
 		}
+
 		select {
 		case r := <-returns:
 			if r.ReplyText == "NO_ROUTE" {
@@ -86,9 +114,8 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 				logger.Sugar().Errorf("Unknown reason message returned: %v", r)
 				return bo.Permanent(errors.New("unknown error"))
 			}
-		case <-time.After(8 * time.Second): // Timeout if no message is received in 3 seconds
-			logger.Sugar().Debugf("8 seconds have passed for target: %v", target)
-
+		case <-time.After(5 * time.Second): // Timeout if no message is received in 5 seconds
+			logger.Sugar().Debugf("5 seconds have passed for target: %v", target)
 		}
 
 		return nil
@@ -101,14 +128,18 @@ func send(ctx context.Context, message amqp.Publishing, target string, opts ...e
 	backoff.MaxElapsedTime = retryOpts.MaxElapsedTime
 
 	err := bo.Retry(operation, backoff)
+	logger.Sugar().Debugf("Backoff!!")
 	if err != nil {
 		logger.Sugar().Errorf("Publish failed after %v seconds, err: %s", backoff.MaxElapsedTime, err)
+		running_messages -= 1
 		return &emptypb.Empty{}, err
 	}
+	running_messages -= 1
+
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) SendRequestApproval(ctx context.Context, in *pb.RequestApproval) (*emptypb.Empty, error) {
+func (s *serverInstance) SendRequestApproval(ctx context.Context, in *pb.RequestApproval) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal requestApproval failed: %s", err)
@@ -122,11 +153,11 @@ func (s *server) SendRequestApproval(ctx context.Context, in *pb.RequestApproval
 		Type: "requestApproval",
 	}
 
-	go send(ctx, message, in.DestinationQueue)
+	go send(ctx, message, in.DestinationQueue, s)
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationResponse) (*emptypb.Empty, error) {
+func (s *serverInstance) SendValidationResponse(ctx context.Context, in *pb.ValidationResponse) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal ValidationResponse failed: %s", err)
@@ -140,12 +171,12 @@ func (s *server) SendValidationResponse(ctx context.Context, in *pb.ValidationRe
 		Type: "validationResponse",
 	}
 
-	go send(ctx, message, "orchestrator-in")
+	go send(ctx, message, "orchestrator-in", s)
 	return &emptypb.Empty{}, nil
 
 }
 
-func (s *server) SendCompositionRequest(ctx context.Context, in *pb.CompositionRequest) (*emptypb.Empty, error) {
+func (s *serverInstance) SendCompositionRequest(ctx context.Context, in *pb.CompositionRequest) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal CompositionRequest failed: %s", err)
@@ -159,12 +190,12 @@ func (s *server) SendCompositionRequest(ctx context.Context, in *pb.CompositionR
 		Type: "compositionRequest",
 	}
 
-	go send(ctx, message, in.DestinationQueue)
+	go send(ctx, message, in.DestinationQueue, s)
 	return &emptypb.Empty{}, nil
 
 }
 
-func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
+func (s *serverInstance) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal requestApproval failed: %s", err)
@@ -180,12 +211,12 @@ func (s *server) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) 
 	}
 
 	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetadata.DestinationQueue)
-	go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	go send(ctx, message, in.RequestMetadata.DestinationQueue, s, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
 
 }
 
-func (s *server) SendPolicyUpdate(ctx context.Context, in *pb.PolicyUpdate) (*emptypb.Empty, error) {
+func (s *serverInstance) SendPolicyUpdate(ctx context.Context, in *pb.PolicyUpdate) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal PolicyUpdate failed: %s", err)
@@ -201,34 +232,30 @@ func (s *server) SendPolicyUpdate(ctx context.Context, in *pb.PolicyUpdate) (*em
 	}
 
 	logger.Sugar().Debugf("PolicyUpdate destination queue: %s", in.RequestMetadata.DestinationQueue)
-	go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second))
+	go send(ctx, message, in.RequestMetadata.DestinationQueue, s, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
 
 }
 
-// TODO: This go function is mostly to get an accurate feel for data transfer speeds.
-// It's probably better to just remove the Go func in the long run
-func (s *server) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
-	go func(in *pb.MicroserviceCommunication) {
-		data, err := proto.Marshal(in)
-		if err != nil {
-			logger.Sugar().Errorf("Marshal SendMicroserviceComm failed: %s", err)
-			return
-			// return nil, status.Error(codes.Internal, err.Error())
-		}
+func (s *serverInstance) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
+	data, err := proto.Marshal(in)
+	if err != nil {
+		logger.Sugar().Errorf("Marshal SendMicroserviceComm failed: %s", err)
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
-		message := amqp.Publishing{
-			CorrelationId: in.RequestMetadata.CorrelationId,
-			Body:          data,
-			Type:          in.Type,
-		}
-		logger.Sugar().Debugf("SendMicroserviceComm destination queue: %s", in.RequestMetadata.DestinationQueue)
-		go send(ctx, message, in.RequestMetadata.DestinationQueue, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
-	}(in)
+	message := amqp.Publishing{
+		CorrelationId: in.RequestMetadata.CorrelationId,
+		Body:          data,
+		Type:          in.Type,
+	}
+	logger.Sugar().Debugf("SendMicroserviceComm destination queue: %s", in.RequestMetadata.DestinationQueue)
+	go send(ctx, message, in.RequestMetadata.DestinationQueue, s, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
+
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
+func (s *serverInstance) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal SendMicroserviceComm failed: %s", err)
@@ -242,11 +269,11 @@ func (s *server) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.
 		Body:          data,
 		Type:          "testSet",
 	}
-	go send(ctx, message, "no existss", etcd.WithMaxElapsedTime(10*time.Second))
+	go send(ctx, message, "no existss", s, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) SendRequestApprovalResponse(ctx context.Context, in *pb.RequestApprovalResponse) (*emptypb.Empty, error) {
+func (s *serverInstance) SendRequestApprovalResponse(ctx context.Context, in *pb.RequestApprovalResponse) (*emptypb.Empty, error) {
 	data, err := proto.Marshal(in)
 	if err != nil {
 		logger.Sugar().Errorf("Marshal SendRequestApprovalResponse failed: %s", err)
@@ -260,6 +287,6 @@ func (s *server) SendRequestApprovalResponse(ctx context.Context, in *pb.Request
 		Type: "requestApprovalResponse",
 	}
 
-	go send(ctx, message, in.RequestMetadata.DestinationQueue)
+	go send(ctx, message, in.RequestMetadata.DestinationQueue, s)
 	return &emptypb.Empty{}, nil
 }

@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
-	"github.com/Jorrit05/DYNAMOS/pkg/api"
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -26,7 +24,7 @@ var (
 
 	serviceName  string = "test"
 	grpcAddr            = "localhost:50051"
-	c            pb.SideCarClient
+	c            pb.RabbitMQClient
 	receiveMutex = &sync.Mutex{}
 )
 
@@ -104,41 +102,42 @@ func getAvailableAgents() {
 }
 func main() {
 
-	fmt.Println(test1.ValidArchetypes.Archetypes["UVA"].Archetypes)
-	fmt.Println(test1.ValidArchetypes.Archetypes["VU"].Archetypes)
+	// fmt.Println(test1.ValidArchetypes.Archetypes["UVA"].Archetypes)
+	// fmt.Println(test1.ValidArchetypes.Archetypes["VU"].Archetypes)
 
-	os.Exit(0)
+	// os.Exit(0)
 
-	fmt.Printf("Start %s\n", serviceName)
+	// fmt.Printf("Start %s\n", serviceName)
 
-	var archeTypes = &api.Archetype{}
+	// var archeTypes = &api.Archetype{}
 
-	archeTypess, _ := etcd.GetPrefixListEtcd(etcdClient, "/archetypes", archeTypes)
+	// archeTypess, _ := etcd.GetPrefixListEtcd(etcdClient, "/archetypes", archeTypes)
 
-	fmt.Println(archeTypess)
-	for _, archeType := range archeTypess {
-		fmt.Println(archeType)
-	}
-	fmt.Println(len(archeTypess))
-	os.Exit(0)
-	// deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
-	getAvailableAgents()
+	// fmt.Println(archeTypess)
+	// for _, archeType := range archeTypess {
+	// 	fmt.Println(archeType)
+	// }
+	// fmt.Println(len(archeTypess))
+	// os.Exit(0)
+	// // deleteJobInfo("jorrit.stutterheim@cloudnation.nl")
+	// getAvailableAgents()
 	// conn = lib.GetGrpcConnection(grpcAddr)
 	conn = lib.GetGrpcConnection(grpcAddr)
 
 	c = lib.InitializeSidecarMessaging(conn, &pb.InitRequest{ServiceName: fmt.Sprintf("%s-in", serviceName), RoutingKey: fmt.Sprintf("%s-in", serviceName), QueueAutoDelete: false})
+	sendMicroserviceComm(c)
 
-	// Define a WaitGroup
-	var wg sync.WaitGroup
-	wg.Add(1)
+	// // Define a WaitGroup
+	// var wg sync.WaitGroup
+	// wg.Add(1)
 
-	go func() {
-		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second, receiveMutex)
+	// go func() {
+	// 	lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second, receiveMutex)
 
-		wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
-	}()
+	// 	wg.Done() // Decrement the WaitGroup counter when the goroutine finishes
+	// }()
 
-	wg.Wait()
+	// wg.Wait()
 
 }
 

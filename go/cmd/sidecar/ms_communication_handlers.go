@@ -1,3 +1,19 @@
+// Package main, that implements 'sidecar' functionality
+//
+// File: ms_communication_handlers.go
+//
+// Description:
+// This file contains functions to send a message to the specified AMQ target queue. This
+// is specifically used for a microservice chain to send the message to the new destination after
+// processing on the current data steward. The function will ensure the sidecar exits
+// after sending this message
+//
+// Notes:
+// This function can perhaps be more streamlined with the generic 'send' function, clearly delining that
+// the sidecar exits afterwards.
+//
+// Author: Jorrit Stutterheim
+
 package main
 
 import (
@@ -11,19 +27,23 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func SendDataThroughAMQ(ctx context.Context, data *pb.MicroserviceCommunication) (*emptypb.Empty, error) {
+// SendDataThroughAMQ sends a message to the specified AMQ target queue.
+// After sending the message, it closes the stop channel to signal the end of the program,
+// the sidecar will exit.
+//
+// Parameters:
+// - ctx: Context
+// - data: message to send in the form of a MicroserviceCommunication protobuf message.
+// - s:  serverInstance pointer, used to access the AMQ channel.
+//
+// Returns:
+// - An empty protobuf message.
+// - An error if the message could not be sent, otherwise nil.
+func SendDataThroughAMQ(ctx context.Context, data *pb.MicroserviceCommunication, s *serverInstance) (*emptypb.Empty, error) {
 	logger.Debug("Starting lib.SendDataThroughAMQ")
-
-	// ctx, span, err := lib.StartRemoteParentSpan(ctx, "sidecar SendDataThroughAMQ/func:", data.Traces)
-	// if err != nil {
-	// 	logger.Sugar().Warnf("Error starting span: %v", err)
-	// }
 
 	ctx, span := trace.StartSpan(ctx, "sidecar SendDataThroughAMQ/func:")
 
-	// TODO: This go function is mostly to get an accurate feel for data transfer speeds.
-	// It's probably better to just remove the Go func in the long run
-	// go func(data *pb.MicroserviceCommunication, stop chan struct{}) {
 	// Marshaling google.protobuf.Struct to Proto wire format
 	body, err := proto.Marshal(data)
 	if err != nil {
@@ -54,16 +74,13 @@ func SendDataThroughAMQ(ctx context.Context, data *pb.MicroserviceCommunication)
 	// Create a context with a timeout
 	timeoutCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
 	defer cancel()
-	// send(ctx, msg, data.RequestMetadata.ReturnAddress)
-	err = channel.PublishWithContext(timeoutCtx, exchangeName, data.RequestMetadata.ReturnAddress, true, false, msg)
+
+	err = s.channel.PublishWithContext(timeoutCtx, exchangeName, data.RequestMetadata.ReturnAddress, true, false, msg)
 	if err != nil {
 		logger.Sugar().Errorf("Error sending microserviceCommunication: %v", err)
 		// return &emptypb.Empty{}, err
 	}
 
-	close(stop)
-	// }(data, stop)
-	// go send(ctx, msg, data.RequestMetadata.ReturnAddress)
-
+	logger.Debug("Ending lib.SendDataThroughAMQ")
 	return &emptypb.Empty{}, nil
 }
