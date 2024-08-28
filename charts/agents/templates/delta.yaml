@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: delta
+  namespace: delta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: delta
+  template:
+    metadata:
+      labels:
+        app: delta
+      annotations:
+        "linkerd.io/inject" : enabled
+    spec:
+      serviceAccountName: job-creator-delta
+      containers:
+      - name: delta
+        image: {{ .Values.dockerArtifactAccount }}/agent:{{ .Values.branchNameTag }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATA_STEWARD_NAME
+          value: delta
+        - name: OC_AGENT_HOST
+          value: {{ .Values.tracingEndpoint }}
+        # resources:
+        #   requests:
+        #     memory: "128Mi"
+        #   limits:
+        #     memory: "256Mi"
+      - name: sidecar
+        image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
+        imagePullPolicy: Always
+        env:
+        - name: AMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbit
+              key: password
+        - name: AMQ_USER
+          value: normal_user
+        - name: OC_AGENT_HOST
+          value: {{ .Values.tracingEndpoint }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: delta
+  namespace: delta
+spec:
+  selector:
+    app: delta
+  ports:
+    - name: http-delta-api
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: delta-ingress
+  namespace: delta
+  annotations:
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: delta.delta.svc.cluster.local
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/agent/v1/sqlDataRequest/delta"
+        backend:
+          service:
+            name: delta
+            port:
+              number: 8080

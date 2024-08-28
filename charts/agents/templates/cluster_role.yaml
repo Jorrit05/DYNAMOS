@@ -19,7 +19,12 @@ kind: ServiceAccount
 metadata:
   name: job-creator-vu
   namespace: vu
-
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: job-creator-delta
+  namespace: delta
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
@@ -50,3 +55,19 @@ subjects:
 - kind: ServiceAccount
   name: job-creator-vu
   namespace: vu
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: job-creator-delta
+  namespace: delta
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: job-creator
+subjects:
+- kind: ServiceAccount
+  name: job-creator-delta
+  namespace: delta
+---
