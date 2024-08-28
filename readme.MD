@@ -322,7 +322,7 @@ deploy_api_gateway() {
 # Deploy the agents (UVA, VU, etc) to the cluster
 deploy_agent() {
   agentChart="${DYNAMOS_ROOT}/charts/agents/values.yaml"
-  helm upgrade -i -f "${agentChart}" agent ${DYNAMOS_ROOT}/charts/agents
+  helm upgrade -i -f "${agentChart}" agents ${DYNAMOS_ROOT}/charts/agents
 }
 
 # Deploy trusted third party "surf" to the cluster
