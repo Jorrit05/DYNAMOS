@@ -352,7 +352,7 @@ deploy_all() {
 uninstall_all(){
   helm uninstall orchestrator
   helm uninstall surf
-  helm uninstall agent
+  helm uninstall agents
   helm uninstall api-gateway
   helm uninstall core
 }
@@ -368,7 +368,7 @@ deploy_addons() {
 uninstall_addons() {
   helm uninstall orchestrator
   helm uninstall surf
-  helm uninstall agent
+  helm uninstall agents
   helm uninstall api-gateway
 }
 
