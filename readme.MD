@@ -292,7 +292,7 @@ deploy_ingress() {
 
 # Deploy the core services to the cluster
 deploy_core() {
-  helm upgrade -i -f "${coreChart}/values.yaml" core ${DYNAMOS_ROOT}/charts/core
+  helm upgrade -i -f "${coreChart}/values.yaml" core ${DYNAMOS_ROOT}/charts/core --set hostPath="${DYNAMOS_ROOT}"
 }
 
 # Deploy prometheus for metric collection
@@ -322,7 +322,7 @@ deploy_api_gateway() {
 # Deploy the agents (UVA, VU, etc) to the cluster
 deploy_agent() {
   agentChart="${DYNAMOS_ROOT}/charts/agents/values.yaml"
-  helm upgrade -i -f "${agentChart}" agent ${DYNAMOS_ROOT}/charts/agents
+  helm upgrade -i -f "${agentChart}" agents ${DYNAMOS_ROOT}/charts/agents
 }
 
 # Deploy trusted third party "surf" to the cluster
@@ -352,7 +352,7 @@ deploy_all() {
 uninstall_all(){
   helm uninstall orchestrator
   helm uninstall surf
-  helm uninstall agent
+  helm uninstall agents
   helm uninstall api-gateway
   helm uninstall core
 }
@@ -368,7 +368,7 @@ deploy_addons() {
 uninstall_addons() {
   helm uninstall orchestrator
   helm uninstall surf
-  helm uninstall agent
+  helm uninstall agents
   helm uninstall api-gateway
 }
 
