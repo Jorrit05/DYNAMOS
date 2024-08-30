@@ -77,6 +77,27 @@ data:
   password: {{ .Values.secret.password | b64enc | quote }}
 
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prets
+  annotations:
+    "helm.sh/resource-policy": keep
+    "app.kubernetes.io/managed-by": "Helm"
+    "config.linkerd.io/trace-collector": collector.linkerd-jaeger:55678 # or 14268?
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbit
+  namespace: prets
+type: Opaque
+data:
+  password: {{ .Values.secret.password | b64enc | quote }}
+
+---
 
 apiVersion: v1
 kind: Namespace
