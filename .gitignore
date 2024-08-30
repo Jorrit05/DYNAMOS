@@ -5,6 +5,7 @@ build
 dist
 dynamos.egg.info/*
 *dynamos.egg-info
+.obsidian/
 .venv
 .query
 # Binaries for programs and plugins
