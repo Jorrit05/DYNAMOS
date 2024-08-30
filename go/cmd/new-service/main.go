@@ -47,7 +47,7 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 
 		switch msComm.RequestType {
 		case "sqlDataRequest":
-			err := handleSqlDataRequest(ctx, msComm)
+			err := handleDataRequest(ctx, msComm)
 			if err != nil {
 				logger.Sugar().Errorf("Failed to process %s message: %v", msComm.RequestType, err)
 			}
