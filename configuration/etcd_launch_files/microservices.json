@@ -41,5 +41,11 @@
         "invalidArchetypes": [
             "computeToData"
         ]
+    },
+    {
+        "name": "new-microservice",
+        "label": "dataProvider",
+        "allowedOutputs": [],
+        "invalidArchetypes": []
     }
 ]
