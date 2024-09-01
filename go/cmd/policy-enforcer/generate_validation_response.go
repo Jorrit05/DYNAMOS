@@ -19,6 +19,8 @@ func checkRequestApproval(ctx context.Context, requestApproval *pb.RequestApprov
 
 	// ctx, span := trace.StartSpan(ctx, serviceName+"/func: checkRequestApproval")
 
+	logger.Sugar().Debugf("Data providers: %v", requestApproval.DataProviders)
+
 	var agreements []api.Agreement
 
 	protoRequest := &pb.ValidationResponse{
