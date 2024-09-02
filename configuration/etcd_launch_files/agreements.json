@@ -93,6 +93,37 @@
         ]
     },
     {
+        "name": "PRETS",
+        "relations": {
+            "alex@uva.nl": {
+                "ID": "GUID",
+                "requestTypes": [
+                    "sqlDataRequest",
+                    "genericRequest"
+                ],
+                "dataSets": [
+                    "wageGap"
+                ],
+                "allowedArchetypes": [
+                    "computeToData",
+                    "dataThroughTtp"
+                ],
+                "allowedComputeProviders": [
+                    "SURF"
+                ]
+            }
+        },
+        "computeProviders": [
+            "SURF",
+            "otherCompany"
+        ],
+        "archetypes": [
+            "computeToData",
+            "dataThroughTtp",
+            "reproducableScience"
+        ]
+    },
+    {
         "name": "RUG",
         "relations": {}
     }
