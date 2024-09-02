@@ -24,7 +24,7 @@ spec:
             - containerPort: 8080
           env:
             - name: DATA_STEWARD_NAME
-              value: prets
+              value: PRETS
             - name: OC_AGENT_HOST
               value: {{ .Values.tracingEndpoint }}
           # resources:
