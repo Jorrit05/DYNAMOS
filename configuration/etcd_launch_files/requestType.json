@@ -15,5 +15,10 @@
         "name": "genericRequest",
         "requiredServices": [],
         "optionalServices": {}
+    },
+    {
+        "name": "dummyRequest",
+        "requiredServices": ["new-service"],
+        "optionalServices": {}
     }
 ]

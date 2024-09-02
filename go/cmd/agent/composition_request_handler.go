@@ -124,10 +124,11 @@ func handleQueue(ctx context.Context, jobName string, localJobname string, userN
 }
 
 func generateMicroserviceChain(compositionRequest *pb.CompositionRequest, options map[string]bool) ([]mschain.MicroserviceMetadata, error) {
-	logger.Sugar().Debugf("Starting generateMicroserviceChain")
+	logger.Sugar().Debugf("Starting generateMicroserviceChain for composition request: %v", compositionRequest)
 
 	var requestType mschain.RequestType
-	_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/requestTypes/%s", compositionRequest.RequestType), &requestType)
+	//_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/requestTypes/%s", compositionRequest.RequestType), &requestType)
+	_, err := etcd.GetAndUnmarshalJSON(etcdClient, "/requestTypes/dummyRequest", &requestType)
 	if err != nil {
 		return nil, err
 	}

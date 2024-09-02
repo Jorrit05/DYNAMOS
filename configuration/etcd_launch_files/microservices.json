@@ -43,7 +43,7 @@
         ]
     },
     {
-        "name": "new-microservice",
+        "name": "new-service",
         "label": "dataProvider",
         "allowedOutputs": [],
         "invalidArchetypes": []

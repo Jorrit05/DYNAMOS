@@ -74,6 +74,8 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 		},
 	}
 
+	logger.Sugar().Debugf("New job to deploy: %v", job)
+
 	// Add the containers to the job
 	port := firstPortMicroservice
 	nrOfServices := len(msChain)
@@ -96,6 +98,8 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 		logger.Sugar().Debugw("job info:", "name: ", microservice.Name, "Port: ", port)
 
 		microserviceTag := getMicroserviceTag(microservice.Name)
+
+		logger.Sugar().Debugf("MS tag: %v", microserviceTag)
 
 		repositoryName := os.Getenv("MICROSERVICE_REPOSITORY_NAME")
 		if repositoryName == "" {
@@ -268,5 +272,5 @@ func getMicroserviceTag(msName string) string {
 		return tag
 	}
 
-	return "main"
+	return "new-service-test"
 }
