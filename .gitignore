@@ -36,3 +36,4 @@ datasets/*.csv
 
 *.drawio.bkp
 *.drawio.dtmp
+/.idea
