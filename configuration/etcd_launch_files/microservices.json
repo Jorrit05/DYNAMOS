@@ -41,5 +41,11 @@
         "invalidArchetypes": [
             "computeToData"
         ]
+    },
+    {
+        "name": "new-service",
+        "label": "dataProvider",
+        "allowedOutputs": [],
+        "invalidArchetypes": []
     }
 ]

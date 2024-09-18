@@ -103,7 +103,7 @@ func requestHandler() http.HandlerFunc {
 			}
 
 			logger.Sugar().Infof("Data Prepared jsonData: %s", dataRequestJson)
-
+			logger.Sugar().Debugf("msg.AuthorizedProviders: %v", msg.AuthorizedProviders)
 			responses := sendDataToAuthProviders(dataRequestJson, msg.AuthorizedProviders, apiReqApproval.Type, msg.JobId)
 			w.WriteHeader(http.StatusOK)
 			w.Write(responses)

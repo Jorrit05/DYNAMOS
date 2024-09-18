@@ -8,7 +8,11 @@ WORKDIR /app/cmd/$NAME
 RUN mkdir /app/pkg
 RUN mkdir /app/etcd
 
+# RUN mkdir /res
+
 COPY *.go ./
+
+# COPY ./synthetic_data_sample.csv /res
 
 # Copy go.mod and go.sum files into the container
 COPY go.mod /app
@@ -25,6 +29,10 @@ FROM alpine:3.18.2
 ARG NAME
 ENV NAME=$NAME
 RUN apk --no-cache add ca-certificates
+
+RUN mkdir /res
+COPY ./synthetic_data_sample.csv /res 
+COPY ./synthetic_sdv.csv /res
 
 WORKDIR /app/
 

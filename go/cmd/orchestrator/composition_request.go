@@ -66,8 +66,10 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 		compositionRequest.Role = "all"
 		for key := range authorizedProviders {
 			compositionRequest.DestinationQueue = authorizedProviders[key].RoutingKey
+			logger.Sugar().Debugf("compositionRequest: %v", compositionRequest)
 			c.SendCompositionRequest(ctx, compositionRequest)
 			userTargets[key] = authorizedProviders[key].Dns
+			logger.Sugar().Debugf("userTargets: %v", userTargets)
 		}
 	} else {
 		// TODO: Here I am assuming that the initial archetype choice is correct
@@ -158,6 +160,9 @@ func getArchetypeBasedOnOptions(validationResponse *pb.ValidationResponse, autho
 func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataProviders map[string]lib.AgentDetails) (string, error) {
 	logger.Sugar().Debug("starting chooseArchetype")
 	logger.Sugar().Debugf("length options: %v", len(validationResponse.Options))
+
+	logger.Sugar().Debugf("Archetype: %v", "dummyRequest")
+	return "dummyRequest", nil
 
 	for k, _ := range validationResponse.ValidDataproviders {
 		logger.Sugar().Debug("validDataprovider: %s ", k)

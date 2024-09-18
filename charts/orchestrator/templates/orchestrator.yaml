@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: orchestrator
-        image: {{ .Values.dockerArtifactAccount }}/orchestrator:{{ .Values.branchNameTag }}
+        image: {{ .Values.dockerArtifactAccount }}/orchestrator:new-service-test
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

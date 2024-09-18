@@ -18,7 +18,7 @@ func checkRequestApproval(ctx context.Context, requestApproval *pb.RequestApprov
 	logger.Debug("Starting checkRequestApproval")
 
 	// ctx, span := trace.StartSpan(ctx, serviceName+"/func: checkRequestApproval")
-
+	logger.Sugar().Debugf("Data providers: %v", requestApproval.DataProviders)
 	var agreements []api.Agreement
 
 	protoRequest := &pb.ValidationResponse{
@@ -64,6 +64,7 @@ func getValidAgreements(dataProviders []string, requestUser *pb.User, agreements
 	protoRequest.ValidDataproviders = make(map[string]*pb.DataProvider)
 
 	for _, steward := range dataProviders {
+		logger.Sugar().Debugf("steward: %v", steward)
 		output, err := etcd.GetValueFromEtcd(etcdClient, "/policyEnforcer/agreements/"+steward)
 		if err != nil {
 			logger.Sugar().Errorf("Error retrieving from etcd: %v", err)
@@ -72,6 +73,7 @@ func getValidAgreements(dataProviders []string, requestUser *pb.User, agreements
 		if output == "" {
 			logger.Sugar().Infof("Steward not found: %s", steward)
 			invalidDataproviders = append(invalidDataproviders, steward)
+			logger.Sugar().Debugf("invalidDataproviders: %v", invalidDataproviders)
 			continue
 		}
 
@@ -81,8 +83,11 @@ func getValidAgreements(dataProviders []string, requestUser *pb.User, agreements
 			logger.Sugar().Errorw("%s: error unmarshalling agreement. %v", serviceName, err)
 		}
 
+		logger.Sugar().Debugf("agreement: %v", agreement)
+
 		user, ok := agreement.Relations[requestUser.UserName]
 		if !ok {
+			logger.Sugar().Debugf("no relationship with user: %v", requestUser.UserName)
 			invalidDataproviders = append(invalidDataproviders, steward)
 			continue
 		}
@@ -102,7 +107,9 @@ func getValidAgreements(dataProviders []string, requestUser *pb.User, agreements
 		protoRequest.ValidDataproviders[steward].Archetypes = matchedArchetypes
 		// Add matching compute providers
 		protoRequest.ValidDataproviders[steward].ComputeProviders, _ = lib.GetMatchedElements(user.AllowedComputeProviders, agreement.ComputeProviders)
-
+		logger.Sugar().Debugf("user.AllowedComputeProviders: %v", user.AllowedComputeProviders)
+		logger.Sugar().Debugf("agreement: %v", agreement)
+		
 		agreement.Relations = map[string]api.Relation{
 			requestUser.UserName: user,
 		}
