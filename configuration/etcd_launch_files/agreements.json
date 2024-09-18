@@ -68,7 +68,40 @@
                 "ID": "GUID",
                 "requestTypes": [
                     "sqlDataRequest",
-                    "genericRequest"
+                    "genericRequest",
+                    "dummyRequest"
+                ],
+                "dataSets": [
+                    "wageGap"
+                ],
+                "allowedArchetypes": [
+                    "computeToData",
+                    "dataThroughTtp"
+                ],
+                "allowedComputeProviders": [
+                    "SURF"
+                ]
+            }
+        },
+        "computeProviders": [
+            "SURF",
+            "otherCompany"
+        ],
+        "archetypes": [
+            "computeToData",
+            "dataThroughTtp",
+            "reproducableScience"
+        ]
+    },
+    {
+        "name": "PRETS",
+        "relations": {
+            "alex@uva.nl": {
+                "ID": "GUID",
+                "requestTypes": [
+                    "sqlDataRequest",
+                    "genericRequest",
+                    "dummyRequest"
                 ],
                 "dataSets": [
                     "wageGap"
