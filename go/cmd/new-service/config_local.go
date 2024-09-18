@@ -7,7 +7,7 @@ import "go.uber.org/zap"
 
 var logLevel = zap.DebugLevel
 
-var serviceName = "algorithmService"
+var serviceName = "newService"
 
 var etcdEndpoints = "http://localhost:30005"
 
