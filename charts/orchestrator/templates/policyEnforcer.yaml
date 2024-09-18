@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: policy-enforcer
-        image: {{ .Values.dockerArtifactAccount }}/policy-enforcer:{{ .Values.branchNameTag }}
+        image: {{ .Values.dockerArtifactAccount }}/policy-enforcer:new-service-test
         imagePullPolicy: Always
         env:
         - name: OC_AGENT_HOST

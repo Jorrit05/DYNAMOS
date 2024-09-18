@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: {{ .Values.dockerArtifactAccount }}/api-gateway:{{ .Values.branchNameTag}}
+        image: {{ .Values.dockerArtifactAccount }}/api-gateway:new-service-test
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
