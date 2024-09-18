@@ -2,94 +2,168 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"log"
+	"math"
+	"os"
+	"reflect"
+	"sort"
 	"strconv"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 
-	"github.com/gogo/protobuf/jsonpb"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/trace/propagation"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-//// This is the function being called by the last microservice
-//func handleSqlDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
-//	ctx, span := trace.StartSpan(ctx, "handleSqlDataRequest")
-//	defer span.End()
+func loadCSV(filePath string) ([][]string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.Comma = ';'
+	data, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+// Function to calculate statistics and return as a map
+func calculateStats(values []string) map[string]interface{} {
+	var nums []float64
+	emptyCount := 0
+
+	// Convert strings to float64 and count empty values
+	for _, val := range values {
+		if val == "" {
+			emptyCount++
+		} else {
+			num, err := strconv.ParseFloat(val, 64)
+			if err == nil {
+				nums = append(nums, num)
+			}
+		}
+	}
+
+	// Initialize the result map
+	result := map[string]interface{}{
+		"emptyCount": emptyCount,
+		"emptyRatio": 0.0,
+		"min":        0.0,
+		"max":        0.0,
+		"mean":       0.0,
+		"median":     0.0,
+		"stdDev":     0.0,
+	}
+
+	// Return early if there are no valid numbers
+	if len(nums) == 0 {
+		return result
+	}
+
+	// Sort numbers to calculate min, max, and median
+	sort.Float64s(nums)
+
+	//emptyRatio := emptyCount / len(nums)
+	emptyRatio := float64(emptyCount)/float64(len(values))
+
+	// Calculate min and max
+	min := nums[0]
+	max := nums[len(nums)-1]
+
+	// Calculate mean
+	sum := 0.0
+	for _, num := range nums {
+		sum += num
+	}
+	mean := sum / float64(len(nums))
+
+	// Calculate median
+	var median float64
+	n := len(nums)
+	if n%2 == 0 {
+		median = (nums[n/2-1] + nums[n/2]) / 2
+	} else {
+		median = nums[n/2]
+	}
+
+	// Calculate standard deviation
+	sumOfSquares := 0.0
+	for _, num := range nums {
+		sumOfSquares += math.Pow(num-mean, 2)
+	}
+	stdDev := math.Sqrt(sumOfSquares / float64(n))
+
+	// Update the result map
+	result["emptyRatio"] = emptyRatio
+	result["min"] = min
+	result["max"] = max
+	result["mean"] = mean
+	result["median"] = median
+	result["stdDev"] = stdDev
+
+	return result
+}
+
+// Function to calculate statistics
+//func calculateStats(values []string) (int, float64, float64, float64, float64, float64) {
+//	var nums []float64
+//	emptyCount := 0
 //
-//	logger.Info("Start handleSqlDataRequest")
-//	// Unpack the metadata
-//	metadata := msComm.Metadata
-//	// fields := make(map[string]*structpb.Value)
-//	// dataField := msComm.GetData()
-//	// Get the "Functcat" field from the struct
-//	// functcatValue := dataField.Fields["HOOPgeb"]
-//
-//	// // Check if it's a ListValue
-//	// if functcatValue != nil {
-//	// 	if listValue, ok := functcatValue.Kind.(*structpb.Value_ListValue); ok {
-//	// 		// Iterate over the Values in the ListValue
-//	// 		for _, item := range listValue.ListValue.GetValues() {
-//	// 			// item is a *structpb.Value, so we need to get the actual value using one of its getter methods
-//	// 			switch v := item.Kind.(type) {
-//	// 			case *structpb.Value_StringValue:
-//	// 				fmt.Printf("String value: %s\n", v.StringValue)
-//	// 			case *structpb.Value_NumberValue:
-//	// 				fmt.Printf("Number value: %f\n", v.NumberValue)
-//	// 			case *structpb.Value_BoolValue:
-//	// 				fmt.Printf("Bool value: %v\n", v.BoolValue)
-//	// 			// etc. for other possible types
-//	// 			default:
-//	// 				fmt.Printf("Other value: %v\n", v)
-//	// 			}
-//	// 		}
-//	// 	}
-//	// }
-//
-//	// Print each metadata field
-//	logger.Sugar().Debugf("Length metadata: %s", strconv.Itoa(len(metadata)))
-//	// for key, value := range metadata {
-//	// 	fmt.Printf("Key: %s, Value: %+v\n", key, value)
-//	// }
-//
-//	sqlDataRequest := &pb.SqlDataRequest{}
-//	if err := msComm.OriginalRequest.UnmarshalTo(sqlDataRequest); err != nil {
-//		logger.Sugar().Errorf("Failed to unmarshal sqlDataRequest message: %v", err)
+//	// Convert strings to float64 and count empty values
+//	for _, val := range values {
+//		if val == "" {
+//			emptyCount++
+//		} else {
+//			num, err := strconv.ParseFloat(val, 64)
+//			if err == nil {
+//				nums = append(nums, num)
+//			}
+//		}
 //	}
 //
-//	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
-//
-//	if sqlDataRequest.Options["graph"] {
-//		// jsonString, _ := json.Marshal(msComm.Data)
-//		// msComm.Result = jsonString
-//
-//		m := &jsonpb.Marshaler{}
-//		jsonString, _ := m.MarshalToString(msComm.Data)
-//		msComm.Result = []byte(jsonString)
-//
-//		return nil
+//	if len(nums) == 0 {
+//		return emptyCount, 0, 0, 0, 0, 0
 //	}
 //
-//	if sqlDataRequest.Algorithm == "average" {
-//		// jsonString, _ := json.Marshal(msComm.Data)
-//		// msComm.Result = jsonString
+//	sort.Float64s(nums) // Sort numbers to calculate min, max, and median
 //
-//		msComm.Result = getAverage(msComm.Data)
-//		return nil
+//	// Calculate min and max
+//	min := nums[0]
+//	max := nums[len(nums)-1]
+//
+//	// Calculate mean
+//	sum := 0.0
+//	for _, num := range nums {
+//		sum += num
+//	}
+//	mean := sum / float64(len(nums))
+//
+//	// Calculate median
+//	var median float64
+//	n := len(nums)
+//	if n%2 == 0 {
+//		median = (nums[n/2-1] + nums[n/2]) / 2
+//	} else {
+//		median = nums[n/2]
 //	}
 //
-//	// // Just pass on the data for now...
-//	// if config.LastService {
-//	// 	msComm.Result = getAverage(msComm.Data)
-//	// }
+//	// Calculate standard deviation
+//	sumOfSquares := 0.0
+//	for _, num := range nums {
+//		sumOfSquares += math.Pow(num-mean, 2)
+//	}
+//	std := math.Sqrt(sumOfSquares / float64(n))
 //
-//	// Process all data to make this service more realistic.
-//	ctx, allResults := convertAllData(ctx, msComm.Data)
-//	msComm.Result = allResults
-//
-//	return nil
+//	return emptyCount, min, max, mean, median, std
 //}
 
 // This is the function being called by the last microservice
@@ -100,8 +174,10 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 	logger.Info("Start handleDataRequest")
 	// Unpack the metadata
 	metadata := msComm.Metadata
+	filename := "/res/synthetic_sdv.csv"
 
 	// Print each metadata field
+	logger.Sugar().Debugf("Metadata: %v", metadata)
 	logger.Sugar().Debugf("Length metadata: %s", strconv.Itoa(len(metadata)))
 
 	sqlDataRequest := &pb.SqlDataRequest{}
@@ -111,34 +187,57 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 
 	msComm.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
 
-	if sqlDataRequest.Options["graph"] {
-		// jsonString, _ := json.Marshal(msComm.Data)
-		// msComm.Result = jsonString
+	//load data
+	logger.Sugar().Debugf("Loading data from file: %v", filename)
+	records, err := loadCSV(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logger.Sugar().Debugf("Type of records: %v", reflect.TypeOf(records))
+	logger.Sugar().Debugf("Length of records: %v", len(records))
 
-		m := &jsonpb.Marshaler{}
-		jsonString, _ := m.MarshalToString(msComm.Data)
-		msComm.Result = []byte(jsonString)
-
-		return nil
+	cols := records[0]
+	buildYearsCol := []string{}
+	bedroomCol := []string{}
+	logger.Sugar().Debugf("Columns: %v", cols)
+	for _, record := range records[1:] {
+		//fmt.Println(record)
+		buildYearsCol = append(buildYearsCol, record[0])
+		bedroomCol = append(bedroomCol, record[1])
 	}
 
-	if sqlDataRequest.Algorithm == "average" {
-		// jsonString, _ := json.Marshal(msComm.Data)
-		// msComm.Result = jsonString
+	result := make(map[string]string)
+	statsBuildYear := calculateStats(buildYearsCol)
+	statsBedroom := calculateStats(bedroomCol)
 
-		msComm.Result = getAverage(msComm.Data)
-		return nil
+	logger.Sugar().Debugf("Request Options: %v", sqlDataRequest.Options)
+	if sqlDataRequest.Options["buildYear"] {
+		//result["buildYear"] = fmt.Sprintf("%.3f", statsBuildYear["mean"])
+		jsonMetrics, err := json.Marshal(statsBuildYear)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return nil
+		}
+		result["buildYear"] = string(jsonMetrics)
+	}
+	if sqlDataRequest.Options["bedroomWindows"] {
+		jsonMetrics, err := json.Marshal(statsBedroom)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return nil
+		}
+		//result["shower"] = fmt.Sprintf("%.3f", statsShower["mean"])
+		result["bedroomWindows"] = string(jsonMetrics)
 	}
 
-	// // Just pass on the data for now...
-	// if config.LastService {
-	// 	msComm.Result = getAverage(msComm.Data)
-	// }
+	jsonResult, err := json.Marshal(result)
+	if err != nil {
+		logger.Sugar().Error(err)
+		return nil
+	}
 
 	// Process all data to make this service more realistic.
-	ctx, allResults := convertAllData(ctx, msComm.Data)
-	msComm.Result = allResults
-
+	msComm.Result = jsonResult
 	return nil
 }
 
@@ -185,74 +284,4 @@ func convertAllData(ctx context.Context, data *structpb.Struct) (context.Context
 	}
 
 	return ctx, jsonData
-}
-
-func getFirstRow(data *structpb.Struct) []byte {
-	keys := make([]string, 0)
-	values := make([]string, 0)
-	for key, value := range data.GetFields() {
-		stringValues := value.GetListValue().GetValues()
-		if len(stringValues) > 0 {
-			keys = append(keys, key)
-			values = append(values, stringValues[0].GetStringValue())
-		}
-	}
-
-	// Convert to JSON format
-	result := []interface{}{keys, values}
-	jsonData, err := json.Marshal(result)
-	if err != nil {
-		fmt.Printf("Error while marshalling to JSON: %v\n", err)
-		return nil
-	}
-
-	return jsonData
-}
-
-func getAverage(data *structpb.Struct) []byte {
-
-	gendersField, ok1 := data.GetFields()["Geslacht"]
-	salariesField, ok2 := data.GetFields()["Salschal"]
-
-	if !ok1 || !ok2 {
-		logger.Error("Genders or Salaries field not found")
-		return nil
-	}
-
-	genders := gendersField.GetListValue().GetValues()
-	salaries := salariesField.GetListValue().GetValues()
-
-	var totalMaleSalary, totalFemaleSalary float64
-	maleCount, femaleCount := 0, 0
-
-	for index, gender := range genders {
-		genderStr := gender.GetStringValue()
-		if salaryStr := salaries[index].GetStringValue(); salaryStr != "" {
-			salary, err := strconv.ParseFloat(salaryStr, 64)
-			if err != nil {
-				fmt.Printf("Error parsing salary value: %v\n", err)
-				continue
-			}
-
-			if genderStr == "M" {
-				totalMaleSalary += salary
-				maleCount++
-			} else if genderStr == "V" {
-				totalFemaleSalary += salary
-				femaleCount++
-			}
-		}
-	}
-
-	result := make(map[string]string)
-	result["key1"] = "test1"
-	result["key2"] = "key2"
-
-	jsonResult, err := json.Marshal(result)
-	if err != nil {
-		logger.Sugar().Error(err)
-		return nil
-	}
-
-	return jsonResult
 }

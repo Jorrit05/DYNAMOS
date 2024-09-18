@@ -129,6 +129,7 @@ func generateMicroserviceChain(compositionRequest *pb.CompositionRequest, option
 	var requestType mschain.RequestType
 	//_, err := etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/requestTypes/%s", compositionRequest.RequestType), &requestType)
 	_, err := etcd.GetAndUnmarshalJSON(etcdClient, "/requestTypes/dummyRequest", &requestType)
+
 	if err != nil {
 		return nil, err
 	}

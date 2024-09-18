@@ -98,6 +98,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 		logger.Sugar().Debugw("job info:", "name: ", microservice.Name, "Port: ", port)
 
 		microserviceTag := getMicroserviceTag(microservice.Name)
+		logger.Sugar().Debugf("MS tag: %v", microserviceTag)
 
 		logger.Sugar().Debugf("MS tag: %v", microserviceTag)
 

@@ -18,7 +18,7 @@ require (
 	go.etcd.io/etcd/client/v3 v3.5.12
 	go.opencensus.io v0.24.0
 	go.uber.org/zap v1.24.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.31.0
@@ -62,7 +62,7 @@ require (
 	golang.org/x/term v0.22.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/api v0.25.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240725223205-93522f1f2a9f // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/protobuf v1.5.4
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/gorilla/websocket v1.5.1
 	github.com/pkg/errors v0.9.1 // indirect
