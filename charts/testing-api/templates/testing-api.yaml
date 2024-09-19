@@ -1,0 +1,81 @@
+# testing-api deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: testing-api
+  namespace: {{ .Values.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: testing-api
+  template:
+    metadata:
+      labels:
+        app: testing-api
+    spec:
+      containers:
+      - name: testing-api
+        image: {{ .Values.dockerArtifactAccount }}/testing-api:{{ .Values.branchNameTag}}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: OC_AGENT_HOST
+          value: {{ .Values.tracingEndpoint }}
+        # resources:
+        #   requests:
+        #     memory: "128Mi"
+        #   limits:
+        #     memory: "256Mi"
+      - name: sidecar
+        image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag}}
+        imagePullPolicy: Always
+        env:
+        - name: AMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbit
+              key: password
+        - name: AMQ_USER
+          value: normal_user
+        - name: OC_AGENT_HOST
+          value: {{ .Values.tracingEndpoint }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: testing-api
+  namespace: {{ .Values.Namespace }}
+spec:
+  selector:
+    app: testing-api
+  ports:
+    - name: http-testing-api-api
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: testing-api-ingress
+  namespace: {{ .Values.Namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: testing-api.testing-api.svc.cluster.local
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/api/v1"
+        backend:
+          service:
+            name: testing-api
+            port:
+              number: 8080
