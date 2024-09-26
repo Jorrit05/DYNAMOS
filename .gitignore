@@ -5,6 +5,7 @@ build
 dist
 dynamos.egg.info/*
 *dynamos.egg-info
+.obsidian/
 .venv
 .query
 # Binaries for programs and plugins
@@ -20,10 +21,10 @@ __pycache__
 # TEMP
 definitions.json
 definitions.bak
-
+*.DS_Store
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
+*.vscode
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
