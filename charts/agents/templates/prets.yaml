@@ -45,6 +45,11 @@ spec:
               value: normal_user
             - name: OC_AGENT_HOST
               value: {{ .Values.tracingEndpoint }}
+        - name: simple-flwr-api
+          image: simple-flwr-api:api
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 7000
 
 ---
 
