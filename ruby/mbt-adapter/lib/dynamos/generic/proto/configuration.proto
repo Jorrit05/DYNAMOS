@@ -1,0 +1,22 @@
+syntax = "proto3";
+package PluginAdapter.Api;
+
+// Configurations contain a list of key-value pairs where each key identifies
+// something that can be configured and the value contains either the default
+// value (if the message comes from the adapter) or the current value (if the
+// message comes from TestManager).
+message Configuration {
+  message Item {
+    string key = 1; // Should match /^[a-zA-Z0-9]+[a-zA-Z0-9_]*$/
+    string description = 2;
+
+    oneof type {
+      string string = 3;
+      int64 integer = 4;
+      float float = 5;
+      bool boolean = 6;
+    }
+  }
+
+  repeated Item items = 1;
+}

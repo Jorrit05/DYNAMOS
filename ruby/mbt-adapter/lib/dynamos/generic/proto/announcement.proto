@@ -1,0 +1,22 @@
+syntax = "proto3";
+package PluginAdapter.Api;
+import "configuration.proto";
+import "label.proto";
+
+// Announcement of an adapter when it plugs in.
+message Announcement {
+  // The adapter name uniquely identifies this adapter. Only one adapter is
+  // allowed to connect with this name at a time.
+  //
+  // It's useful to use this format: interface@location. For example, if the
+  // adapter is connected to the PRL42 System Under Test running at company Comp
+  // and provides access to its SNMP interface, then the name would be
+  // snmp@prl42-comp.
+  string name = 1;
+
+  // Default configuration. All values should be set to their default values.
+  Configuration configuration = 2;
+
+  // Labels that this adapter supports.
+  repeated Label labels = 3;
+}

@@ -1,0 +1,23 @@
+syntax = "proto3";
+package PluginAdapter.Api;
+import "label.proto";
+import "announcement.proto";
+import "configuration.proto";
+
+// Message sent while testing (after the announcement and configuration).
+message Message {
+  message Reset {}
+  message Ready {}
+  message Error {
+    string message = 1; // Free form explanation about what went wrong
+  }
+
+  oneof type {
+    Error error = 1; // Protocol error occurred
+    Announcement announcement = 2; // Initial announcement send to broker
+    Configuration configuration = 3; // Configuration message sent to adapter
+    Label label = 4; // Message exchanged with system under test
+    Reset reset = 5; // Request by TestManager to reset the SUT into its initial state
+    Ready ready = 6; // Adapter confirms that SUT is in its initial state
+  }
+}

@@ -1,0 +1,60 @@
+GEM
+  specs:
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    amq-protocol (2.3.2)
+    bigdecimal (3.1.8)
+    bunny (2.23.0)
+      amq-protocol (~> 2.3, >= 2.3.1)
+      sorted_set (~> 1, >= 1.0.2)
+    google-protobuf (4.29.1)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.29.1-aarch64-linux)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.29.1-arm64-darwin)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.29.1-x86-linux)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.29.1-x86_64-darwin)
+      bigdecimal
+      rake (>= 13)
+    google-protobuf (4.29.1-x86_64-linux)
+      bigdecimal
+      rake (>= 13)
+    little-plugger (1.1.4)
+    logging (2.4.0)
+      little-plugger (~> 1.1)
+      multi_json (~> 1.14)
+    multi_json (1.15.0)
+    rake (13.2.1)
+    rbtree (0.4.6)
+    set (1.1.1)
+    sorted_set (1.0.3)
+      rbtree
+      set (~> 1.0)
+    websocket-driver (0.7.6)
+      websocket-extensions (>= 0.1.0)
+    websocket-extensions (0.1.5)
+
+PLATFORMS
+  aarch64-linux
+  arm64-darwin
+  ruby
+  x86-linux
+  x86_64-darwin
+  x86_64-linux
+
+DEPENDENCIES
+  bunny (>= 2.23.0)!
+  google-protobuf!
+  logging!
+  websocket-driver!
+
+BUNDLED WITH
+   2.5.23
