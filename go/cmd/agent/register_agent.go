@@ -14,6 +14,10 @@ import (
 func registerAgent() {
 	// Prepare agent configuration data
 	// var service lib.MicroServiceData = lib.UnmarshalStackFile("/var/log/stack-files/agents.yaml")
+
+	logger.Sugar().Debug("Register Agent")
+	logger.Sugar().Debug("serviceName: %s ", serviceName)
+
 	now := time.Now()
 	agentConfig = lib.AgentDetails{
 		Name:          serviceName,
@@ -28,6 +32,8 @@ func registerAgent() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	logger.Sugar().Debug("agentConfig: %s ", agentConfig)
 
 	go etcd.PutEtcdWithLease(etcdClient, fmt.Sprintf("/agents/online/%s", agentConfig.Name), string(configData))
 }

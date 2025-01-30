@@ -11,7 +11,7 @@ proto:
 	protoc -I ../proto-files --go_out=./pkg/proto --go_opt=paths=source_relative --go-grpc_out=./pkg/proto --go-grpc_opt=paths=source_relative ../proto-files/*.proto
 
 $(dynamos): prepare proto
-	cp Dockerfile go.mod go.sum ./cmd/$@
+	cp Dockerfile go.mod go.sum synthetic_sdv.csv synthetic_data_sample.csv ./cmd/$@
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
 	docker build --build-arg NAME='$@' -t $(dockerhub_account)/$@:$(branch_name) -t $(dockerhub_account)/$@:latest ./cmd/$@/)
@@ -20,7 +20,7 @@ $(dynamos): prepare proto
 
 
 $(sql_microservices): prepare proto
-	cp Dockerfile go.mod go.sum ./cmd/$@
+	cp Dockerfile go.mod go.sum synthetic_sdv.csv synthetic_data_sample.csv ./cmd/$@
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
 	docker build --build-arg NAME='$@' -t $(dockerhub_account)/$@:$(branch_name) -t $(dockerhub_account)/$@:latest ./cmd/$@/)

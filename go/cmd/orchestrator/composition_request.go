@@ -109,6 +109,8 @@ func pickArchetypeBasedOnWeight() (*api.Archetype, error) {
 
 	// Assuming GetPrefixListEtcd returns a slice of Archetype and an error
 	archeTypes, err := etcd.GetPrefixListEtcd(etcdClient, "/archetypes", target)
+	logger.Sugar().Debug("archeTypes: %s ", archeTypes)
+
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +163,8 @@ func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataPr
 	logger.Sugar().Debug("starting chooseArchetype")
 	logger.Sugar().Debugf("length options: %v", len(validationResponse.Options))
 
-	logger.Sugar().Debugf("Archetype: %v", "dummyRequest")
-	return "dummyRequest", nil
+	//logger.Sugar().Debugf("Archetype: %v", "dummyRequest")
+	//return "dummyRequest", nil
 
 	for k, _ := range validationResponse.ValidDataproviders {
 		logger.Sugar().Debug("validDataprovider: %s ", k)
@@ -170,6 +172,8 @@ func chooseArchetype(validationResponse *pb.ValidationResponse, authorizedDataPr
 
 	if validationResponse.Options != nil && len(validationResponse.Options) > 0 {
 		archetype := getArchetypeBasedOnOptions(validationResponse, authorizedDataProviders)
+		logger.Sugar().Debug("archetype: %s ", archetype)
+
 		if archetype != "" {
 			return archetype, nil
 		}
