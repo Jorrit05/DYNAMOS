@@ -36,3 +36,6 @@ datasets/*.csv
 
 *.drawio.bkp
 *.drawio.dtmp
+
+# Ignore GoLand project files   
+.idea/
