@@ -168,7 +168,7 @@ If you don't want to constantly be using `kubectl` to check the status of your c
 HINT: When running k9s, it will initially load the default namespaces, press 0 to show all namespaces, which your containers are likely going to show up in.
 
 ```bash
- brew install derailed/k9s/k9s
+brew install derailed/k9s/k9s
 ```
 
 # System Configuration
@@ -187,7 +187,7 @@ DYNAMOS_ROOT="${HOME}/DYNAMOS"
 To run the script, execute the following from the root of DYNAMOS
 
 ```sh
-  ./configuration/dynamos-configuration.sh
+./configuration/dynamos-configuration.sh
 ```
 
 - Set all requirements for the RabbitMQ password, see section [RabbitMQ password process](#rabbitMQ-password-process)
@@ -202,10 +202,21 @@ To run the script, execute the following from the root of DYNAMOS
 
 Understanding this script will help understanding how DYNAMOS is deployed.
 
+###  9.1 <a name='PrometheusExporterFix'></a>Prometheus Exporter Fix
+
+Some versions of Prometheus might have an issue with the node-exporter that does not allow the container to start 
+correctly.
+
+Fix from: https://github.com/prometheus-operator/kube-prometheus/discussions/790#discussioncomment-6896643
+
+Patch: 
+```bash
+kubectl patch ds prometheus-prometheus-node-exporter --type "json" -p '[{"op": "remove", "path" : "/spec/template/spec/containers/0/volumeMounts/2/mountPropagation"}]'
+```
 
 ##  10. <a name='RabbitMQpasswordprocess'></a>RabbitMQ password process
 
-**This is an explanation of the aforemntioned install script. Do not need to run the commands if the script was successful.**
+**This is an explanation of the aforementioned install script. Do not need to run the commands if the script was successful.**
 
 Every service in DYNAMOS that connects to RabbitMQ requires a user with a password that are configured in RabbitMQ. For now every service has the user 'normal_user' and they share a generic password that we will show how to generate here.
 
@@ -398,13 +409,13 @@ restart_core() {
 
 ```
 
-**Important**: Remeber to source your shell file after inserting the above into it.
+**Important**: Remember to source your shell file after inserting the above into it.
 ```bash
-  source ~/.bashrc
+source ~/.bashrc
 ```
 or
 ```bash
-  source ~/.zshrc
+source ~/.zshrc
 ```
 (or whatever shell rc is used)
 
