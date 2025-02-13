@@ -1,8 +1,7 @@
 # Copyright 2023 Axini B.V. https://www.axini.com, see: LICENSE.txt.
 # frozen_string_literal: true
 
-# Implementation of Handler for the SmartDoor SUT.
-class Dynamos::Handler < Handler
+class DynamosHandler < Handler
   def initialize
     @connection = nil
     super

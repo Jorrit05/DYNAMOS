@@ -12,7 +12,7 @@ end
 
 # The DynamosConnection holds the WebSocket connection with the standalone
 # DYNAMOS SUT
-class Dynamos::Connection
+class DynamosConnection
   def initialize(url, handler)
     @url     = url
     @handler = handler
