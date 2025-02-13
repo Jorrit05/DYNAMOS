@@ -4,7 +4,7 @@ set -e
 
 # Change this to the path of the DYNAMOS repository on your disk
 echo "Setting up paths..."
-DYNAMOS_ROOT="${HOME}/DYNAMOS"
+DYNAMOS_ROOT="${HOME}/Dev/DYNAMOS"
 
 # Charts
 charts_path="${DYNAMOS_ROOT}/charts"
@@ -37,14 +37,13 @@ actual_hash=$(echo "$hashed_pw" | cut -d $'\n' -f2)
 echo "Replacing tokens..."
 cp ${k8s_service_files}/definitions_example.json ${rabbit_definitions_file}
 
-
 # The Rabbit Hashed password needs to be in definitions.json file, that is the configuration for RabbitMQ
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS sed
-    sed -i '' "s|%PASSWORD%|${actual_hash}|g" ${rabbit_definitions_file}
+  # macOS sed
+  sed -i '' "s|%PASSWORD%|${actual_hash}|g" ${rabbit_definitions_file}
 else
-    # GNU sed
-    sed -i "s|%PASSWORD%|${actual_hash}|g" ${rabbit_definitions_file}
+  # GNU sed
+  sed -i "s|%PASSWORD%|${actual_hash}|g" ${rabbit_definitions_file}
 fi
 
 echo "Installing namespaces..."
@@ -55,8 +54,8 @@ helm upgrade -i -f ${namespace_chart}/values.yaml namespaces ${namespace_chart} 
 echo "Preparing PVC"
 
 {
-    cd ${DYNAMOS_ROOT}/configuration
-    ./fill-rabbit-pvc.sh
+  cd ${DYNAMOS_ROOT}/configuration
+  ./fill-rabbit-pvc.sh
 }
 
 #Install prometheus
@@ -94,3 +93,4 @@ helm upgrade -i -f "${api_gw_chart}/values.yaml" api-gateway ${api_gw_chart}
 echo "Finished setting up DYNAMOS"
 
 exit 0
+

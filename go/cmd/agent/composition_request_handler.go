@@ -25,10 +25,11 @@ func generateJobName(jobName string) (string, error) {
 	// Get the jobname of this user
 	jobMutex.Lock()
 	jobCounter[jobName]++
-	newValue := jobCounter[jobName]
+	//  TODO: This is the source of all the blocking requests, for now I've changed the return to always have 1 as the value, tho this should probably change in the future.
+	// newValue := jobCounter[jobName]
 	jobMutex.Unlock()
 
-	return jobName + dataStewardName + strconv.Itoa(newValue), nil
+	return jobName + dataStewardName + strconv.Itoa(1), nil
 }
 
 func watchQueue(ctx context.Context, key string) {
@@ -42,7 +43,7 @@ func watchQueue(ctx context.Context, key string) {
 				// Take action if key is deleted
 				if event.Type == clientv3.EventTypeDelete {
 					logger.Sugar().Infof("Key has been deleted! Taking action...")
-					//TODO probably should figure out a way to also delete the jobs compositionrequest here (/agents/jobs/UVA/jorrit.stutterheim@cloudnation.nl/jorrit-stutterheim-7e2d9c4c)
+					// TODO probably should figure out a way to also delete the jobs compositionrequest here (/agents/jobs/UVA/jorrit.stutterheim@cloudnation.nl/jorrit-stutterheim-7e2d9c4c)
 					// userKey := fmt.Sprintf("%s/%s/%s/%s", etcdJobRootKey, agentConfig.Name, compositionRequest.User.UserName, compositionRequest.JobName)
 
 					// delete the jobs compositionrequest here
