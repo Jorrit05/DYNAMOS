@@ -130,7 +130,8 @@ Linkerd is a service mesh for Kubernetes, we use it to install Jaeger (https://w
 
 ```bash
 # Install CLI
-curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
+curl -sL https://run.linkerd.io/install | LINKERD2_VERSION=stable-2.14.10 sh
+
 
 # Add Linkerd to PATH
 export PATH=$HOME/.linkerd2/bin:$PATH
@@ -479,8 +480,16 @@ See [RabbitMQ password process](#rabbitmq-password-process) and/or [Configure Ra
 Note, this password does not match the one in `definition.json`. But you can try hashing this password with rabbitctl and place it in the `defintions.json` to see if this was the issue.
 
 # Extra commands for portforwarding
+The commands below can be copy pasted into your terminal as it will start headless sessions for each.
+If you want to individually run the commands, remove the `nohup` and the `&` from the commands.
 
+```bash
+# Run api-gateway locally 
+nohup kubectl port-forward svc/api-gateway 8080:8080 -n api-gateway &
+# Run jaeger UI
+nohup kubectl port-forward svc/jaeger -n linkerd-jaeger 16686:16686 &
+# Run Grafana UI
+nohup kubectl port-forward -n core $(kubectl get pods -n core -l app=grafana -o jsonpath='{.items[0].metadata.name}') 3000:3000 &
 ```
-kubectl port-forward svc/api-gateway 8080:8080 -n api-gateway
-kubectl port-forward svc/jaeger -n linkerd-jaeger 16686:16686
-```
+
+

@@ -21,6 +21,13 @@ spec:
         ports:
         - containerPort: 8080
         env:
+        - name: AMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbit
+              key: password
+        - name: AMQ_USER
+          value: normal_user
         - name: OC_AGENT_HOST
           value: {{ .Values.tracingEndpoint }}
         # resources:

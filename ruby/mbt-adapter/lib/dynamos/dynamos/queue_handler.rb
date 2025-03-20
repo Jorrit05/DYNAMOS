@@ -1,9 +1,8 @@
-
 class RabbitMQHandler
   # Class variable to store all messages in memory
   @@messages = []
 
-  def initialize(amp_handler, queue_name = 'persistent_queue', )
+  def initialize(amp_handler, queue_name = 'testing_queue')
     @queue_name = queue_name
     @connection = nil
     @channel = nil
@@ -14,25 +13,23 @@ class RabbitMQHandler
 
   # Method to establish a connection to RabbitMQ
   def connect_to_queue
-    begin
-      logger.info("Attempting to connect to RabbitMQ...")
-      @connection = Bunny.new
-      @connection.start
-      @channel = @connection.create_channel
-      @queue = @channel.queue(@queue_name, durable: true) # Durable queue
-      logger.info("Connected to RabbitMQ and queue '#{@queue_name}' is ready.")
-      @amp_handler.send_ready_to_amp
-    rescue Bunny::TCPConnectionFailedForAllHosts => e
-      message = "Connection failed: #{e.message}"
-      logger.error(message)
-      @amp_handler&.send_error_to_amp(message)
-      raise
-    rescue StandardError => e
-      message = "An unexpected error occurred: #{e.message}"
-      logger.error(message)
-      @amp_handler&.send_error_to_amp(message)
-      raise
-    end
+    logger.info('Attempting to connect to RabbitMQ...')
+    @connection = Bunny.new
+    @connection.start
+    @channel = @connection.create_channel
+    @queue = @channel.queue(@queue_name, durable: true) # Durable queue
+    logger.info("Connected to RabbitMQ and queue '#{@queue_name}' is ready.")
+    @amp_handler.send_ready_to_amp
+  rescue Bunny::TCPConnectionFailedForAllHosts => e
+    message = "Connection failed: #{e.message}"
+    logger.error(message)
+    @amp_handler&.send_error_to_amp(message)
+    raise
+  rescue StandardError => e
+    message = "An unexpected error occurred: #{e.message}"
+    logger.error(message)
+    @amp_handler&.send_error_to_amp(message)
+    raise
   end
 
   # Method to send messages to the queue
@@ -47,7 +44,7 @@ class RabbitMQHandler
 
   # Method to consume messages from the queue and store the responses
   def process_messages
-    logger.info("Waiting for messages. Press CTRL+C to exit.")
+    logger.info('Waiting for messages. Press CTRL+C to exit.')
     @queue.subscribe(block: true, manual_ack: false) do |_delivery_info, _properties, body|
       store_message(body)
 
@@ -55,7 +52,7 @@ class RabbitMQHandler
       logger.info("Received and stored message: #{body}")
     end
   rescue Interrupt
-    message = "Message processing interrupted by user."
+    message = 'Message processing interrupted by user.'
     logger.warn(message)
     @amp_handler&.send_error_to_amp(message)
     close
@@ -81,9 +78,9 @@ class RabbitMQHandler
   def close
     if @connection&.open?
       @connection.close
-      logger.info("Connection closed.")
+      logger.info('Connection closed.')
     else
-      message = "Connection was already closed."
+      message = 'Connection was already closed.'
       logger.warn(message)
       @amp_handler&.send_error_to_amp(message)
     end

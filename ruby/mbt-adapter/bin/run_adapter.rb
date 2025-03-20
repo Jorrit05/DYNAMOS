@@ -1,23 +1,37 @@
-# Copyright 2023 Axini B.V. https://www.axini.com, see: LICENSE.txt.
-# frozen_string_literal: true
+#!/usr/bin/env ruby
 
-require_relative '../lib/dynamos'
+require 'bunny'
+require 'logger'
 
-# The adapter should connect to a server running AMP, announce itself with a
-# name, and supply a valid adapter token. You can fill in your own adapter
-# configuration here, or provide the parameters when starting the adapter.
+class RabbitMQService
+  def initialize(queue_name: 'mbt_testing_queue')
+    @amq_user = ENV['AMQ_USER']
+    @amq_password = ENV['AMQ_PASSWORD']
+    @rabbit_port = '5672'
+    @rabbit_dns = 'rabbitmq.core.svc.cluster.local'
+    @queue_name = queue_name
+    @connection = nil
+    @channel = nil
+    @queue = nil
+    @log = Logger.new($stdout)
+  end
 
-name  = ENV['ADAPTER_NAME']
-url   = ENV['ADAPTER_URL']
-token = ENV['ADAPTER_TOKEN']
+  def connect
+    @connection = Bunny.new(host: @rabbit_dns, port: @rabbit_port, username: @amq_user,
+                            password: @amq_password)
+    @connection.start
+    @channel = @connection.create_channel
+    @queue = @channel.queue(@queue_name, durable: true)
+    @log.debug "Queue '#{@queue_name}' is ready."
+  end
 
-
-# Minimal customization through command line parameters.
-if ARGV.size == 3
-  name, url, token = ARGV
-elsif !ARGV.empty?
-  puts 'usage: adapter <name> <url> <token>'
-  exit(1)
+  def close
+    @connection&.close
+  end
 end
 
-Adapter.new(name, url, token).run
+# Initialize and set up the queue
+rabbitmq = RabbitMQService.new
+rabbitmq.connect
+
+sleep

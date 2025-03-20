@@ -26,7 +26,10 @@ func generateJobName(jobName string) (string, error) {
 	jobMutex.Lock()
 	jobCounter[jobName]++
 	//  TODO: This is the source of all the blocking requests, for now I've changed the return to always have 1 as the value, tho this should probably change in the future.
-	// newValue := jobCounter[jobName]
+	//  Change the code back to the below to reproduce the behaviour
+	//	newValue := jobCounter[jobName]
+	// jobMutex.Unlock()
+	// return jobName + dataStewardName + strconv.Itoa(newValue), nil
 	jobMutex.Unlock()
 
 	return jobName + dataStewardName + strconv.Itoa(1), nil

@@ -72,7 +72,6 @@ class DynamosHandler < Handler
   DYNAMOS_URL = 'ws://127.0.0.1:3001'
 
   # The default configuration for this adapter.
-  # NOTE: the SmartDoor SUT does not longer support a manufacturer.
   def default_configuration
     url = PluginAdapter::Api::Configuration::Item.new(
       key: 'url',

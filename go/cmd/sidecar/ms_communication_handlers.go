@@ -84,3 +84,49 @@ func SendDataThroughAMQ(ctx context.Context, data *pb.MicroserviceCommunication,
 	logger.Debug("Ending lib.SendDataThroughAMQ")
 	return &emptypb.Empty{}, nil
 }
+
+func SendDataToTestingQueue(ctx context.Context, data *pb.MicroserviceCommunication, s *serverInstance) (*emptypb.Empty, error) {
+	logger.Debug("Starting lib.SendDataToTestingQueue")
+
+	ctx, span := trace.StartSpan(ctx, "sidecar SendDataToTestingQueue/func:")
+
+	// Marshaling google.protobuf.Struct to Proto wire format
+	body, err := proto.Marshal(data)
+	if err != nil {
+		logger.Sugar().Errorf("Failed to marshal struct to proto wire format: %v", err)
+		return &emptypb.Empty{}, nil
+	}
+
+	msg := amqp.Publishing{
+		CorrelationId: data.RequestMetadata.CorrelationId,
+		Body:          body,
+		Type:          "microserviceCommunication",
+		Headers:       amqp.Table{},
+	}
+	span.End()
+
+	// Here I am assuming that the msCommunication will take care of tracing requirements.
+	// I don't trust context cause this might be called from a Python or other language microservice
+	value, ok := data.Traces["jsonTrace"]
+	if ok {
+		msg.Headers["jsonTrace"] = value
+	}
+
+	value, ok = data.Traces["binaryTrace"]
+	if ok {
+		msg.Headers["binaryTrace"] = value
+	}
+
+	// Create a context with a timeout
+	timeoutCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+
+	err = s.channel.PublishWithContext(timeoutCtx, exchangeName, data.RequestMetadata.ReturnAddress, true, false, msg)
+	if err != nil {
+		logger.Sugar().Errorf("Error sending microserviceCommunication: %v", err)
+		// return &emptypb.Empty{}, err
+	}
+
+	logger.Debug("Ending lib.SendDataToTestingQueue")
+	return &emptypb.Empty{}, nil
+}

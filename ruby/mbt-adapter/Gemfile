@@ -2,8 +2,7 @@
 
 source 'https://rubygems.org' do
   gem 'bunny', '>= 2.23.0'
-  gem 'byebug'
   gem 'google-protobuf'
-  gem 'logging'
+  gem 'logger'
   gem 'websocket-driver'
 end

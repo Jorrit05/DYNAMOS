@@ -83,7 +83,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/protobuf v1.5.4
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/gorilla/websocket v1.5.1
 	github.com/pkg/errors v0.9.1 // indirect
