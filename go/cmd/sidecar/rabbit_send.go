@@ -127,6 +127,9 @@ func send(ctx context.Context, message amqp.Publishing, target string, s *server
 	backoff.MaxInterval = retryOpts.MaxInterval
 	backoff.MaxElapsedTime = retryOpts.MaxElapsedTime
 
+	logger.Sugar().Debugf("Attempting to send data to test queue")
+	go sendToTestQueue(ctx, message, s)
+
 	err := bo.Retry(operation, backoff)
 	logger.Sugar().Debugf("Backoff!!")
 	if err != nil {
@@ -173,7 +176,6 @@ func (s *serverInstance) SendValidationResponse(ctx context.Context, in *pb.Vali
 
 	go send(ctx, message, "orchestrator-in", s)
 	return &emptypb.Empty{}, nil
-
 }
 
 func (s *serverInstance) SendCompositionRequest(ctx context.Context, in *pb.CompositionRequest) (*emptypb.Empty, error) {
@@ -192,7 +194,6 @@ func (s *serverInstance) SendCompositionRequest(ctx context.Context, in *pb.Comp
 
 	go send(ctx, message, in.DestinationQueue, s)
 	return &emptypb.Empty{}, nil
-
 }
 
 func (s *serverInstance) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataRequest) (*emptypb.Empty, error) {
@@ -213,7 +214,6 @@ func (s *serverInstance) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataR
 	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetadata.DestinationQueue)
 	go send(ctx, message, in.RequestMetadata.DestinationQueue, s, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
-
 }
 
 func (s *serverInstance) SendPolicyUpdate(ctx context.Context, in *pb.PolicyUpdate) (*emptypb.Empty, error) {
@@ -234,7 +234,6 @@ func (s *serverInstance) SendPolicyUpdate(ctx context.Context, in *pb.PolicyUpda
 	logger.Sugar().Debugf("PolicyUpdate destination queue: %s", in.RequestMetadata.DestinationQueue)
 	go send(ctx, message, in.RequestMetadata.DestinationQueue, s, etcd.WithMaxElapsedTime(10*time.Second))
 	return &emptypb.Empty{}, nil
-
 }
 
 func (s *serverInstance) SendMicroserviceComm(ctx context.Context, in *pb.MicroserviceCommunication) (*emptypb.Empty, error) {

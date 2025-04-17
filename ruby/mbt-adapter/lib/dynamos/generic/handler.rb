@@ -28,8 +28,8 @@ class Handler
   def reset
     raise NoMethodError, ABSTRACT_METHOD
   end
-
   # Stimulate the SUT and return the physical label.
+
   # @param [PluginAdapter::Api:Label] stimulus to inject into the SUT.
   def stimulate(_label)
     raise NoMethodError, ABSTRACT_METHOD

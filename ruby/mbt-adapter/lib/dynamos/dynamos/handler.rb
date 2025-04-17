@@ -7,14 +7,18 @@ class DynamosHandler < Handler
     super
   end
 
+  STIMULI = %w[amqp_send].freeze
+  RESPONSES = %w[amqp_recieve].freeze
+  private_constant :STIMULI, :RESPONSES
+
+  DYNAMOS_URL = 'ws://127.0.0.1:3001'
+
   # Prepare to start testing.
   def start
     return unless @connection.nil?
 
-    url = string_from(configuration, 'url')
     logger.info 'Starting. Trying to connect to the SUT.'
-    logger.info "URL: #{url}"
-    @connection = DynamosConnection.new(url, self)
+    @connection = DynamosConnection.new(self)
     @connection.connect
     # When the connection is open, the :open callback will send Ready to AMP.
   end
@@ -50,11 +54,8 @@ class DynamosHandler < Handler
     @adapter_core.send_stimulus_confirmation(label, sut_message, Time.now)
 
     # Send AMQP message to SUT
+    DynamosApi.stimulate_dynamos
   end
-
-  STIMULI = %w[amqp_send].freeze
-  RESPONSES = %w[amqp_recieve].freeze
-  private_constant :STIMULI, :RESPONSES
 
   # @see super
   def supported_labels
@@ -68,8 +69,6 @@ class DynamosHandler < Handler
 
     labels
   end
-
-  DYNAMOS_URL = 'ws://127.0.0.1:3001'
 
   # The default configuration for this adapter.
   def default_configuration
@@ -109,18 +108,6 @@ class DynamosHandler < Handler
 
   private
 
-  # ----- Converters
-
-  # For the SmartDoor SUT the conversion between Protobuf Labels and
-  # SUT messages is simple (upper <-> lower). Hence, these converters
-  # can be part of the SmartDoorHandler. For practical SUTs, we typically
-  # introduce special classes for theses converters.
-
-  # Message to label converter.
-  def sut_message_to_label(message)
-    response(message.downcase)
-  end
-
   # Simple factory methods for PluginAdapter::Api objects.
 
   def stimulus(name, parameters = {}, channel = 'amqp')
@@ -150,10 +137,5 @@ class DynamosHandler < Handler
     label.channel = channel
     parameters.each { |param| label.parameters << param }
     label
-  end
-
-  def string_from(configuration, key)
-    item_found = configuration.items.find { |item| item.key == key }
-    item_found&.string
   end
 end

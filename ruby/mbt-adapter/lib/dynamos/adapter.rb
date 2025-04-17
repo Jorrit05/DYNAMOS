@@ -3,20 +3,19 @@
 
 # Adapter class which instantiates and connects the various adapter objects.
 class Adapter
-  def initialize(name, url, token)
-    @name  = name
-    @url   = url
-    @token = token
+  def initialize
+    @name  = ENV['ADAPTER_NAME']
+    @url   = ENV['ADAPTER_URL']
+    @token = ENV['ADAPTER_TOKEN']
   end
 
   def run
     logger.info 'Starting adapter.'
 
-    # broker_connection = BrokerConnection.new(@url, @token)
+    BrokerConnection.new(@url, @token)
     handler = DynamosHandler.new
     handler.start
     # adapter_core = AdapterCore.new(@name, broker_connection, handler)
-    #
     # broker_connection.register_adapter_core(adapter_core)
     # handler.register_adapter_core(adapter_core)
     # adapter_core.start

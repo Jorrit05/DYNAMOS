@@ -5,7 +5,7 @@ FROM ruby:3
 ARG ADAPTER_NAME=default_name
 ARG ADAPTER_URL=http://example.com
 ARG ADAPTER_TOKEN=default_token
-ARG NAME
+ARG NAME=adapter_dev
 
 # Set environment variables using the build arguments
 ENV ADAPTER_NAME=$ADAPTER_NAME \
@@ -13,15 +13,26 @@ ENV ADAPTER_NAME=$ADAPTER_NAME \
   ADAPTER_TOKEN=$ADAPTER_TOKEN \
   NAME=$NAME
 
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
+
+# Install useful dev tools
+RUN apt-get update && apt-get install -y \
+  curl \
+  vim \
+  git \
+  less \
+  net-tools \
+  iputils-ping \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN mkdir $NAME
 
 # Copy the Gemfile and Gemfile.lock into the working directory
 COPY . /app/$NAME
 
+# Install dependencies
 RUN cd /app/$NAME/ && bundle install
 
-# Specify the default command to run the main Ruby file (update `main.rb` as needed)
-# CMD ["bundle", "exec", "/app/${NAME}/bin/run_adapter.rb"]
-CMD sh -c "cd /app/$NAME && bundle exec bin/run_adapter.rb"
+# Default to an interactive shell
+CMD ["sh"]

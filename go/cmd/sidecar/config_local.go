@@ -5,10 +5,13 @@ package main
 
 import "go.uber.org/zap"
 
-var logLevel = zap.DebugLevel
-
-var exchangeName = "topic_exchange"
-var rabbitPort = "30020"
-var rabbitDNS = "localhost"
-var etcdEndpoints = "http://localhost:30005"
-var grpcPort = 50051
+var (
+	logLevel            = zap.DebugLevel
+	exchangeName        = "topic_exchange"
+	rabbitPort          = "30020"
+	mbtTestingQueueName = "mbt_testing_queue"
+	useMbtQueue         = true
+	rabbitDNS           = "localhost"
+	etcdEndpoints       = "http://localhost:30005"
+	grpcPort            = 50051
+)

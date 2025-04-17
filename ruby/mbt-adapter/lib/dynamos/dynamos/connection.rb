@@ -13,8 +13,7 @@ end
 # The DynamosConnection holds the WebSocket connection with the standalone
 # DYNAMOS SUT
 class DynamosConnection
-  def initialize(url, handler)
-    @url     = url
+  def initialize(handler)
     @handler = handler
     @socket  = nil
     @driver  = nil
@@ -23,7 +22,7 @@ class DynamosConnection
 
   # Connect to AMP's plugin adapter broker and register WebSocket callbacks.
   def connect
-    @queue_handler = RabbitMQHandler.new(@handler, 'mbt_parallel_queue')
+    @queue_handler = RabbitMQService.new(@handler)
   end
 
   # Close the given websocket with the given response close code and reason.

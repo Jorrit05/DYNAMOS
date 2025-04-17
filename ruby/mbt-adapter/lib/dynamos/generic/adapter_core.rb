@@ -10,7 +10,6 @@
 # One can see the AdapterCore as the generic part of the adapter and the
 # Handler as the implementation specific part of the adapter.
 class AdapterCore
-
   # Possible states of the Adapter(Core).
   module State
     DISCONNECTED  = :disconnected
@@ -29,9 +28,9 @@ class AdapterCore
     @state = State::DISCONNECTED
 
     @qthread_to_amp =
-        QThread.new { |item| send_message_to_amp(item) }
+      QThread.new { |item| send_message_to_amp(item) }
     @qthread_handle_message =
-        QThread.new { |item| parse_and_handle_message(item) }
+      QThread.new { |item| parse_and_handle_message(item) }
   end
 
   # Start the adapter core, which connects to AMP.
@@ -153,7 +152,7 @@ class AdapterCore
   end
 
   def handle_message(data)
-    logger.debug "Adding message from AMP to the queue to be handled"
+    logger.debug 'Adding message from AMP to the queue to be handled'
     @qthread_handle_message << data
   end
 
