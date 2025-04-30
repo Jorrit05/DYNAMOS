@@ -126,6 +126,11 @@ https://linkerd.io/2.15/getting-started/
 
 **Prereqs**: kubectl
 
+I had to run this before it worked: 
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
+```
+
 Linkerd is a service mesh for Kubernetes, we use it to install Jaeger (https://www.jaegertracing.io/) a distributed tracing platform onto our cluster.
 
 ```bash
