@@ -23,7 +23,7 @@
     },
     {
         "name": "mlRequest",
-        "requiredServices": ["synthetic-dataset-generation"],
+        "requiredServices": ["synthetic-dataset-generation", "model-training"],
         "optionalServices": {}
     }
 ]

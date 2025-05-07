@@ -51,6 +51,12 @@
     {
         "name": "synthetic-dataset-generation",
         "label": "dataProvider",
+        "allowedOutputs": ["model-training"],
+        "invalidArchetypes": []
+    },
+    {
+        "name": "model-training",
+        "label": "computeProvider",
         "allowedOutputs": [],
         "invalidArchetypes": []
     }
