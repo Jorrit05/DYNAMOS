@@ -273,5 +273,6 @@ func getMicroserviceTag(msName string) string {
 		return tag
 	}
 
-	return "new-service-test"
+	// return "new-service-test"
+	return "new_use_case"
 }

@@ -18,7 +18,7 @@ spec:
       serviceAccountName: job-creator-prets
       containers:
         - name: prets
-          image: {{ .Values.dockerArtifactAccount }}/agent:Prets
+          image: {{ .Values.dockerArtifactAccount }}/agent:new_use_case
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

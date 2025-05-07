@@ -16,5 +16,11 @@
         "computeProvider": "dataProvider",
         "resultRecipient": "requestor",
         "weight": 90
+    },
+    {
+        "name": "mlRequest",
+        "computeProvider": "dataProvider", 
+        "resultRecipient": "requestor",
+        "weight": 80
     }
 ]

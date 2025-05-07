@@ -47,5 +47,11 @@
         "label": "dataProvider",
         "allowedOutputs": [],
         "invalidArchetypes": []
+    },
+    {
+        "name": "synthetic-dataset-generation",
+        "label": "dataProvider",
+        "allowedOutputs": [],
+        "invalidArchetypes": []
     }
 ]

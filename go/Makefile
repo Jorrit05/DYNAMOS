@@ -1,5 +1,5 @@
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
-sql_microservices := sql-algorithm sql-anonymize sql-aggregate sql-test new-service
+sql_microservices := sql-algorithm sql-anonymize sql-aggregate sql-test new-service synthetic-dataset-generation
 dynamos := sidecar policy-enforcer orchestrator agent api-gateway
 dockerhub_account := dynamos1
 
@@ -11,7 +11,8 @@ proto:
 	protoc -I ../proto-files --go_out=./pkg/proto --go_opt=paths=source_relative --go-grpc_out=./pkg/proto --go-grpc_opt=paths=source_relative ../proto-files/*.proto
 
 $(dynamos): prepare proto
-	cp Dockerfile go.mod go.sum synthetic_sdv.csv synthetic_data_sample.csv ./cmd/$@
+# the .csv files ideally in the future they should be mounted as pvc. Also they should be different for different services. 
+	cp Dockerfile go.mod go.sum synthetic_data_sample.csv ./cmd/$@ 
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
 	docker build --build-arg NAME='$@' -t $(dockerhub_account)/$@:$(branch_name) -t $(dockerhub_account)/$@:latest ./cmd/$@/)
@@ -20,7 +21,7 @@ $(dynamos): prepare proto
 
 
 $(sql_microservices): prepare proto
-	cp Dockerfile go.mod go.sum synthetic_sdv.csv synthetic_data_sample.csv ./cmd/$@
+	cp Dockerfile go.mod go.sum synthetic_data_sample.csv ./cmd/$@
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
 	docker build --build-arg NAME='$@' -t $(dockerhub_account)/$@:$(branch_name) -t $(dockerhub_account)/$@:latest ./cmd/$@/)

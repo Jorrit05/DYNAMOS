@@ -20,5 +20,10 @@
         "name": "dummyRequest",
         "requiredServices": ["new-service"],
         "optionalServices": {}
+    },
+    {
+        "name": "mlRequest",
+        "requiredServices": ["synthetic-dataset-generation"],
+        "optionalServices": {}
     }
 ]

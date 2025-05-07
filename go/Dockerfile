@@ -32,7 +32,7 @@ RUN apk --no-cache add ca-certificates
 
 RUN mkdir /res
 COPY synthetic_data_sample.csv /res
-COPY synthetic_sdv.csv /res
+# COPY synthetic_sdv.csv /res
 
 WORKDIR /app/
 

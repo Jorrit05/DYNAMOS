@@ -6,10 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"reflect"
-	"sort"
 	"strconv"
 
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -37,21 +35,13 @@ func loadCSV(filePath string) ([][]string, error) {
 }
 
 // Function to calculate statistics and return as a map
-func helloWorld() map[string]interface{} {
+func createSyntheticDataset(values []string) map[string]string {
 
 	logger.Info("Start hello world functionality")
-	var nums []float64
-	emptyCount := 0
 
-	// Initialize the result map
-	result := map[string]interface{}{
-		"Hello": "world",
-		"emptyRatio": 0.0,
-		"min":        0.0,
-		"max":        0.0,
-		"mean":       0.0,
-		"median":     0.0,
-		"stdDev":     0.0,
+	result := map[string]string{
+		"Hello":      "world",
+		"emptyRatio": fmt.Sprintf("%v", 0.0),
 	}
 
 	// // Return early if there are no valid numbers
@@ -111,7 +101,7 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 	logger.Info("Start handleDataRequest")
 	// Unpack the metadata
 	metadata := msComm.Metadata
-	filename := "/res/synthetic_sdv.csv"
+	filename := "/res/synthetic_data_sample.csv"
 
 	// Print each metadata field
 	logger.Sugar().Debugf("Metadata: %v", metadata)
@@ -146,7 +136,7 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 	result := make(map[string]string)
 	// statsBuildYear := calculateStats(buildYearsCol)
 	// statsBedroom := calculateStats(bedroomCol)
-	result = helloWorld()
+	result = createSyntheticDataset(buildYearsCol)
 
 	logger.Sugar().Debugf("Request Options: %v", sqlDataRequest.Options)
 	// if sqlDataRequest.Options["buildYear"] {
