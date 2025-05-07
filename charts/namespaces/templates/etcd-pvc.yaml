@@ -31,7 +31,7 @@ spec:
           - /bin/sh
           - -c
           - |
-            base_url="https://raw.githubusercontent.com/Jorrit05/DYNAMOS/new-service-test/configuration/etcd_launch_files"
+            base_url="https://raw.githubusercontent.com/Jorrit05/DYNAMOS/new-use-case/configuration/etcd_launch_files"
             files="agreements.json archetype.json datasets.json microservices.json optional_microservices.json requestType.json"
 
             for file in $files; do

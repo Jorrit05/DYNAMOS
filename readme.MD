@@ -208,6 +208,18 @@ To run the script, execute the following from the root of DYNAMOS
 Understanding this script will help understanding how DYNAMOS is deployed.
 
 
+###  9.1 <a name='PrometheusExporterFix'></a>Prometheus Exporter Fix
+
+Some versions of Prometheus might have an issue with the node-exporter that does not allow the container to start 
+correctly.
+
+Fix from: https://github.com/prometheus-operator/kube-prometheus/discussions/790#discussioncomment-6896643
+
+Patch: 
+```bash
+kubectl patch ds prometheus-prometheus-node-exporter --type "json" -p '[{"op": "remove", "path" : "/spec/template/spec/containers/0/volumeMounts/2/mountPropagation"}]'
+```
+
 ##  10. <a name='RabbitMQpasswordprocess'></a>RabbitMQ password process
 
 **This is an explanation of the aforemntioned install script. Do not need to run the commands if the script was successful.**

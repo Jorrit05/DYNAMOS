@@ -56,7 +56,7 @@ echo "Preparing PVC"
 
 {
     cd ${DYNAMOS_ROOT}/configuration
-    ./fill-rabbit-pvc.sh
+    bash ./fill-rabbit-pvc.sh
 }
 
 #Install prometheus
