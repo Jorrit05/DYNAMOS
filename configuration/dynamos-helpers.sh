@@ -62,6 +62,17 @@ deploy_surf() {
   helm upgrade -i -f "${surfChart}" surf ${DYNAMOS_ROOT}/charts/thirdparty
 }
 
+# Deploy all for AMDEX (agents and third party: surf)
+deploy_all_amdex() {
+  deploy_agent
+  deploy_surf
+}
+# Uninstall all for AMDEX (agents and third party: surf)
+uninstall_all_amdex(){
+  helm uninstall surf
+  helm uninstall agents
+}
+
 ##############################
 ## Bulk deployment commands ##
 ##############################
@@ -115,6 +126,14 @@ delete_jobs() {
   etcdctl --endpoints=http://localhost:30005 del /agents/jobs/VU/queueInfo/jorrit-stutterheim- --prefix
 }
 
+# Delete jobs that may not be automatically deleted
+delete_jobs_other() {
+  kubectl get pods -A | grep 'jorrit-stutterheim' | awk '{split($2,a,"-"); print $1" "a[1]"-"a[2]"-"a[3]}' | xargs -n2 bash -c 'kubectl delete job $1 -n $0'
+  etcdctl --endpoints=http://localhost:30005 del /agents/jobs/UVA/jorrit.stutterheim --prefix
+  etcdctl --endpoints=http://localhost:30005 del /agents/jobs/SURF/jorrit.stutterheim --prefix
+  etcdctl --endpoints=http://localhost:30005 del /agents/jobs/VU/jorrit.stutterheim --prefix
+}
+
 # Provides an overview of all running pods
 #   Decent but basic alternative to using k9s
 watch_pods(){
@@ -125,4 +144,27 @@ watch_pods(){
 #   Could be useful if an error with the queue occurs during development
 restart_core() {
   kubectl rollout restart deployment/rabbitmq -n core
+}
+
+# Redeploy all DYNAMOS components structurally. This ensures core is uninstalled first, then orchestrator, etc.
+# If it is not done in this sequence, occassionally it causes some issues, such as pods not running, requests timing out, etc.
+redeploy_structurally() {
+  # Uninstall all and wait a while before it is all removed
+  uninstall_all
+  echo "Waiting for 1 minute..."
+  sleep 60
+
+  # Deploy core and wait for 15 seconds so orchestrator is running after core is done
+  deploy_core
+  echo "Waiting for 15 seconds..."
+  sleep 15
+
+  # Deploy orchestrator and wait a short time before deploying the rest
+  deploy_orchestrator
+  echo "Waiting for 10 seconds..."
+  sleep 10
+
+  # Deploy other components (sequence in which it is running does not matter here)
+  deploy_agents
+  deploy_api_gateway
 }
