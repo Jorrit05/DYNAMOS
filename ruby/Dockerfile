@@ -2,9 +2,9 @@
 FROM ruby:3
 
 # Define build arguments with default values
-ARG ADAPTER_NAME=default_name
-ARG ADAPTER_URL=http://example.com
-ARG ADAPTER_TOKEN=default_token
+ARG ADAPTER_NAME
+ARG ADAPTER_URL
+ARG ADAPTER_TOKEN
 ARG NAME
 
 # Set environment variables using the build arguments

@@ -8,5 +8,6 @@ source 'https://rubygems.org' do
   gem 'logger'
   gem 'logging', '~> 2.4'
   gem 'syslog'
+  gem 'thread'
   gem 'websocket-driver'
 end

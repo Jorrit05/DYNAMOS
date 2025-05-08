@@ -1,13 +1,14 @@
 class DynamosApi
-  def stimulate_dynamos(endpoint = 'requestApproval', url = 'http://api-gateway.api-gateway.svc.cluster.local:8080/api/v1')
-    uri = "#{url}/#{endpoint}"
-    request_properties = { 'Content-Type' => 'application/json' }
-    http = Net::HTTP.new(uri.host, uri.port)
-    Net::HTTP::Post.new(uri.request_uri, request_properties)
+  def initialize(api_gateway_url = 'http://api-gateway.api-gateway.svc.cluster.local:8080/api/v1')
+    @api_gateway_url = api_gateway_url
+  end
 
-    body = request_body
-    logger.info("Stimulating SUT with body: #{body}")
-    response = http.request(body)
+  def stimulate_dynamos(endpoint = 'requestApproval')
+    uri = URI.parse("#{@api_gateway_url}/#{endpoint}")
+    request_properties = { 'Content-Type' => 'application/json' }
+
+    logger.info("Stimulating SUT with body: #{request_body}")
+    response = Net::HTTP.post(uri, request_body, request_properties)
     logger.info("Response from SUT: #{response.body}")
 
     response

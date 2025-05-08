@@ -19,9 +19,9 @@ $(targets): proto
 	@trap 'rm -f ./$@/Dockerfile' EXIT; \
 		docker build \
 		--build-arg NAME=$@ \
-		--build-arg ADAPTER_NAME=my_adapter \
-		--build-arg ADAPTER_URL=http://myurl.com \
-		--build-arg ADAPTER_TOKEN=my_token \
+		--build-arg ADAPTER_NAME=${ADAPTER_NAME} \
+		--build-arg ADAPTER_URL=${ADAPTER_URL} \
+		--build-arg ADAPTER_TOKEN=${ADAPTER_TOKEN} \
 		-t $(dockerhub_account)/$@:$(branch_name) \
 		./$@
 
@@ -33,9 +33,9 @@ dev: proto
 		docker build \
 		-f Dockerfile.dev \
 		--build-arg NAME=adapter-dev \
-		--build-arg ADAPTER_NAME=my_adapter \
-		--build-arg ADAPTER_URL=http://myurl.com \
-		--build-arg ADAPTER_TOKEN=my_token \
+		--build-arg ADAPTER_NAME=${ADAPTER_NAME} \
+		--build-arg ADAPTER_URL=${ADAPTER_URL} \
+		--build-arg ADAPTER_TOKEN=${ADAPTER_TOKEN} \
 		-t adapter-dev:latest \
 		./mbt-adapter
 

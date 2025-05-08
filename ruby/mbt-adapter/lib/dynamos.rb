@@ -8,6 +8,8 @@ require 'logging'
 require 'bunny'
 require 'json'
 require 'base64'
+require 'net/http'
+require 'thread'
 
 # ----- Protobuf
 
@@ -59,12 +61,14 @@ end
   adapter_core
   broker_connection
   handler
+  qthread
 ].each { |file| require_relative File.join('dynamos/generic', file) }
 
 %w[
   connection
   handler
   rabbitmq_service
+  dynamos_api
 ].each { |file| require_relative File.join('dynamos/dynamos', file) }
 
 %w[

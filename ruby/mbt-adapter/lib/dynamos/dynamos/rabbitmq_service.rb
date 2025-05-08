@@ -37,7 +37,7 @@ class RabbitMQService
 
   def start_consuming
     logger.info "Waiting for messages on '#{@queue_name}'..."
-    @queue.subscribe(block: true) do |_delivery_info, properties, body|
+    @queue.subscribe(block: false) do |_delivery_info, properties, body|
       logger.info "Received properties #{properties}"
       logger.info "Received message: #{body}"
 
@@ -76,18 +76,15 @@ class RabbitMQService
     # Step 2: Decode the base64-encoded protobuf binary
     proto_binary = Base64.decode64(base64_body)
 
-    # Step 3: Map the type to the corresponding protobuf class
-    # You must define this mapping manually or dynamically
-    type_class_map = {
-      'microserviceCommunication' => Dynamos::MicroserviceCommunication
-    }
+    type[0].upcase
+    type[1..]
+    klass = klass_from_type(type)
 
-    # Step 4: Deserialize the binary into the correct Protobuf message
-    klass = type_class_map[type]
-
-    return klass.decode(proto_binary) if klass
-
-    puts "Unknown message type: #{type}"
+    if klass
+      klass&.decode(proto_binary)
+    else
+      logger.error "Unknown message type: #{type}"
+    end
   end
 
   # Helper method to store messages in memory
@@ -99,6 +96,14 @@ class RabbitMQService
   # Method to retrieve all stored messages
   def self.get_stored_messages
     @@messages
+  end
+
+  def klass_from_type(type)
+    # Capitalize first letter to match the naming convention
+    class_name = type[0].upcase + type[1..]
+    return unless Dynamos.const_defined?(class_name)
+
+    Dynamos.const_get(class_name)
   end
 end
 
