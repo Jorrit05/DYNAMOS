@@ -165,6 +165,6 @@ redeploy_structurally() {
   sleep 10
 
   # Deploy other components (sequence in which it is running does not matter here)
-  deploy_agents
+  deploy_all_amdex
   deploy_api_gateway
 }
