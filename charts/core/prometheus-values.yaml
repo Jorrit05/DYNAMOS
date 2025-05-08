@@ -43,32 +43,6 @@ extraScrapeConfigs: |
       username: 'guest'
       password: 'guest'
 
-# Node exporter specifics to be able to mount the /host, which otherwise causes:
-# Error: failed to start container "node-exporter": Error response from daemon: path / is mounted on / but it is not a shared or slave mount
-nodeExporter:
-  hostRootfs: /host
-  extraArgs:
-    - --path.rootfs=/host
-  hostNetwork: true
-  tolerations:
-    - key: "node-role.kubernetes.io/master"
-      operator: "Exists"
-      effect: "NoSchedule"
-  hostPort:
-    metrics: 9100
-  service:
-    hostPort:
-      enabled: true
-  volumes:
-    - name: host-root
-      hostPath:
-        path: /
-  volumeMounts:
-    - name: host-root
-      mountPath: /host
-
-
-
 # server:
 #   podAnnotations:
 #     config.linkerd.io/skip-outbound-ports: "15692"
