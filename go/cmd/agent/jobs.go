@@ -43,7 +43,10 @@ func handleFurtherProcessing(ctx context.Context, waitingJobName string, msComm 
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: handleFurtherProcessing")
 	defer span.End()
 
-	msComm.RequestMetadata.DestinationQueue = waitingJobName
+	// TODO FIXME: This is a workaround for now, the destination queue should be with surf1 for example, 
+	// but with next job names it uses the job name, which is incremented for each job, but the queue remains at surf1
+	// msComm.RequestMetadata.DestinationQueue = waitingJobName
+	msComm.RequestMetadata.DestinationQueue = waitingJobName[:len(waitingJobName)-1] + "1"
 	msComm.RequestMetadata.ReturnAddress = agentConfig.RoutingKey
 	// PrettyPrintMicroserviceCommunication(msComm)
 	logger.Sugar().Debugf("handleFurtherProcessing: %v", time.Now())

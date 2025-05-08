@@ -1,3 +1,5 @@
+# prometheus-community helm chart: https://artifacthub.io/packages/helm/prometheus-community/prometheus 
+
 extraScrapeConfigs: |
   - job_name: 'kubelet'
     scheme: https
@@ -42,8 +44,6 @@ extraScrapeConfigs: |
     basic_auth:
       username: 'guest'
       password: 'guest'
-
-
 
 # server:
 #   podAnnotations:
