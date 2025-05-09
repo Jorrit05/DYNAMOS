@@ -268,5 +268,5 @@ func getMicroserviceTag(msName string) string {
 		return tag
 	}
 
-	return sql-query:issue-20-broken-system-tracing
+	return "issue-20-broken-system-tracing"
 }
