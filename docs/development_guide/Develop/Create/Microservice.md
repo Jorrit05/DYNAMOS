@@ -3,6 +3,7 @@
 This guide provides information on creating a new Microservice. Currently services in GO and Python are implemented, however, you may decide to implement in other languages, but there is no support provided for this currently. 
 
 TODO: Probably move this to its own document of background information
+
 # Common components
 All services have a few components in common, these should be implemented in all services to ensure that consistency is maintained throughout the entire code base. These components are described below:
 

@@ -28,7 +28,8 @@ else:
     import config_local as config
 
 logger = InitLogger()
-# tracer = InitTracer(config.service_name, config.tracing_host)
+tracer = InitTracer(config.service_name, config.tracing_host)
+logger.debug(f"tracer: {tracer}")
 
 # Events to start the shutdown of this Microservice, can be used to call 'signal_shutdown'
 stop_event = threading.Event()
