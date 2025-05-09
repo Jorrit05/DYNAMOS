@@ -2,7 +2,7 @@
 branch_name := $(shell git rev-parse --abbrev-ref HEAD | sed 's#/#-#g')
 sql_microservices := sql-algorithm sql-anonymize sql-aggregate sql-test
 dynamos := sidecar policy-enforcer orchestrator agent api-gateway
-dockerhub_account := dynamos1
+dockerhub_account := poetoec
 
 prepare:
 	go mod tidy

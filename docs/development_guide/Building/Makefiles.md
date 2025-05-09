@@ -5,7 +5,7 @@ The newly built docker images will have the following naming convention:
 `<dockerhub_account_name>/<service_name>:<branch_name>`
 
 > [!NOTE]
-> If you want to push the docker images to a registry, you must first `docker login` and be associated with a registry. At the moment a maximum of three people can be added to the `dynamos1` registry.
+> If you want to push the docker images to a registry, you must first `docker login` and be associated with a registry. At the moment a maximum of three people can be added to the `poetoec` registry.
 
 # GO Makefile
 

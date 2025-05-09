@@ -3,7 +3,7 @@ targets := sql-query
 datasets := "../configuration/datasets/"
 # This replaces branches with names like issue/ with issue- to avoid breaking the makefile
 branch_name := $(shell git rev-parse --abbrev-ref HEAD | sed 's#/#-#g')
-dockerhub_account := dynamos1
+dockerhub_account := poetoec
 
 .PHONY: proto $(targets) dynamos
 
