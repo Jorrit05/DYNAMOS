@@ -19,6 +19,7 @@ import threading
 import time
 import sys
 from opentelemetry.context.context import Context
+from opentelemetry import trace
 
 
 # --- DYNAMOS Interface code At the TOP ----------------------------------------------------
@@ -29,6 +30,8 @@ else:
 
 logger = InitLogger()
 tracer = InitTracer(config.service_name, config.tracing_host)
+# Debugging for traces:
+logger.debug(f"tracer host: {config.tracing_host}")
 logger.debug(f"tracer: {tracer}")
 
 # Events to start the shutdown of this Microservice, can be used to call 'signal_shutdown'
@@ -143,9 +146,9 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
 
-            # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
-            data, metadata = process_sql_data_request(sqlDataRequest, ctx)
-                # span1.set_attribute("handleMsCommunication finished:", metadata)
+            with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
+                data, metadata = process_sql_data_request(sqlDataRequest, ctx)
+                span1.set_attribute("handleMsCommunication finished:", metadata)
 
             logger.debug(f"Forwarding result, metadata: {metadata}")
             ms_config.next_client.ms_comm.send_data(msComm, data, metadata)
@@ -163,6 +166,10 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
 def main():
     global config
     global ms_config
+
+    # Debugging: test traces:
+    with tracer.start_as_current_span("test_startup_trace") as span:
+        span.set_attribute("test_attr", "testing if this trace shows up")
 
     if test:
         logger.info("Running in test mode")
