@@ -37,6 +37,24 @@ oce, err := lib.InitTracer(serviceName)
 ```go
 ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: <name of function>", msComm.Traces) // The traces are of type make(map[string][]byte)
 ```
+
+- Debug traces by printing the values
+```go
+// In pkg/lib/tracing.go there is a function called PrettyPrintSpanContext(), which you can use to print the span information
+// In your code after creating a span, add a line calling this function:
+<add above function to start a remote span with lib.StartRemoteParentSpan>
+if err != nil {
+	logger.Sugar().Warnf("Error starting span: %v", err)
+}
+// Print traces for debugging
+lib.PrettyPrintSpanContext(span.SpanContext())
+// This will print it in a format like this for example:
+sql-algorithm Trace ID: 0ffa2f5cd4a3c4e15b27a50a90821bbd
+sql-algorithm Span ID: 3fd1f17c653dfa02
+sql-algorithm Trace options: 1
+sql-algorithm Trace IsSampled: true
+// You can use the Trace ID in the Jaeger UI (after forwarding the UI, see docs/helpers/cheat_sheet.md) to view the trace information if it was created successfully.
+```
 TODO: Add more examples 
 
 ## Logs

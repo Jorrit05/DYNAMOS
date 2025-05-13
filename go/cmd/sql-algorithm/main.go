@@ -41,10 +41,6 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 			logger.Sugar().Warnf("Error starting span: %v", err)
 		}
 		// TODO: remove later after done debugging:
-		if span == nil {
-			logger.Sugar().Errorf("Span is nil — trace propagation likely failed")
-			return nil // or ctx, span, nil to fail gracefully
-		}
 		// Log the msComm.Traces for debugging
         logger.Sugar().Debugf("Received msComm.Traces in sql-algorithm/main.go/messageHandler: %v", msComm.Traces)
 		lib.PrettyPrintSpanContext(span.SpanContext())
