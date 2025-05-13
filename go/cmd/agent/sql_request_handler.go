@@ -29,6 +29,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
 
+		// TODO: this needs to be changed to the start span function with parent to attach to api-gateway?
 		ctx, span := trace.StartSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler")
 		defer span.End()
 

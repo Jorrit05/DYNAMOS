@@ -132,6 +132,10 @@ func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]
 		// Construct the end point
 		endpoint := fmt.Sprintf("http://%s:%s/agent/v1/%s/%s", url, agentPort, msgType, target)
 
+		// TODO: remove debugging later here
+		logger.Sugar().Debugf("Sending request to endpoint: %s", endpoint)
+		logger.Sugar().Debugf("Sending request with JSON: %v", string(dataRequest))
+
 		logger.Sugar().Infof("Sending request to %s.\nEndpoint: %s\nJSON:%v", target, endpoint, string(dataRequest))
 
 		// Async call send the data
