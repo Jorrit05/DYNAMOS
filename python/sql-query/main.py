@@ -138,8 +138,6 @@ def process_sql_data_request(sqlDataRequest, ctx):
 def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context):
     global ms_config
     logger.info(f"Received original request type: {msComm.request_type}")
-
-    # TODO: add starting services span in the trace.
     
     # Ensure all connections have finished setting up before processing data
     signal_wait(wait_for_setup_event, wait_for_setup_condition)

@@ -26,6 +26,11 @@ kubectl port-forward -n linkerd-jaeger service/jaeger 16686:16686
 ```
 The UI can then be viewed [here](http://localhost:16686/jaeger/search) 
 
+### Blank space in traces
+In the Jaeger UI, the tracing output sometimes shows blank spaces (periods where no spans are visible). This often occurs when something is waiting, such as during a data request. These gaps typically indicate that the system is waiting for something, such as service startup or coordination, unless traces are missing or broken.
+
+These blank spaces do not necessarily need to be filled. In many cases, it would be unnecessarily complex or not worth the effort. For example, during a data request, multiple gRPC functions are used to perform health checks before the query can begin. Adding tracing for each of these would result in a large number of additional spans, increasing complexity without much benefit. Moreover, gRPC is primarily used for communication between the services, such as carrying the trace context between services. Since context propagation begins only after the gRPC channel is established, it’s not straightforward to trace the operations that occur before gRPC is invoked. Tracing these pre-gRPC steps would require deep instrumentation of low-level communication or setup code, which is often impractical or infeasible.
+
 ### Code Snippets
 
 - Initialize a trace
