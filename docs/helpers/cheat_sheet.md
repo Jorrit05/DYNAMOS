@@ -149,3 +149,21 @@ kubectl get svc --namespace ingress nginx
 # RabbitMQ
 ## See RabbitMQ information
 Go to http://localhost:30000/ and login with "guest" as username and password. Here you can view queues and other things.
+
+
+# Infinite job creation (i.e., jobs removed keep being recreated in k8s)
+To delete a job that keeps running (e.g., when it did not finish successfully), you can follow these steps:
+1. Describe the pod from the job(s), such as in k9s by pressing d on the pod, or use a command, such as:
+```sh
+# This describes the k8s pod, which you can use to view the labels
+# Replace with pod name and namespace
+kubectl describe pod jorrit-stutterheim-3539f61fuva1-lcp8 -n uva
+# Or alternatively use the following command to get the jobs in a specific namespace:
+kubectl get jobs -n uva
+```
+2. Delete the job returned from the previous step (for example in the labels you can see "job-name=jorrit-stutterheim-3539f61fuva1"), then the command would be:
+```sh
+# This deletes the job from k8s, after which is should not be creating the job again
+# Replace with pod name and namespace
+kubectl delete job jorrit-stutterheim-3539f61fuva1 -n uva
+```
