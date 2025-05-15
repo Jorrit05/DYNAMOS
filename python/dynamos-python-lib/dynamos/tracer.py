@@ -19,10 +19,9 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 
-from opentelemetry.trace import SpanContext, NonRecordingSpan
-from opentelemetry.trace.span import TraceFlags, TraceState
+import json
+from opentelemetry.trace import SpanContext, TraceFlags, TraceState, NonRecordingSpan
 from opentelemetry.trace.propagation import set_span_in_context
-
 
 # Service name is required for most backends
 # Service to initialize the tracer for a specific microservice.
@@ -61,27 +60,28 @@ def InitTracer(service_name : str, tracing_host : str):
 # - ctx: A new context with the parent span set.
 # - span: The newly started child span.
 def start_remote_parent_span(tracer, span_name: str, trace_map: dict):
-    binary_trace = trace_map.get("binaryTrace")
-
+    # Use JSON trace format to avoid issues with binary data format from Go services (might have slightly different binary format)
+    json_trace = trace_map.get("jsonTrace")
     # If no trace context was provided, start a new root span.
-    if not binary_trace:
+    if not json_trace:
+        # No parent info, start a new root span
         span = tracer.start_span(span_name)
         ctx = set_span_in_context(span)
         return ctx, span
 
-    # Attempt to extract the trace ID (16 bytes), span ID (8 bytes), and optional trace flags (1 byte).
+    # Attempt to extract the trace ID, span ID.
     try:
-        trace_id = int.from_bytes(binary_trace[0:16], byteorder="big")
-        span_id = int.from_bytes(binary_trace[16:24], byteorder="big")
-        trace_flags = TraceFlags(binary_trace[24]) if len(binary_trace) > 24 else TraceFlags(1)
+        trace_info = json.loads(json_trace.decode("utf-8") if isinstance(json_trace, bytes) else json_trace)
+        trace_id = int(trace_info["TraceID"], 16)
+        span_id = int(trace_info["SpanID"], 16)
     except Exception as e:
-        raise ValueError(f"Invalid binaryTrace format: {e}")
+        raise ValueError(f"Invalid jsonTrace format: {e}")
     # Construct a remote SpanContext from the extracted fields.
+    # Assume sampled by default (can be extended)
     span_context = SpanContext(
         trace_id=trace_id,
         span_id=span_id,
         is_remote=True,
-        trace_flags=trace_flags,
         trace_state=TraceState()  # Empty state unless custom headers are used
     )
 

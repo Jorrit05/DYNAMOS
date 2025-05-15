@@ -176,10 +176,6 @@ def main():
     global config
     global ms_config
 
-    # Debugging: test traces:
-    with tracer.start_as_current_span("test_startup_trace") as span:
-        span.set_attribute("test_attr", "testing if this trace shows up")
-
     if test:
         logger.info("Running in test mode")
         return
