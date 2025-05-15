@@ -10,7 +10,7 @@ import argparse
 from dynamos.ms_init import NewConfiguration
 from dynamos.signal_flow import signal_continuation, signal_wait
 from dynamos.logger import InitLogger
-from dynamos.tracer import InitTracer
+from dynamos.tracer import InitTracer, start_remote_parent_span, pretty_print_span_context
 
 from google.protobuf.empty_pb2 import Empty
 import microserviceCommunication_pb2 as msCommTypes
@@ -146,7 +146,16 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
 
-            with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
+            # TODO: this is likely the problem that it starts as a separate span, but it needs to append to msComm.Traces like in the Go code
+            # TODO: should probably use the start_remote_parent_span from tracer.py to attach it to the current span
+            # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
+            #     data, metadata = process_sql_data_request(sqlDataRequest, ctx)
+            #     span1.set_attribute("handleMsCommunication finished:", metadata)
+            logger.debug(f"msComm in Python sql-query service: {msComm}")
+            ctx, span1 = start_remote_parent_span(tracer, "process_sql_data_request", msComm.traces)
+            pretty_print_span_context(span1)  # print trace ID, span ID, sampled flag
+
+            with trace.use_span(span1, end_on_exit=True):
                 data, metadata = process_sql_data_request(sqlDataRequest, ctx)
                 span1.set_attribute("handleMsCommunication finished:", metadata)
 
