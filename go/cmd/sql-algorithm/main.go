@@ -40,13 +40,7 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 		if err != nil {
 			logger.Sugar().Warnf("Error starting span: %v", err)
 		}
-		// TODO: remove later after done debugging:
-		// Log the msComm.Traces for debugging
-        logger.Sugar().Debugf("Received msComm.Traces in sql-algorithm/main.go/messageHandler: %v", msComm.Traces)
-		lib.PrettyPrintSpanContext(span.SpanContext())
-		// logger.Sugar().Debugw("Type:", "MessageType", grpcMsg.Type)
-
-		defer span.End()		
+		defer span.End()
 
 		// Wait till all services and connections have started
 		<-COORDINATOR

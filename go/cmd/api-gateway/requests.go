@@ -132,11 +132,8 @@ func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]
 		// Construct the end point
 		endpoint := fmt.Sprintf("http://%s:%s/agent/v1/%s/%s", url, agentPort, msgType, target)
 
-		// TODO: remove debugging later here
-		logger.Sugar().Debugf("Sending request to endpoint: %s", endpoint)
-		logger.Sugar().Debugf("Sending request with JSON: %v", string(dataRequest))
-
-		logger.Sugar().Infof("Sending request to %s.\nEndpoint: %s\nJSON:%v", target, endpoint, string(dataRequest))
+		// Print the request to the console (without \n to avoid the log only showing first line when searching)
+		logger.Sugar().Infof("Sending request to %s. Endpoint: %s JSON:%v", target, endpoint, string(dataRequest))
 
 		// Async call send the data
 		go func() {
@@ -182,6 +179,8 @@ func sendData(endpoint string, jsonData []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// TODO: add optional part here for attaching to API-gateway traces, provide context.
 
 	// Here we should send the request over the socket
 	// For now we should append it to a list so that we gather all responses and send them in bulk
