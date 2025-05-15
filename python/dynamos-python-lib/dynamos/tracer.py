@@ -17,6 +17,7 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 
 from opentelemetry.trace import SpanContext, NonRecordingSpan
 from opentelemetry.trace.span import TraceFlags, TraceState
@@ -24,16 +25,26 @@ from opentelemetry.trace.propagation import set_span_in_context
 
 
 # Service name is required for most backends
+# Service to initialize the tracer for a specific microservice.
 def InitTracer(service_name : str, tracing_host : str):
+    # Define the service-level resource (metadata for traces)
     resource = Resource(attributes={
         SERVICE_NAME: service_name
     })
 
-    provider = TracerProvider(resource=resource)
-    processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=tracing_host, insecure=True))
+    # Set up the TracerProvider with AlwaysOn sampling (matches Go's AlwaysSample)
+    provider = TracerProvider(resource=resource, sampler=ALWAYS_ON)
+
+    # Configure the OTLP gRPC exporter and batch processor
+    processor = BatchSpanProcessor(
+        OTLPSpanExporter(endpoint=tracing_host, insecure=True)
+    )
     provider.add_span_processor(processor)
+
+    # Register this provider as the global tracer provider
     trace.set_tracer_provider(provider)
 
+    # Return a tracer scoped to this service
     return trace.get_tracer(f"{service_name}.tracer")
 
 # Mirrors Go's StartRemoteParentSpan (see go/pkg/lib/tracing.go).

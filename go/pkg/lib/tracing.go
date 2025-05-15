@@ -11,20 +11,27 @@ import (
 	"go.opencensus.io/trace/propagation"
 )
 
+// InitTracer initializes the OpenCensus tracing pipeline for the given service.
 func InitTracer(serviceName string) (*ocagent.Exporter, error) {
+	// Get the OpenCensus Agent (or OTLP collector) address from the environment
 	ocagentHost := os.Getenv("OC_AGENT_HOST")
 	if ocagentHost == "" {
 		return nil, fmt.Errorf("env OC_AGENT_HOST not declared")
 	}
 
+	// Create a new exporter that pushes spans to the agent over gRPC
 	oce, err := ocagent.NewExporter(
-		ocagent.WithInsecure(),
-		ocagent.WithReconnectionPeriod(5*time.Second),
-		ocagent.WithAddress(ocagentHost),
-		ocagent.WithServiceName(serviceName),
+		ocagent.WithInsecure(),                             // Skip TLS (adjust in production)
+		ocagent.WithReconnectionPeriod(5*time.Second),     // Retry if the collector is unavailable
+		ocagent.WithAddress(ocagentHost),                  // Collector endpoint
+		ocagent.WithServiceName(serviceName),              // Service name shown in trace viewers
 	)
 
+	// Register this exporter as the trace output
 	trace.RegisterExporter(oce)
+
+	// Apply AlwaysSample to match OpenTelemetry's AlwaysOn behavior
+	// This forces all spans to be exported regardless of context unless explicitly overridden
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	return oce, err
