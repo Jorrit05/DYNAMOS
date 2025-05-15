@@ -153,9 +153,9 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             # (metadata that helps combine data into a single trace) is set in the dynamos-python-lib/dynamos/ms_init.py file
             # in the request_handler function (similar to the StartRemoteParentSpan() in tracing.go), which sets the 
             # context (as ctx) to use for the spans (subsequent spans will also use this context automatically)
-            with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
+            with tracer.start_as_current_span("process_sql_data_request", context=ctx) as parent_span:
                 data, metadata = process_sql_data_request(sqlDataRequest, ctx)
-                span1.set_attribute("handleMsCommunication finished:", metadata)
+                parent_span.set_attribute("handleMsCommunication finished:", metadata)
 
             # Forward the result to the next service
             logger.debug(f"Forwarding result, metadata: {metadata}")
