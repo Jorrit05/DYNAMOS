@@ -57,7 +57,8 @@ test = args.test
 
 #--------------------------------
 
-
+# Start span using the span context created in the request handler
+@tracer.start_as_current_span("load_and_query_csv")
 def load_and_query_csv(file_path_prefix, query):
     # Extract table names from the query
     table_names = re.findall(r'FROM (\w+)', query) + re.findall(r'JOIN (\w+)', query)
@@ -88,7 +89,8 @@ def load_and_query_csv(file_path_prefix, query):
 
     return result_df
 
-
+# Start span using the span context created in the request handler
+@tracer.start_as_current_span("dataframe_to_protobuf")
 def dataframe_to_protobuf(df):
     # Convert the DataFrame to a dictionary of lists (one for each column)
     data_dict = df.to_dict(orient='list')
@@ -112,7 +114,6 @@ def dataframe_to_protobuf(df):
     metadata = {k: str(v) for k, v in data_types.items()}
 
     return data_struct, metadata
-
 
 def process_sql_data_request(sqlDataRequest, ctx):
     global config
@@ -146,19 +147,17 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
 
-            # TODO: this is likely the problem that it starts as a separate span, but it needs to append to msComm.Traces like in the Go code
-            # TODO: should probably use the start_remote_parent_span from tracer.py to attach it to the current span
-            # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
-            #     data, metadata = process_sql_data_request(sqlDataRequest, ctx)
-            #     span1.set_attribute("handleMsCommunication finished:", metadata)
-            logger.debug(f"msComm in Python sql-query service: {msComm}")
+            # Start a new span as a child of the one passed in msComm.traces using the start_remote_parent_span function
+            # This ensures trace continuity across services
             ctx, span1 = start_remote_parent_span(tracer, "process_sql_data_request", msComm.traces)
             pretty_print_span_context(span1)  # print trace ID, span ID, sampled flag
-
+            
+            # Activate the span as current for any child spans and process the data request
             with trace.use_span(span1, end_on_exit=True):
                 data, metadata = process_sql_data_request(sqlDataRequest, ctx)
                 span1.set_attribute("handleMsCommunication finished:", metadata)
 
+            # Forward the result to the next service
             logger.debug(f"Forwarding result, metadata: {metadata}")
             ms_config.next_client.ms_comm.send_data(msComm, data, metadata)
             signal_continuation(stop_event, stop_microservice_condition)
