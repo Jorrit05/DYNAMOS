@@ -31,8 +31,8 @@ def InitTracer(service_name : str, tracing_host : str):
         SERVICE_NAME: service_name
     })
 
-    # Set up the TracerProvider with AlwaysOn sampling (matches Go's AlwaysSample)
-    provider = TracerProvider(resource=resource, sampler=ALWAYS_ON)
+    # Set up the TracerProvider 
+    provider = TracerProvider(resource=resource)
 
     # Configure the OTLP gRPC exporter and batch processor
     processor = BatchSpanProcessor(
@@ -46,54 +46,7 @@ def InitTracer(service_name : str, tracing_host : str):
     # Return a tracer scoped to this service
     return trace.get_tracer(f"{service_name}.tracer")
 
-# Mirrors Go's StartRemoteParentSpan (see go/pkg/lib/tracing.go).
-#
-# Starts a new span using a remote parent span context, derived from binary data.
-# This is used to maintain trace continuity across service boundaries.
-#
-# Parameters:
-# - tracer: The OpenTelemetry tracer instance to use.
-# - span_name: The name for the new span.
-# - trace_map: A dictionary expected to contain a key "binaryTrace" with bytes.
-#
-# Returns:
-# - ctx: A new context with the parent span set.
-# - span: The newly started child span.
-def start_remote_parent_span(tracer, span_name: str, trace_map: dict):
-    # Use JSON trace format to avoid issues with binary data format from Go services (might have slightly different binary format)
-    json_trace = trace_map.get("jsonTrace")
-    # If no trace context was provided, start a new root span.
-    if not json_trace:
-        # No parent info, start a new root span
-        span = tracer.start_span(span_name)
-        ctx = set_span_in_context(span)
-        return ctx, span
-
-    # Attempt to extract the trace ID, span ID.
-    try:
-        trace_info = json.loads(json_trace.decode("utf-8") if isinstance(json_trace, bytes) else json_trace)
-        trace_id = int(trace_info["TraceID"], 16)
-        span_id = int(trace_info["SpanID"], 16)
-    except Exception as e:
-        raise ValueError(f"Invalid jsonTrace format: {e}")
-    # Construct a remote SpanContext from the extracted fields.
-    # Assume sampled by default (can be extended)
-    span_context = SpanContext(
-        trace_id=trace_id,
-        span_id=span_id,
-        is_remote=True,
-        trace_state=TraceState()  # Empty state unless custom headers are used
-    )
-
-    # Wrap the remote context in a NonRecordingSpan and attach it to a new context.
-    parent = NonRecordingSpan(span_context)
-    ctx = set_span_in_context(parent)
-
-    # Start a new span using the parent context.
-    span = tracer.start_span(span_name, context=ctx)
-    return ctx, span
-
-
+# Function used to debug a span
 def pretty_print_span_context(span):
     ctx = span.get_span_context()
     print(f"Trace ID: {format(ctx.trace_id, '032x')}")

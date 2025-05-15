@@ -10,7 +10,7 @@ import argparse
 from dynamos.ms_init import NewConfiguration
 from dynamos.signal_flow import signal_continuation, signal_wait
 from dynamos.logger import InitLogger
-from dynamos.tracer import InitTracer, start_remote_parent_span, pretty_print_span_context
+from dynamos.tracer import InitTracer, pretty_print_span_context
 
 from google.protobuf.empty_pb2 import Empty
 import microserviceCommunication_pb2 as msCommTypes
@@ -139,6 +139,8 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
     global ms_config
     logger.info(f"Received original request type: {msComm.request_type}")
 
+    # TODO: add starting services span in the trace.
+    
     # Ensure all connections have finished setting up before processing data
     signal_wait(wait_for_setup_event, wait_for_setup_condition)
 
@@ -146,14 +148,12 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
         if msComm.request_type == "sqlDataRequest":
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
-
-            # Start a new span as a child of the one passed in msComm.traces using the start_remote_parent_span function
-            # This ensures trace continuity across services
-            ctx, span1 = start_remote_parent_span(tracer, "process_sql_data_request", msComm.traces)
-            pretty_print_span_context(span1)  # print trace ID, span ID, sampled flag
             
-            # Activate the span as current for any child spans and process the data request
-            with trace.use_span(span1, end_on_exit=True):
+            # Create a new span, using the context (ctx) passed to this function. In the background, the context 
+            # (metadata that helps combine data into a single trace) is set in the dynamos-python-lib/dynamos/ms_init.py file
+            # in the request_handler function (similar to the StartRemoteParentSpan() in tracing.go), which sets the 
+            # context (as ctx) to use for the spans (subsequent spans will also use this context automatically)
+            with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
                 data, metadata = process_sql_data_request(sqlDataRequest, ctx)
                 span1.set_attribute("handleMsCommunication finished:", metadata)
 
