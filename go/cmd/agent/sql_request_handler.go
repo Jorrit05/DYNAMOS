@@ -30,6 +30,8 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		defer cancel()
 
 		// TODO: this needs to be changed to the start span function with parent to attach to api-gateway?
+		// TODO: what I can likely do is pass the context in the body so it can be used with this as optional value?
+		// then check if it is present, if it is, add the span there, if not, do not add it so the request body remains unchanged.
 		ctx, span := trace.StartSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler")
 		defer span.End()
 
@@ -38,6 +40,8 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
+		// TODO: remove after testing:
+		logger.Sugar().Debugf("Request body of sql data request: %v", body)
 
 		sqlDataRequest := &pb.SqlDataRequest{}
 		sqlDataRequest.RequestMetadata = &pb.RequestMetadata{}

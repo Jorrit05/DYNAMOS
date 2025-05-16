@@ -104,7 +104,8 @@ func requestHandler() http.HandlerFunc {
 
 			logger.Sugar().Infof("Data Prepared jsonData: %s", dataRequestJson)
 
-			responses := sendDataToAuthProviders(dataRequestJson, msg.AuthorizedProviders, apiReqApproval.Type, msg.JobId)
+			// Send the data to the authorized providers (no need to further process ctx, which is why we use _ to ignore it)
+			_, responses := sendDataToAuthProviders(ctx, dataRequestJson, msg.AuthorizedProviders, apiReqApproval.Type, msg.JobId)
 			w.WriteHeader(http.StatusOK)
 			w.Write(responses)
 			return
@@ -118,10 +119,14 @@ func requestHandler() http.HandlerFunc {
 
 // Use the data request that was previously built and send it to the authorised providers
 // acquired from the request approval
-func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]string, msgType string, jobId string) []byte {
+func sendDataToAuthProviders(ctx context.Context, dataRequest []byte, authorizedProviders map[string]string, msgType string, jobId string) (context.Context, []byte) {
 	// Setup the wait group for async data requests
 	var wg sync.WaitGroup
 	var responses []string
+
+	// Start a new span with the ctx
+	ctx, span := trace.StartSpan(ctx, "sendDataToAuthProviders")
+	defer span.End()
 
 	// This will be replaced with AMQ in the future
 	agentPort := "8080"
@@ -158,7 +163,7 @@ func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]
 
 	// jsonResponse, _ := json.Marshal(responseMap)
 	// return jsonResponse
-	return cleanupAndMarshalResponse(responseMap)
+	return ctx, cleanupAndMarshalResponse(responseMap)
 }
 
 // Now assumes input is map[string]interface{} and directly marshals it to prettified JSON.
@@ -175,12 +180,15 @@ func sendData(endpoint string, jsonData []byte) (string, error) {
 	headers := map[string]string{
 		"Authorization": "bearer 1234",
 	}
+	// Append the context to the request body so that the agent can use it
+	// TODO: add optional part here for attaching to API-gateway traces, provide context.
+
+	// Request the data using the endpoint, body and headers
 	body, err := api.PostRequest(endpoint, string(jsonData), headers)
 	if err != nil {
 		return "", err
 	}
 
-	// TODO: add optional part here for attaching to API-gateway traces, provide context.
 
 	// Here we should send the request over the socket
 	// For now we should append it to a list so that we gather all responses and send them in bulk
