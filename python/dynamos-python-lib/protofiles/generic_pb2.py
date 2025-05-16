@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgeneric.proto\x12\x07\x64ynamos\x1a\x1bgoogle/protobuf/empty.proto\"~\n\x0fRequestMetadata\x12\x16\n\x0e\x63orrelation_id\x18\x01 \x01(\t\x12\x19\n\x11\x64\x65stination_queue\x18\x02 \x01(\t\x12\x10\n\x08job_name\x18\x03 \x01(\t\x12\x16\n\x0ereturn_address\x18\x04 \x01(\t\x12\x0e\n\x06job_id\x18\x05 \x01(\t\"#\n\x0bServiceName\x12\x14\n\x0cservice_name\x18\x01 \x01(\t2G\n\x07Generic\x12<\n\nInitTracer\x12\x14.dynamos.ServiceName\x1a\x16.google.protobuf.Empty\"\x00\x42\'Z%github.com/Jorrit05/DYNAMOS/pkg/protob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgeneric.proto\x12\x07\x64ynamos\x1a\x1bgoogle/protobuf/empty.proto\"\x94\x01\n\x0fRequestMetadata\x12\x16\n\x0e\x63orrelation_id\x18\x01 \x01(\t\x12\x19\n\x11\x64\x65stination_queue\x18\x02 \x01(\t\x12\x10\n\x08job_name\x18\x03 \x01(\t\x12\x16\n\x0ereturn_address\x18\x04 \x01(\t\x12\x0e\n\x06job_id\x18\x05 \x01(\t\x12\x14\n\x0c\x62inary_trace\x18\x06 \x01(\x0c\"#\n\x0bServiceName\x12\x14\n\x0cservice_name\x18\x01 \x01(\t2G\n\x07Generic\x12<\n\nInitTracer\x12\x14.dynamos.ServiceName\x1a\x16.google.protobuf.Empty\"\x00\x42\'Z%github.com/Jorrit05/DYNAMOS/pkg/protob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,10 +22,10 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'generic_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z%github.com/Jorrit05/DYNAMOS/pkg/proto'
-  _globals['_REQUESTMETADATA']._serialized_start=55
-  _globals['_REQUESTMETADATA']._serialized_end=181
-  _globals['_SERVICENAME']._serialized_start=183
-  _globals['_SERVICENAME']._serialized_end=218
-  _globals['_GENERIC']._serialized_start=220
-  _globals['_GENERIC']._serialized_end=291
+  _globals['_REQUESTMETADATA']._serialized_start=56
+  _globals['_REQUESTMETADATA']._serialized_end=204
+  _globals['_SERVICENAME']._serialized_start=206
+  _globals['_SERVICENAME']._serialized_end=241
+  _globals['_GENERIC']._serialized_start=243
+  _globals['_GENERIC']._serialized_end=314
 # @@protoc_insertion_point(module_scope)

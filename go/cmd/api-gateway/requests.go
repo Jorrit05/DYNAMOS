@@ -14,6 +14,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.opencensus.io/trace/propagation"
 	"go.opencensus.io/trace"
 )
 
@@ -90,10 +91,15 @@ func requestHandler() http.HandlerFunc {
 				return
 			}
 
+			// Add necessary information for the data request in the request metadata
 			requestMetadata := &pb.RequestMetadata{
+				// Add the job id from the request approval to the data request body
 				JobId: msg.JobId,
+				// Add the binary trace of the span to the data request (used for appending the traces)
+				BinaryTrace: propagation.Binary(span.SpanContext()),
 			}
 			dataRequestInterface["requestMetadata"] = requestMetadata
+			// TODO: now updated protobuf message RequestMetedata to include the binary trace, test that
 
 			// Marshal the combined data back into JSON for forwarding
 			dataRequestJson, err := json.Marshal(dataRequestInterface)
@@ -123,10 +129,6 @@ func sendDataToAuthProviders(ctx context.Context, dataRequest []byte, authorized
 	// Setup the wait group for async data requests
 	var wg sync.WaitGroup
 	var responses []string
-
-	// Start a new span with the ctx
-	ctx, span := trace.StartSpan(ctx, "sendDataToAuthProviders")
-	defer span.End()
 
 	// This will be replaced with AMQ in the future
 	agentPort := "8080"
@@ -180,19 +182,17 @@ func sendData(endpoint string, jsonData []byte) (string, error) {
 	headers := map[string]string{
 		"Authorization": "bearer 1234",
 	}
-	// Append the context to the request body so that the agent can use it
-	// TODO: add optional part here for attaching to API-gateway traces, provide context.
-
 	// Request the data using the endpoint, body and headers
 	body, err := api.PostRequest(endpoint, string(jsonData), headers)
 	if err != nil {
 		return "", err
 	}
 
+	// Print body (only use for debugging and testing, this is sometimes a very large output in the logs)
+	// logger.Sugar().Debugf("Body: %v", body)
 
 	// Here we should send the request over the socket
 	// For now we should append it to a list so that we gather all responses and send them in bulk
-	logger.Sugar().Infof("Body: %v", body)
 	return string(body), nil
 }
 

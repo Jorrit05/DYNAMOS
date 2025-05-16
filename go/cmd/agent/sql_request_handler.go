@@ -116,7 +116,8 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.proto.messageSize", int64(len(msgBytes))))
 			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.json.messageSize", int64(len(jsonBytes))))
 			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.String.messageSize", int64(len(msComm.Result))))
-			logger.Sugar().Debugf("Result: %s", msComm.Result)
+			// Print result (only use for debugging and testing, this is sometimes a very large output in the logs)
+			// logger.Sugar().Debugf("Result: %s", msComm.Result)
 
 			//Handle response information
 			w.WriteHeader(http.StatusOK)

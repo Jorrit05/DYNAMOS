@@ -16,6 +16,7 @@ message RequestMetadata {
     string job_name = 3;
     string return_address = 4;
     string job_id = 5;
+    bytes binary_trace = 6; // Optional binary trace data (in proto3, all fields are "optional" by default (unless marked as repeated or oneof)
 }
 
 message ServiceName {
