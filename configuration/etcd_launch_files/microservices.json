@@ -51,11 +51,17 @@
     {
         "name": "data-anonymization",
         "label": "computeProvider",
-        "allowedOutputs": ["synthetic-dataset-generation", "model-training"],
+        "allowedOutputs": ["synthetic-dataset-generation", "differential-privacy","model-training"],
         "invalidArchetypes": []
     },
     {
         "name": "synthetic-dataset-generation",
+        "label": "dataProvider",
+        "allowedOutputs": ["model-training"],
+        "invalidArchetypes": []
+    },
+    {
+        "name": "differential-privacy",
         "label": "dataProvider",
         "allowedOutputs": ["model-training"],
         "invalidArchetypes": []

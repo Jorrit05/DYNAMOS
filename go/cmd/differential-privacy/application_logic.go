@@ -35,12 +35,12 @@ func loadCSV(filePath string) ([][]string, error) {
 }
 
 // Function to calculate statistics and return as a map
-func dataAnonymization(values []string) map[string]string {
+func differentialPrivacy(values []string) map[string]string {
 
-	logger.Info("Data Anonymization functionality")
+	logger.Info("Differential Privacy functionality")
 
 	result := map[string]string{
-		"Hello":      "world",
+		"Data":       "Anonymized",
 		"emptyRatio": fmt.Sprintf("%v", 0.0),
 	}
 
@@ -136,7 +136,7 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 	result := make(map[string]string)
 	// statsBuildYear := calculateStats(buildYearsCol)
 	// statsBedroom := calculateStats(bedroomCol)
-	result = dataAnonymization(buildYearsCol)
+	result = differentialPrivacy(buildYearsCol)
 
 	logger.Sugar().Debugf("Request Options: %v", sqlDataRequest.Options)
 	// if sqlDataRequest.Options["buildYear"] {

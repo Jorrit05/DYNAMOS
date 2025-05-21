@@ -25,7 +25,8 @@
         "name": "mlRequest",
         "requiredServices": ["data-anonymization", "model-training"],
         "optionalServices": {
-            "synthetic-dataset-generation": "synthetic-dataset-generation"
+            "synthetic-dataset-generation": "synthetic-dataset-generation",
+            "differential-privacy": "differential-privacy"
         }
     }
 ]

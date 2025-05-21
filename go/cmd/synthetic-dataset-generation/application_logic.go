@@ -35,13 +35,13 @@ func loadCSV(filePath string) ([][]string, error) {
 }
 
 // Function to calculate statistics and return as a map
-func dataAnonymization(values []string) map[string]string {
+func syntheticDataGeneration(values []string) map[string]string {
 
-	logger.Info("Start data anonymization functionality")
+	logger.Info("Start Synthetic data generation functionality")
 
 	result := map[string]string{
-		"Data":       "Anonymized",
-		"emptyRatio": fmt.Sprintf("%v", 0.0),
+		"Differential": "privacy",
+		"emptyRatio":   fmt.Sprintf("%v", 0.0),
 	}
 
 	// // Return early if there are no valid numbers
@@ -136,7 +136,7 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 	result := make(map[string]string)
 	// statsBuildYear := calculateStats(buildYearsCol)
 	// statsBedroom := calculateStats(bedroomCol)
-	result = dataAnonymization(buildYearsCol)
+	result = syntheticDataGeneration(buildYearsCol)
 
 	logger.Sugar().Debugf("Request Options: %v", sqlDataRequest.Options)
 	// if sqlDataRequest.Options["buildYear"] {
