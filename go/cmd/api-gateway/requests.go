@@ -95,11 +95,13 @@ func requestHandler() http.HandlerFunc {
 			requestMetadata := &pb.RequestMetadata{
 				// Add the job id from the request approval to the data request body
 				JobId: msg.JobId,
-				// Add the binary trace of the span to the data request (used for appending the traces)
-				BinaryTrace: propagation.Binary(span.SpanContext()),
+				// initialize the map to add values to it
+				Traces: make(map[string][]byte),
 			}
+			// Add the binary trace of the span to the data request (used for appending the traces)
+			requestMetadata.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
+			// Set the data request interface to the request metadata from the previous steps
 			dataRequestInterface["requestMetadata"] = requestMetadata
-			// TODO: now updated protobuf message RequestMetedata to include the binary trace, test that
 
 			// Marshal the combined data back into JSON for forwarding
 			dataRequestJson, err := json.Marshal(dataRequestInterface)

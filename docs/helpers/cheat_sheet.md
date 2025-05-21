@@ -135,8 +135,8 @@ linkerd jaeger install --set grafana.url=grafana.core.svc.cluster.local:3000 \
 linkerd jaeger uninstall | kubectl delete -f -
 
 ## Jaeger dashboard
-linkerd jaeger dashboard
 kubectl port-forward -n linkerd-jaeger service/jaeger 16686:16686
+linkerd jaeger dashboard
 
 # Ingress
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx

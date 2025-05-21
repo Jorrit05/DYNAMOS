@@ -29,12 +29,23 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
 
+		// Get the sql data request 
+		sqlDataRequest := &pb.SqlDataRequest{}
+		sqlDataRequest.RequestMetadata = &pb.RequestMetadata{}
+
+		// TODO: remove after testing:
+		logger.Sugar().Debugf("Sql data request Traces: %v", sqlDataRequest.RequestMetadata.Traces)
+
 		// TODO: this needs to be changed to the start span function with parent to attach to api-gateway?
 		// TODO: what I can likely do is pass the context in the body so it can be used with this as optional value?
 		// then check if it is present, if it is, add the span there, if not, do not add it so the request body remains unchanged.
-		ctx, span := trace.StartSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler")
+		ctx, span, err := lib.StartRemoteParentSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler", sqlDataRequest.RequestMetadata.Traces)
+		if err != nil {
+			logger.Sugar().Warnf("Error starting span: %v", err)
+		}
 		defer span.End()
 
+		// Read the HTTP request body. If reading fails, return a 500 Internal Server Error.
 		body, err := api.GetRequestBody(w, r, serviceName)
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -43,9 +54,8 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		// TODO: remove after testing:
 		logger.Sugar().Debugf("Request body of sql data request: %v", body)
 
-		sqlDataRequest := &pb.SqlDataRequest{}
-		sqlDataRequest.RequestMetadata = &pb.RequestMetadata{}
-
+		// Unmarshal the incoming HTTP request body into a protobuf SqlDataRequest message.
+		// If unmarshalling fails, log a warning and return a 400 Bad Request error.
 		err = protojson.Unmarshal(body, sqlDataRequest)
 		if err != nil {
 			logger.Sugar().Warnf("Error unmarshalling sqlDataRequest: %v", err)
@@ -62,6 +72,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		// /agents/jobs/UVA/jorrit-3141334
 		compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
 		if err != nil {
+			logger.Sugar().Debugf("Error getting composition request: %v", err)
 			http.Error(w, "No job found for this user", http.StatusBadRequest)
 			return
 		}
