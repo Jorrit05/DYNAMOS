@@ -49,6 +49,12 @@
         "invalidArchetypes": []
     },
     {
+        "name": "merge-datasets",
+        "label": "computeProvider",
+        "allowedOutputs": ["data-anonymization"],
+        "invalidArchetypes": []
+    },
+    {
         "name": "data-anonymization",
         "label": "computeProvider",
         "allowedOutputs": ["synthetic-dataset-generation", "differential-privacy","model-training"],
