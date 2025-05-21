@@ -33,18 +33,6 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		sqlDataRequest := &pb.SqlDataRequest{}
 		sqlDataRequest.RequestMetadata = &pb.RequestMetadata{}
 
-		// TODO: remove after testing:
-		logger.Sugar().Debugf("Sql data request Traces: %v", sqlDataRequest.RequestMetadata.Traces)
-
-		// TODO: this needs to be changed to the start span function with parent to attach to api-gateway?
-		// TODO: what I can likely do is pass the context in the body so it can be used with this as optional value?
-		// then check if it is present, if it is, add the span there, if not, do not add it so the request body remains unchanged.
-		ctx, span, err := lib.StartRemoteParentSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler", sqlDataRequest.RequestMetadata.Traces)
-		if err != nil {
-			logger.Sugar().Warnf("Error starting span: %v", err)
-		}
-		defer span.End()
-
 		// Read the HTTP request body. If reading fails, return a 500 Internal Server Error.
 		body, err := api.GetRequestBody(w, r, serviceName)
 		if err != nil {
@@ -62,6 +50,14 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
+
+		// Append to the previous span using the trace variable (this can only be done here because the sqlDataRequest needs to be unmarshalled first,
+		// otherwise it cannot read it and it will be empty for example)
+		ctx, span, err := lib.StartRemoteParentSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler", sqlDataRequest.RequestMetadata.Traces)
+		if err != nil {
+			logger.Sugar().Warnf("Error starting span: %v", err)
+		}
+		defer span.End()
 
 		if sqlDataRequest.RequestMetadata.JobId == "" {
 			http.Error(w, "Job ID not passed", http.StatusInternalServerError)
