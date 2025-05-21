@@ -1,5 +1,6 @@
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
-sql_microservices := sql-algorithm sql-anonymize sql-aggregate sql-test new-service synthetic-dataset-generation model-training
+sql_microservices := sql-algorithm sql-anonymize sql-aggregate sql-test
+ml_microservices := new-service synthetic-dataset-generation model-training data-anonymization
 dynamos := sidecar policy-enforcer orchestrator agent api-gateway
 dockerhub_account := dynamos1
 
@@ -21,6 +22,14 @@ $(dynamos): prepare proto
 
 
 $(sql_microservices): prepare proto
+	cp Dockerfile go.mod go.sum ./cmd/$@
+	cp -r pkg ./cmd/$@
+	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
+	docker build --build-arg NAME='$@' -t $(dockerhub_account)/$@:$(branch_name) -t $(dockerhub_account)/$@:latest ./cmd/$@/)
+	docker push $(dockerhub_account)/$@:$(branch_name)
+	docker push $(dockerhub_account)/$@:latest
+
+$(ml_microservices): prepare proto
 	cp Dockerfile go.mod go.sum synthetic_data_sample.csv ./cmd/$@
 	cp -r pkg ./cmd/$@
 	(trap 'rm -f ./cmd/$@/Dockerfile; rm -f ./cmd/$@/go.*; rm -rf ./cmd/$@/pkg' EXIT; \
@@ -31,5 +40,6 @@ $(sql_microservices): prepare proto
 all: $(dynamos) $(sql_microservices)
 dynamos: $(dynamos)
 sql_microservices: $(sql_microservices)
+ml_microservices: $(ml_microservices))
 
-.PHONY: all prepare proto $(dynamos) $(sql_microservices)
+.PHONY: all prepare proto $(dynamos) $(sql_microservices) $(ml_microservices)
