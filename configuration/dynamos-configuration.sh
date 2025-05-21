@@ -66,6 +66,9 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 helm upgrade -i -f "${core_chart}/prometheus-values.yaml" prometheus prometheus-community/prometheus
 
+echo "Patch Prometheus to fix node exporter..."
+kubectl patch ds prometheus-prometheus-node-exporter --type "json" -p '[{"op": "remove", "path" : "/spec/template/spec/containers/0/volumeMounts/2/mountPropagation"}]'
+
 echo "Installing NGINX..."
 helm install -f "${core_chart}/ingress-values.yaml" nginx oci://ghcr.io/nginxinc/charts/nginx-ingress -n ingress --version 0.18.0
 
