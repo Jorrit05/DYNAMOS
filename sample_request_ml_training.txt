@@ -1,1 +1,5 @@
+
 curl --location 'http://api-gateway.api-gateway.svc.cluster.local:80/api/v1/requestApproval' --header 'Content-Type: application/json' --data-raw '{"type":"sqlDataRequest","user":{"id":"12324","userName":"alex@uva.nl"},"dataProviders":["PRETS"],"data_request":{"type":"sqlDataRequest","options":{"bedroomWindows":true,"buildYear":true}}}'
+
+# Request with optional synthetic dataset generation:
+curl --location 'http://api-gateway.api-gateway.svc.cluster.local:80/api/v1/requestApproval' --header 'Content-Type: application/json' --data-raw '{"type":"sqlDataRequest","user":{"id":"12324","userName":"alex@uva.nl"},"dataProviders":["PRETS"],"data_request":{"type":"sqlDataRequest","options":{"synthetic-dataset-generation":true}}}'
