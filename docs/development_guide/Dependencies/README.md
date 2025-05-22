@@ -10,6 +10,6 @@ Dependencies that are required on your machine before developing services within
 > Most of the documentation relates to Linux operating system, namely Debian based. For alternative operating systems we do not guarentee that below will work, but links are provided from official sources to help you get it to work with your local setup. 
 
 ## Table of Contents
-[[Protoc]]
-[[Go]]
-[[Python]]
+- [Protoc](./Protoc.md)
+- [Go](./Go.md)
+- [Python](./Python.md)

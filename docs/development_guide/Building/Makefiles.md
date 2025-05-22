@@ -1,11 +1,11 @@
 
+# Makefiles
 [Makefiles](https://opensource.com/article/18/8/what-how-makefile) are a useful tool in automating repeating tasks or building software. At the moment there is a Makefile in the `go/` directory for building all services in Go, and one in the `python/` directory for all Python services.
 
 The newly built docker images will have the following naming convention:
 `<dockerhub_account_name>/<service_name>:<branch_name>`
 
-> [!NOTE]
-> If you want to push the docker images to a registry, you must first `docker login` and be associated with a registry. At the moment a maximum of three people can be added to the `dynamos1` registry.
+> Note: If you want to push the docker images to a registry, you must first `docker login` and be associated with a registry. At the moment a maximum of three people can be added to the `dynamos1` registry.
 
 # GO Makefile
 
