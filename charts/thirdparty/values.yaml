@@ -2,6 +2,6 @@ Namespace: surf
 etcdDns: etcd-headless.core.svc.cluster.local
 etcdEndpoints: "http://etcd-0.etcd-headless.core.svc.cluster.local:2379,http://etcd-1.etcd-headless.core.svc.cluster.local:2379,http://etcd-2.etcd-headless.core.svc.cluster.local:2379"
 tracingEndpoint: collector.linkerd-jaeger:55678
-branchNameTag: "issue-20-broken-system-tracing"
-dockerArtifactAccount: "poetoec"
+branchNameTag: "main"
+dockerArtifactAccount: "dynamos1"
 
