@@ -51,7 +51,11 @@ etcdctl --endpoints=http://localhost:30005 get --prefix "/agents/jobs/SURF"
 ## Kubernetes specific observability
 The tool k9s is a great way to observe and debug the Kubernetes cluster and the processes running within it.
 
-Some useful features inlude:
+[Official Docs](https://k9scli.io/)
+[K9s commands](https://k9scli.io/topics/commands/)
+[K9s cheatsheet example](https://www.hackingnote.com/en/cheatsheets/k9s/)
+
+Some additional useful features inlude:
 - You can access logs by pressing "l" on a selected pod. Within the logs of k9s you can type / to go into filter mode and then you can find logs based on the text content. Exit with Esc.
 - By pressing "d" on a pod, you can describe it and view contents like attached labels.
 - You can open a shell for the pod by pressing "s". However, be careful, as changing things here could break the system.
