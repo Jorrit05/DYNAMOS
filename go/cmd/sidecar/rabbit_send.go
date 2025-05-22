@@ -1,4 +1,4 @@
-// Package issue-20-broken-system-tracing, that implements 'sidecar' functionality
+// Package main, that implements 'sidecar' functionality
 //
 // File: rabbit_send.go
 //
@@ -12,7 +12,7 @@
 //
 // Author: Jorrit Stutterheim
 
-package issue-20-broken-system-tracing
+package main
 
 import (
 	"context"

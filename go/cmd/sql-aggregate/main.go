@@ -1,4 +1,4 @@
-package issue-20-broken-system-tracing
+package main
 
 import (
 	"context"
@@ -30,7 +30,7 @@ func getNrOfDataProviders() int {
 	return nr_of_data_providers_int
 }
 
-func issue-20-broken-system-tracing() {
+func main() {
 	logger.Sugar().Debugf("Starting %s service", serviceName)
 
 	oce, err := lib.InitTracer(serviceName)

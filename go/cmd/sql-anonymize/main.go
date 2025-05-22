@@ -1,4 +1,4 @@
-package issue-20-broken-system-tracing
+package main
 
 import (
 	"context"
@@ -14,7 +14,7 @@ var (
 	COORDINATOR = make(chan struct{})
 )
 
-func issue-20-broken-system-tracing() {
+func main() {
 	logger.Sugar().Debugf("Starting %s service", serviceName)
 
 	oce, err := lib.InitTracer(serviceName)

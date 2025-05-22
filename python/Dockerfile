@@ -25,4 +25,4 @@ RUN pip install --upgrade numpy pandas
 ENV  ENV="PROD"
 ENV PYTHONPATH="/app/protofiles"
 
-CMD ["sh", "-c", "python /app/${NAME}/issue-20-broken-system-tracing.py"]
+CMD ["sh", "-c", "python /app/${NAME}/main.py"]

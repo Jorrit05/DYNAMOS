@@ -1,4 +1,4 @@
-package issue-20-broken-system-tracing
+package main
 
 import (
 	"flag"
@@ -73,7 +73,7 @@ func stopSidecar(s *grpc.Server, grpcServerInstance *serverInstance, finished ch
 	close(finished)
 }
 
-func issue-20-broken-system-tracing() {
+func main() {
 	flag.Parse()
 	finished := make(chan struct{}) // channel to tell us the server has finished
 

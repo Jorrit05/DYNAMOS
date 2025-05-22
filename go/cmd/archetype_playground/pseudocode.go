@@ -1,4 +1,4 @@
-package issue-20-broken-system-tracing
+package main
 
 // INPUT
 policyResult := PolicyResult{

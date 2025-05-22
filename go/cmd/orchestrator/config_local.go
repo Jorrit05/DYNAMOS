@@ -1,7 +1,7 @@
 //go:build local
 // +build local
 
-package issue-20-broken-system-tracing
+package main
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package issue-20-broken-system-tracing
+package main
 
 import (
 	"context"
@@ -32,7 +32,7 @@ type validation struct {
 	localContext context.Context
 }
 
-func issue-20-broken-system-tracing() {
+func main() {
 	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
 

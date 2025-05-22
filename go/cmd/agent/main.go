@@ -1,4 +1,4 @@
-package issue-20-broken-system-tracing
+package main
 
 import (
 	"context"
@@ -54,7 +54,7 @@ type waitingJob struct {
 	nrOfDataStewards int
 }
 
-func issue-20-broken-system-tracing() {
+func main() {
 	serviceName = os.Getenv("DATA_STEWARD_NAME")
 
 	if local && serviceName == "SURF" {

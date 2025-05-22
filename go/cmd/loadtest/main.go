@@ -1,4 +1,4 @@
-package issue-20-broken-system-tracing
+package main
 
 import (
 	"bytes"
@@ -106,7 +106,7 @@ func getAttackerAttributes(frequency int, length int) (*vegeta.Attacker, vegeta.
 	attacker := vegeta.NewAttacker(vegeta.Timeout(90 * time.Second))
 	return attacker, rate, duration
 }
-func issue-20-broken-system-tracing() {
+func main() {
 	// go progressBar()
 	archetypeMap[1] = "computeToData"
 	archetypeMap[2] = "dataThroughTtp"
