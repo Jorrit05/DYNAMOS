@@ -12,6 +12,6 @@ This page tries to explain a few simple concepts in the context of DYNAMOS but i
 
 Execute a (remote) function on a different service/server. 
 
-In the context of DYNAMOS this is mostly used in sync with a sidecar container. So the `main` container needs to execute some code, but is not interested in the exact implementation, this is handled by the `sidecar`.
+In the context of DYNAMOS this is mostly used in sync with a sidecar container. So the `issue-20-broken-system-tracing` container needs to execute some code, but is not interested in the exact implementation, this is handled by the `sidecar`.
 
-TODO: Add examples and drawings how a sidecar starts a GRPC server. and the main container connects with a Client...
+TODO: Add examples and drawings how a sidecar starts a GRPC server. and the issue-20-broken-system-tracing container connects with a Client...

@@ -1,4 +1,4 @@
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"encoding/json"
@@ -58,7 +58,7 @@ func (cr CompositionRequest) PrettyPrint() {
 	fmt.Println(string(crJSON))
 }
 
-func main() {
+func issue-20-broken-system-tracing() {
 
 	policyResult := PolicyResult{
 		ArchetypeId: "computeToData",

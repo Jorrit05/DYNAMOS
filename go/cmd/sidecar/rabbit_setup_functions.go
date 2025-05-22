@@ -1,4 +1,4 @@
-// Package main, that implements 'sidecar' functionality
+// Package issue-20-broken-system-tracing, that implements 'sidecar' functionality
 //
 // File: rabbit_setup_functions.go
 //
@@ -11,7 +11,7 @@
 //
 // Author: Jorrit Stutterheim
 
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"fmt"

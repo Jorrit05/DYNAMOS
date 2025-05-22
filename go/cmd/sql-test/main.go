@@ -1,4 +1,4 @@
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"context"
@@ -100,7 +100,7 @@ func getAvailableAgents() {
 
 	fmt.Printf("result: %v", result)
 }
-func main() {
+func issue-20-broken-system-tracing() {
 
 	// fmt.Println(test1.ValidArchetypes.Archetypes["UVA"].Archetypes)
 	// fmt.Println(test1.ValidArchetypes.Archetypes["VU"].Archetypes)

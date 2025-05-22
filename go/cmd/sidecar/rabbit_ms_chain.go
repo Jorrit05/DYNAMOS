@@ -1,4 +1,4 @@
-// Package main, that implements 'sidecar' functionality
+// Package issue-20-broken-system-tracing, that implements 'sidecar' functionality
 //
 // File: rabbit_ms_chain.go
 //
@@ -18,7 +18,7 @@
 //
 // Author: Jorrit Stutterheim
 
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"context"
@@ -138,7 +138,7 @@ func ChainConsume(ctx context.Context, queueName string, autoAck bool, msClient 
 					return err
 				}
 
-				logger.Debug("Send Mscomm to main container")
+				logger.Debug("Send Mscomm to issue-20-broken-system-tracing container")
 				if msg.Headers != nil {
 					logger.Debug("msg.Headers != nil")
 

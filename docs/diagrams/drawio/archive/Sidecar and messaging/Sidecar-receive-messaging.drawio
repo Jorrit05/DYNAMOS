@@ -65,7 +65,7 @@
         <mxCell id="vn9ZUetdtOLam17VPIby-26" value="Pack protobuf message into &#39;Any&#39; type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=14;" parent="vn9ZUetdtOLam17VPIby-25" vertex="1">
           <mxGeometry y="60" width="370" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="vn9ZUetdtOLam17VPIby-29" value="Send to connected main container" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=14;" parent="vn9ZUetdtOLam17VPIby-25" vertex="1">
+        <mxCell id="vn9ZUetdtOLam17VPIby-29" value="Send to connected issue-20-broken-system-tracing container" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=14;" parent="vn9ZUetdtOLam17VPIby-25" vertex="1">
           <mxGeometry y="90" width="370" height="30" as="geometry" />
         </mxCell>
         <mxCell id="vn9ZUetdtOLam17VPIby-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=3;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" source="vn9ZUetdtOLam17VPIby-19" target="vn9ZUetdtOLam17VPIby-25" edge="1">

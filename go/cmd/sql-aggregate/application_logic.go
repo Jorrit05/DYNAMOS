@@ -8,7 +8,7 @@
 
 // Here’s an example function that performs the merge:
 
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"context"

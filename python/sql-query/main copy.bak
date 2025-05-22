@@ -177,7 +177,7 @@ def test_single_query():
 
     return True
 
-def main():
+def issue-20-broken-system-tracing():
     if test:
         job_name="Test"
 
@@ -208,4 +208,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    issue-20-broken-system-tracing()

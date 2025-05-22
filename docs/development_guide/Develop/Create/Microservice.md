@@ -93,7 +93,7 @@ An example of each is as follows:
 //go:build local
 // +build local
 
-package main
+package issue-20-broken-system-tracing
 
 import "go.uber.org/zap"
 
@@ -112,7 +112,7 @@ var grpcAddr = "localhost:"
 //go:build !local
 // +build !local
 
-package main
+package issue-20-broken-system-tracing
 
 import "go.uber.org/zap"
 
@@ -127,8 +127,8 @@ var grpcAddr = "localhost:"
 var tracingHost = "collector.linkerd-jaeger:55678"
 ```
 
-### Main (main.go)
-The `main.go` file is the entry file to your microservice. There is a common pattern that is used with all DYNAMOS services. 
+### Main (issue-20-broken-system-tracing.go)
+The `issue-20-broken-system-tracing.go` file is the entry file to your microservice. There is a common pattern that is used with all DYNAMOS services. 
 
 Imports for the service are handled here, communication configurations are set here and the message handler is initialized here.  
 
@@ -137,7 +137,7 @@ All of the mentioned above are described below:
 #### Imports
 The following are the standard packages used in the DYNAMOS services, usually IDEs will automatically update this for you when adding new dependencies.
 ```go
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"context"
@@ -192,9 +192,9 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 ```
 
 #### Main function
-Each Go MS requires a main function, a typical MS main function can look like so:
+Each Go MS requires a issue-20-broken-system-tracing function, a typical MS issue-20-broken-system-tracing function can look like so:
 ```go
-func main() {
+func issue-20-broken-system-tracing() {
 	logger.Sugar().Debugf("Starting %s service", serviceName)
 
 	oce, err := lib.InitTracer(serviceName)

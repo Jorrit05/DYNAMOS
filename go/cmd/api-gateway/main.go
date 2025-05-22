@@ -1,4 +1,4 @@
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"context"
@@ -43,7 +43,7 @@ type validation struct {
 // 4. Start consuming messages from the sidecar
 // 5. Start HTTP server (in a separate goroutine)
 //   - This function starts an HTTP server that listens for incoming requests from the 'public' API
-func main() {
+func issue-20-broken-system-tracing() {
 	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
 

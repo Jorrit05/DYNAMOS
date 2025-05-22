@@ -1,4 +1,4 @@
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ var (
 	receiveMutex = &sync.Mutex{}
 )
 
-func main() {
+func issue-20-broken-system-tracing() {
 	_, err := lib.InitTracer(serviceName)
 	if err != nil {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
@@ -33,7 +33,7 @@ func main() {
 	// Define a WaitGroup
 	var wg sync.WaitGroup
 	wg.Add(1)
-	logger.Debug("In main, starting startConsumingWithRetry")
+	logger.Debug("In issue-20-broken-system-tracing, starting startConsumingWithRetry")
 	go func() {
 		lib.StartConsumingWithRetry(serviceName, c, fmt.Sprintf("%s-in", serviceName), handleIncomingMessages, 5, 5*time.Second, receiveMutex)
 

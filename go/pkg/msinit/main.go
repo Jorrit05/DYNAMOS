@@ -36,7 +36,7 @@ type Configuration struct {
 	ServiceName  string
 
 	MessageHandler   func(conf *Configuration) func(ctx context.Context, data *pb.MicroserviceCommunication) error
-	StopMicroservice chan struct{} // channel to continue the main routine to kill the MS
+	StopMicroservice chan struct{} // channel to continue the issue-20-broken-system-tracing routine to kill the MS
 
 	GrpcServer                *grpc.Server
 	RabbitMsgClientConnection *grpc.ClientConn
@@ -84,7 +84,7 @@ func NewConfiguration(
 		NextClientConnection:      nil,
 		NextClient:                nil,
 		MessageHandler:            messageHandler,
-		StopMicroservice:          make(chan struct{}), // Continue the main routine to kill the MS
+		StopMicroservice:          make(chan struct{}), // Continue the issue-20-broken-system-tracing routine to kill the MS
 		GrpcServer:                nil,
 	}
 

@@ -1,10 +1,10 @@
-// Package main, that implements 'sidecar' functionality
+// Package issue-20-broken-system-tracing, that implements 'sidecar' functionality
 //
 // File: rabbit_consume.go
 //
 // Description:
 // This file contains the functionality to stream a incoming rabbitMQ
-// message to the main container via gRPC.
+// message to the issue-20-broken-system-tracing container via gRPC.
 //
 // Notes:
 // This could be up for refactoring, for Microservice Chains, we switched to not streaming the messages, but just sending them.
@@ -12,7 +12,7 @@
 //
 // Author: Jorrit Stutterheim
 
-package main
+package issue-20-broken-system-tracing
 
 import (
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
@@ -21,17 +21,17 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// Handle incoming AMQ messages to stream from a sidecar to the main container.
+// Handle incoming AMQ messages to stream from a sidecar to the issue-20-broken-system-tracing container.
 //
-// handleResponse handles the response received from RabbitMQ and sends it to the main container via gRPC.
+// handleResponse handles the response received from RabbitMQ and sends it to the issue-20-broken-system-tracing container via gRPC.
 // It unmarshals the received message into the provided protobuf message, creates an `anypb.Any` message from it,
 // and constructs a `pb.SideCarMessage` with the necessary fields. If there are any trace headers in the RabbitMQ
 // message, they are added to the `pb.SideCarMessage` as well. Finally, it sends the constructed message to the
-// main container via the provided gRPC stream.
+// issue-20-broken-system-tracing container via the provided gRPC stream.
 //
 // Parameters:
 // - msg: The RabbitMQ delivery message containing the response.
-// - stream: The gRPC stream used to send the response to the main container.
+// - stream: The gRPC stream used to send the response to the issue-20-broken-system-tracing container.
 // - pbMsg: The protobuf message to unmarshal the RabbitMQ message into.
 //
 // Returns:
@@ -54,7 +54,7 @@ func (s *serverInstance) handleResponse(msg amqp.Delivery, stream pb.RabbitMQ_Co
 		Body: any,
 		Type: msg.Type,
 	}
-	logger.Debug("stream to main container")
+	logger.Debug("stream to issue-20-broken-system-tracing container")
 	if msg.Headers != nil {
 		logger.Debug("msg.Headers != nil")
 

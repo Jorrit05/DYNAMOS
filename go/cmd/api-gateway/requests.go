@@ -1,5 +1,5 @@
 // This file contains the handlers for the requests that the API Gateway receives from the client
-package main
+package issue-20-broken-system-tracing
 
 import (
 	"context"

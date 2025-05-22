@@ -116,7 +116,7 @@ brew install helm
 ```bash
 curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
 sudo apt-get install apt-transport-https --yes
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all issue-20-broken-system-tracing" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 sudo apt-get update
 sudo apt-get install helm
 ```
@@ -234,7 +234,7 @@ Now:
 
 ###  10.1. <a name='ConfigureRabbitPVC'></a>Configure Rabbit PVC
 
-For a RabbitMQ container to read the definitions.json file the file needs go be uploaded to a Kubernetes PVC. This is done in with the following script, which already done by the main configuration script. Please look through to understand what it does.
+For a RabbitMQ container to read the definitions.json file the file needs go be uploaded to a Kubernetes PVC. This is done in with the following script, which already done by the issue-20-broken-system-tracing configuration script. Please look through to understand what it does.
 ```bash
 cd configuration
 ./fill-rabbit-pvc.sh
