@@ -111,7 +111,7 @@ export LAST=1
 export AMQ_PASSWORD="e3febc96e3060970414ac94b9f0fc020"
 export AMQ_USER="normal_user"
 
-# LInkerD
+# Linkerd
 https://linkerd.io/2.13/getting-started/
 
 linkerd install --crds | kubectl apply -f -
