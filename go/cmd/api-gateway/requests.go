@@ -127,7 +127,7 @@ func requestHandler() http.HandlerFunc {
 
 // Use the data request that was previously built and send it to the authorised providers
 // acquired from the request approval
-func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]string, msgType string, jobId string) ([]byte) {
+func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]string, msgType string, jobId string) []byte {
 	// Setup the wait group for async data requests
 	var wg sync.WaitGroup
 	var responses []string
