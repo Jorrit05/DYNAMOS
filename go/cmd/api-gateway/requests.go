@@ -100,12 +100,8 @@ func requestHandler() http.HandlerFunc {
 			}
 			// Add the binary trace of the span to the data request (used for appending the traces)
 			requestMetadata.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
-			// TODO: remove after testing:
-			logger.Sugar().Debugf("Request metadata before dataRequestInterface: %v", requestMetadata)
 			// Set the data request interface to the request metadata from the previous steps
 			dataRequestInterface["requestMetadata"] = requestMetadata
-			// TODO: remove after testing:
-			logger.Sugar().Debugf("dataRequestInterface: %v", dataRequestInterface)
 
 			// Marshal the combined data back into JSON for forwarding
 			dataRequestJson, err := json.Marshal(dataRequestInterface)

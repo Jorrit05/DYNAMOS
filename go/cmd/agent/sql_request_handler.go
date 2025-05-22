@@ -24,7 +24,6 @@ import (
 func sqlDataRequestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Entering sqlDataRequestHandler")
-		// Start a new span with the context that has a timeout
 
 		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
@@ -39,8 +38,6 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		// TODO: remove after testing:
-		logger.Sugar().Debugf("Request body of sql data request: %v", body)
 
 		// Unmarshal the incoming HTTP request body into a protobuf SqlDataRequest message.
 		// If unmarshalling fails, log a warning and return a 400 Bad Request error.
