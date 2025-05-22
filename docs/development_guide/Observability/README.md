@@ -1,5 +1,4 @@
 # Observability
-
 Observability is the ability to understand a system’s internal state from the data it produces—like logs, metrics, and traces. It’s essential in distributed systems (e.g., microservices, Kubernetes) for diagnosing issues, optimizing performance, and improving reliability. Unlike basic monitoring, which shows what’s wrong, observability reveals why it’s happening, enabling faster debugging and better system insights.
 
 Key pillars of observability include:
@@ -33,10 +32,26 @@ Alternatively, you can port-forward the Jaeger UI to view the logs, as explained
 ## Other processes 
 Some other processes that can be accessed are:
 
+### RabbitMQ
+Go to http://localhost:30000/ and login with "guest" as username and password. Here you can view queues and other things related to RabbitMQ.
 
-TODO: list of processes that can be accessed.
+### Etcd
+Examples of useful commands (replace endpoints when necessary)
+```sh
+# Get all keys
+etcdctl --endpoints=http://localhost:30005 get --prefix "" --keys-only
 
+# Delete jobs with a prefix, such as:
+etcdctl --endpoints=http://localhost:30005 del /agents/jobs/SURF/jorrit.stutterheim --prefix
 
+# Get a specific value based on a key (based on a prefix)
+etcdctl --endpoints=http://localhost:30005 get --prefix "/agents/jobs/SURF"
+```
 
+## Kubernetes specific observability
+The tool k9s is a great way to observe and debug the Kubernetes cluster and the processes running within it.
 
-TODO: add Grafana for centralized visualization, can be accessed at...
+Some useful features inlude:
+- You can access logs by pressing "l" on a selected pod. Within the logs of k9s you can type / to go into filter mode and then you can find logs based on the text content. Exit with Esc.
+- By pressing "d" on a pod, you can describe it and view contents like attached labels.
+- You can open a shell for the pod by pressing "s". However, be careful, as changing things here could break the system.
