@@ -112,8 +112,8 @@ func requestHandler() http.HandlerFunc {
 
 			logger.Sugar().Infof("Data Prepared jsonData: %s", dataRequestJson)
 
-			// Send the data to the authorized providers (no need to further process ctx, which is why we use _ to ignore it)
-			_, responses := sendDataToAuthProviders(ctx, dataRequestJson, msg.AuthorizedProviders, apiReqApproval.Type, msg.JobId)
+			// Send the data to the authorized providers
+			responses := sendDataToAuthProviders(dataRequestJson, msg.AuthorizedProviders, apiReqApproval.Type, msg.JobId)
 			w.WriteHeader(http.StatusOK)
 			w.Write(responses)
 			return
@@ -127,7 +127,7 @@ func requestHandler() http.HandlerFunc {
 
 // Use the data request that was previously built and send it to the authorised providers
 // acquired from the request approval
-func sendDataToAuthProviders(ctx context.Context, dataRequest []byte, authorizedProviders map[string]string, msgType string, jobId string) (context.Context, []byte) {
+func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]string, msgType string, jobId string) ([]byte) {
 	// Setup the wait group for async data requests
 	var wg sync.WaitGroup
 	var responses []string
@@ -167,7 +167,7 @@ func sendDataToAuthProviders(ctx context.Context, dataRequest []byte, authorized
 
 	// jsonResponse, _ := json.Marshal(responseMap)
 	// return jsonResponse
-	return ctx, cleanupAndMarshalResponse(responseMap)
+	return cleanupAndMarshalResponse(responseMap)
 }
 
 // Now assumes input is map[string]interface{} and directly marshals it to prettified JSON.
