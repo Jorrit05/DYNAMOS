@@ -3,54 +3,10 @@
 This guide provides information on creating a new Microservice. Currently services in GO and Python are implemented, however, you may decide to implement in other languages, but there is no support provided for this currently. 
 
 TODO: Probably move this to its own document of background information
+
 # Common components
 All services have a few components in common, these should be implemented in all services to ensure that consistency is maintained throughout the entire code base. These components are described below:
 
-## Tracing
-Tracing is a way to track the journey of a request as it moves through different services in a system. Think of it like a map that shows you how a user's action, like clicking a button, travels through multiple backend services to get a result. In DYNAMOS, we use [Jaeger](https://www.jaegertracing.io/) as a distributed tracing agent. 
-
-There are a few terminologies that you should know:
-
-- **Trace**: A trace is a record of a request as it flows through various services.
-
-- **Span**: Each step or operation that a service performs during that request is called a span. Spans together form a trace.
-
-- **Context**: Metadata or information that gets passed along with a request as it moves through different services. This information helps track the request across multiple services and combine all the spans (steps) into a single trace.
-
-DYNAMOS has a library (`go/pkg/lib/tracing.go`) that handles the code related to tracing, you should use this library for your implementation.
-
-The generated traces can be viewed in the deployed Jaeger instance. To view the Jaeger UI, first run:
-```sh
-kubectl port-forward -n linkerd-jaeger service/jaeger 16686:16686
-```
-The UI can then be viewed [here](http://localhost:16686/jaeger/search) 
-
-### Code Snippets
-
-- Initialize a trace
-```go
-oce, err := lib.InitTracer(serviceName)
-```
-
-- Start remote parent span
-```go
-ctx, span, err := lib.StartRemoteParentSpan(ctx, serviceName+"/func: <name of function>", msComm.Traces) // The traces are of type make(map[string][]byte)
-```
-TODO: Add more examples 
-
-## Logs
-
-Logging is used within the codebase to make debugging easier, make sure to add logs frequently with the appropriate log level.
-
-For example:
-- A debug level log:
-```go
-logger.Sugar().Debugf("Starting %s service", serviceName)
-```
-- Fatal error log
-```go
-logger.Sugar().Fatalf("Failed with error: %v", err)
-```
 # GO Service
 
 ## Service Folder

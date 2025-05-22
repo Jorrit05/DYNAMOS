@@ -24,29 +24,37 @@ import (
 func sqlDataRequestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Entering sqlDataRequestHandler")
-		// Start a new span with the context that has a timeout
 
 		ctxWithTimeout, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
 
-		ctx, span := trace.StartSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler")
-		defer span.End()
+		// Get the sql data request 
+		sqlDataRequest := &pb.SqlDataRequest{}
+		sqlDataRequest.RequestMetadata = &pb.RequestMetadata{}
 
+		// Read the HTTP request body. If reading fails, return a 500 Internal Server Error.
 		body, err := api.GetRequestBody(w, r, serviceName)
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		sqlDataRequest := &pb.SqlDataRequest{}
-		sqlDataRequest.RequestMetadata = &pb.RequestMetadata{}
-
+		// Unmarshal the incoming HTTP request body into a protobuf SqlDataRequest message.
+		// If unmarshalling fails, log a warning and return a 400 Bad Request error.
 		err = protojson.Unmarshal(body, sqlDataRequest)
 		if err != nil {
 			logger.Sugar().Warnf("Error unmarshalling sqlDataRequest: %v", err)
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
+
+		// Append to the previous span using the trace variable (this can only be done here because the sqlDataRequest needs to be unmarshalled first,
+		// otherwise it cannot read it and it will be empty for example)
+		ctx, span, err := lib.StartRemoteParentSpan(ctxWithTimeout, serviceName+"/func: sqlDataRequestHandler", sqlDataRequest.RequestMetadata.Traces)
+		if err != nil {
+			logger.Sugar().Warnf("Error starting span: %v", err)
+		}
+		defer span.End()
 
 		if sqlDataRequest.RequestMetadata.JobId == "" {
 			http.Error(w, "Job ID not passed", http.StatusInternalServerError)
@@ -57,6 +65,7 @@ func sqlDataRequestHandler() http.HandlerFunc {
 		// /agents/jobs/UVA/jorrit-3141334
 		compositionRequest, err := getCompositionRequest(sqlDataRequest.User.UserName, sqlDataRequest.RequestMetadata.JobId)
 		if err != nil {
+			logger.Sugar().Debugf("Error getting composition request: %v", err)
 			http.Error(w, "No job found for this user", http.StatusBadRequest)
 			return
 		}
@@ -111,7 +120,8 @@ func sqlDataRequestHandler() http.HandlerFunc {
 			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.proto.messageSize", int64(len(msgBytes))))
 			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.json.messageSize", int64(len(jsonBytes))))
 			span.AddAttributes(trace.Int64Attribute("sqlDataRequestHandler.String.messageSize", int64(len(msComm.Result))))
-			logger.Sugar().Debugf("Result: %s", msComm.Result)
+			// Print result (only use for debugging and testing, this is sometimes a very large output in the logs)
+			// logger.Sugar().Debugf("Result: %s", msComm.Result)
 
 			//Handle response information
 			w.WriteHeader(http.StatusOK)

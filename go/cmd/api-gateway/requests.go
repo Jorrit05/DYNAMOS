@@ -14,6 +14,7 @@ import (
 	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.opencensus.io/trace/propagation"
 	"go.opencensus.io/trace"
 )
 
@@ -90,9 +91,16 @@ func requestHandler() http.HandlerFunc {
 				return
 			}
 
+			// Add necessary information for the data request in the request metadata
 			requestMetadata := &pb.RequestMetadata{
+				// Add the job id from the request approval to the data request body
 				JobId: msg.JobId,
+				// initialize the map to add values to it
+				Traces: make(map[string][]byte),
 			}
+			// Add the binary trace of the span to the data request (used for appending the traces)
+			requestMetadata.Traces["binaryTrace"] = propagation.Binary(span.SpanContext())
+			// Set the data request interface to the request metadata from the previous steps
 			dataRequestInterface["requestMetadata"] = requestMetadata
 
 			// Marshal the combined data back into JSON for forwarding
@@ -104,6 +112,7 @@ func requestHandler() http.HandlerFunc {
 
 			logger.Sugar().Infof("Data Prepared jsonData: %s", dataRequestJson)
 
+			// Send the data to the authorized providers
 			responses := sendDataToAuthProviders(dataRequestJson, msg.AuthorizedProviders, apiReqApproval.Type, msg.JobId)
 			w.WriteHeader(http.StatusOK)
 			w.Write(responses)
@@ -132,7 +141,8 @@ func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]
 		// Construct the end point
 		endpoint := fmt.Sprintf("http://%s:%s/agent/v1/%s/%s", url, agentPort, msgType, target)
 
-		logger.Sugar().Infof("Sending request to %s.\nEndpoint: %s\nJSON:%v", target, endpoint, string(dataRequest))
+		// Print the request to the console (without \n to avoid the log only showing first line when searching)
+		logger.Sugar().Infof("Sending request to %s. Endpoint: %s JSON:%v", target, endpoint, string(dataRequest))
 
 		// Async call send the data
 		go func() {
@@ -174,14 +184,17 @@ func sendData(endpoint string, jsonData []byte) (string, error) {
 	headers := map[string]string{
 		"Authorization": "bearer 1234",
 	}
+	// Request the data using the endpoint, body and headers
 	body, err := api.PostRequest(endpoint, string(jsonData), headers)
 	if err != nil {
 		return "", err
 	}
 
+	// Print body (only use for debugging and testing, this is sometimes a very large output in the logs)
+	// logger.Sugar().Debugf("Body: %v", body)
+
 	// Here we should send the request over the socket
 	// For now we should append it to a list so that we gather all responses and send them in bulk
-	logger.Sugar().Infof("Body: %v", body)
 	return string(body), nil
 }
 

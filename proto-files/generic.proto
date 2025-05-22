@@ -16,6 +16,9 @@ message RequestMetadata {
     string job_name = 3;
     string return_address = 4;
     string job_id = 5;
+    // Optional Binary or textual representation of span context (in proto3, all fields are "optional" by default (unless marked as repeated or oneof)
+    // adheres to the msComm.Traces type, also expected when passing it to StartRemoteParentSpan() function
+    map<string, bytes> traces = 6;
 }
 
 message ServiceName {

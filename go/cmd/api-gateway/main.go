@@ -47,6 +47,7 @@ func main() {
 	defer logger.Sync() // flushes buffer, if any
 	defer etcdClient.Close()
 
+	// Initialize the tracer for this service
 	_, err := lib.InitTracer(serviceName)
 	if err != nil {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
