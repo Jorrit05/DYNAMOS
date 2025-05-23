@@ -35,12 +35,30 @@ func loadCSV(filePath string) ([][]string, error) {
 }
 
 // Function to calculate statistics and return as a map
-func differentialPrivacy(values []string) map[string]string {
+func differentialPrivacy(data *structpb.Struct) map[string]string {
 
 	logger.Info("Differential Privacy functionality")
 
+	// Ensure data is initialized
+	if data == nil {
+		data = &structpb.Struct{Fields: map[string]*structpb.Value{}}
+	} else if data.Fields == nil {
+		data.Fields = map[string]*structpb.Value{}
+	}
+
+	fieldValue, ok := data.GetFields()["trace"]
+	newTrace := serviceName
+	if !ok {
+		logger.Debug("could not get 'trace' field from data...")
+		data.Fields["trace"] = structpb.NewStringValue(serviceName)
+	} else {
+		logger.Debug(fieldValue.String())
+		newTrace = fieldValue.String() + "-->" + serviceName
+		data.Fields["trace"] = structpb.NewStringValue(newTrace)
+	}
+
 	result := map[string]string{
-		"Data":       "Anonymized",
+		"trace":      newTrace,
 		"emptyRatio": fmt.Sprintf("%v", 0.0),
 	}
 
@@ -136,7 +154,7 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 	result := make(map[string]string)
 	// statsBuildYear := calculateStats(buildYearsCol)
 	// statsBedroom := calculateStats(bedroomCol)
-	result = differentialPrivacy(buildYearsCol)
+	result = differentialPrivacy(msComm.Data)
 
 	logger.Sugar().Debugf("Request Options: %v", sqlDataRequest.Options)
 	// if sqlDataRequest.Options["buildYear"] {

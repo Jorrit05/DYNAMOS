@@ -35,15 +35,25 @@ func loadCSV(filePath string) ([][]string, error) {
 }
 
 // Function to calculate statistics and return as a map
-func mlTraining(values []string) map[string]string {
+func mlTraining(data *structpb.Struct) map[string]string {
 
 	logger.Info("Start ml training ...")
 
-	result := map[string]string{
-		"Model":      "training",
-		"emptyRatio": fmt.Sprintf("%v", 0.0),
+	logger.Info(data.String())
+
+	fieldValue, ok := data.GetFields()["trace"]
+	newTrace := serviceName
+	if !ok {
+		logger.Debug("could not get 'trace' field from data...")
+	} else {
+		logger.Debug(fieldValue.String())
+		newTrace = fieldValue.String() + "-->" + serviceName
 	}
 
+	result := map[string]string{
+		"trace":      newTrace,
+		"emptyRatio": fmt.Sprintf("%v", 0.0),
+	}
 	// // Return early if there are no valid numbers
 	// if len(nums) == 0 {
 	// 	return result
@@ -99,6 +109,7 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 	defer span.End()
 
 	logger.Info("Start handleDataRequest")
+	logger.Debug(msComm.String())
 	// Unpack the metadata
 	metadata := msComm.Metadata
 	filename := "/res/synthetic_data_sample.csv"
@@ -136,7 +147,7 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 	result := make(map[string]string)
 	// statsBuildYear := calculateStats(buildYearsCol)
 	// statsBedroom := calculateStats(bedroomCol)
-	result = mlTraining(buildYearsCol)
+	result = mlTraining(msComm.Data)
 
 	logger.Sugar().Debugf("Request Options: %v", sqlDataRequest.Options)
 	// if sqlDataRequest.Options["buildYear"] {
@@ -164,7 +175,6 @@ func handleDataRequest(ctx context.Context, msComm *pb.MicroserviceCommunication
 		return nil
 	}
 
-	// Process all data to make this service more realistic.
 	msComm.Result = jsonResult
 	return nil
 }

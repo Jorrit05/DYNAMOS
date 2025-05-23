@@ -9,7 +9,7 @@ var logLevel = zap.DebugLevel
 
 // var logLevel = zap.InfoLevel
 
-var serviceName = "syntheticDatasetGenerationService"
+var serviceName = "dataAnonymizationService"
 
 var etcdEndpoints = "http://etcd-0.etcd-headless.core.svc.cluster.local:2379,http://etcd-1.etcd-headless.core.svc.cluster.local:2379,http://etcd-2.etcd-headless.core.svc.cluster.local:2379"
 

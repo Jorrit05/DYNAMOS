@@ -37,7 +37,7 @@ $(ml_microservices): prepare proto
 	docker push $(dockerhub_account)/$@:$(branch_name)
 	docker push $(dockerhub_account)/$@:latest
 
-all: $(dynamos) $(sql_microservices)
+all: $(dynamos) $(sql_microservices) $(ml_microservices))
 dynamos: $(dynamos)
 sql_microservices: $(sql_microservices)
 ml_microservices: $(ml_microservices))
