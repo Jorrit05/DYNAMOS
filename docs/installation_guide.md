@@ -161,6 +161,11 @@ uninstall_all(){
   helm uninstall core
 }
 
+uninstall_dynamos(){
+  uninstall_all
+  kubectl delete namespace ingress
+}
+
 uninstall_addons(){
   helm uninstall orchestrator
   helm uninstall surf
