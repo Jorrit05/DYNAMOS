@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-targets := sql-query
+targets := sql-query ml-differential-privacy
 datasets := "../configuration/datasets/"
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
 dockerhub_account := dynamos1
