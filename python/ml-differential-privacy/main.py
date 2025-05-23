@@ -20,7 +20,11 @@ import time
 import sys
 from opentelemetry.context.context import Context
 
-from python.local_test.config_prod import service_name
+from config_prod import service_name
+
+# from pathlib import Path
+# __file__ is the path to the current script (main.py)
+# service_name = Path(__file__).parent.name  # proxy for service name assuming
 
 # --- DYNAMOS Interface code At the TOP ----------------------------------------------------
 if os.getenv('ENV') == 'PROD':
@@ -131,7 +135,7 @@ def process_sql_data_request(sqlDataRequest, ctx):
 
 # ---  DYNAMOS Interface code At the Bottom -----------------------------------------------------
 
-def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context):
+def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context=None):
     global ms_config
     logger.info(f"Received original request type: {msComm.request_type}")
     # logger.debug(f"ml: {msComm.request_type}")
