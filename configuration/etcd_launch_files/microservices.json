@@ -51,11 +51,11 @@
     {
         "name": "merge-datasets",
         "label": "computeProvider",
-        "allowedOutputs": ["data-anonymization"],
+        "allowedOutputs": ["ml-anonymize-dataset"],
         "invalidArchetypes": []
     },
     {
-        "name": "data-anonymization",
+        "name": "ml-anonymize-dataset",
         "label": "computeProvider",
         "allowedOutputs": ["synthetic-dataset-generation", "ml-differential-privacy","model-training"],
         "invalidArchetypes": []
