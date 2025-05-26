@@ -115,6 +115,30 @@ def dataframe_to_protobuf(df):
     return data_struct, metadata
 
 
+def protobuf_to_dataframe(data_struct: Struct, metadata: dict = None) -> pd.DataFrame:
+    """
+    Convert a google.protobuf.Struct and metadata dict back to a pandas DataFrame.
+    Assumes data_struct was created by dataframe_to_protobuf above.
+    """
+    if metadata is None:
+        metadata = {}
+    data = {}
+
+    for key, value in data_struct.fields.items():
+        value_list = value.list_value.values
+        items = [v.string_value for v in value_list]
+        dtype = metadata.get(key, "object")
+        if dtype.startswith("int"):
+            data[key] = [int(x) for x in items]
+        elif dtype.startswith("float"):
+            data[key] = [float(x) for x in items]
+        elif dtype == "bool":
+            data[key] = [x.lower() in ("true", "1") for x in items]
+        else:
+            data[key] = items
+
+    return pd.DataFrame(data)
+
 def process_sql_data_request(sqlDataRequest, ctx):
     global config
     logger.debug("Start process_sql_data_request")
@@ -147,6 +171,10 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
         if msComm.request_type == "sqlDataRequest":
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
+
+            logger.debug(f"msComm: {msComm}")
+            logger.debug(f"msComm.data: {msComm.data}")
+            logger.debug(f"df head: {protobuf_to_dataframe(msComm.data, msComm.metadata).head()}")
 
             # TODO:
             data = {
