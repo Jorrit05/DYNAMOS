@@ -161,8 +161,7 @@ def process_sql_data_request(sqlDataRequest, ctx):
 
 def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context=None):
     global ms_config
-    logger.debug(f"merge datasets")
-    logger.info(f"Request type: {msComm.request_type}")
+    logger.info(f"Received original request type: {msComm.request_type}")
     # logger.debug(f"ml: {msComm.request_type}")
 
     # Ensure all connections have finished setting up before processing data
@@ -188,8 +187,6 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
                 data_df = pd.DataFrame([{"trace": service_name}])
 
             data, metadata = dataframe_to_protobuf(data_df)
-
-
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
             # data, metadata = process_sql_data_request(sqlDataRequest, ctx)

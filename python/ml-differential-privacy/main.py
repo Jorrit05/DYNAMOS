@@ -174,16 +174,41 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
 
             logger.debug(f"msComm: {msComm}")
             logger.debug(f"msComm.data: {msComm.data}")
-            logger.debug(f"df head: {protobuf_to_dataframe(msComm.data, msComm.metadata).head()}")
-
-            # TODO:
-            data = {
-                'trace': [service_name],
-                'test': [25],
+            """
+            fields {
+              key: "trace"
+              value {
+                list_value {
+                  values {
+                    string_value: "ml-anonymize-dataset"
+                  }
+                }
+              }
             }
+            fields {
+              key: "test"
+              value {
+                list_value {
+                  values {
+                    string_value: "25"
+                  }
+                }
+              }
+            }
+            """
+            data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
+            logger.debug(f"df head: {data_df.head()}")
 
-            dummy_df = pd.DataFrame(data)
-            data, metadata = dataframe_to_protobuf(dummy_df)
+            # Check if "trace" is a column
+            if "trace" in data_df.columns:
+                # Append a new row with only "trace" value
+                new_row = pd.DataFrame([{"trace": service_name}])
+                data_df = pd.concat([data_df, new_row], ignore_index=True)
+            else:
+                # Create a new DataFrame with only the "trace" column
+                data_df = pd.DataFrame([{"trace": service_name}])
+
+            data, metadata = dataframe_to_protobuf(data_df)
 
 
 

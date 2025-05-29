@@ -23,9 +23,9 @@
     },
     {
         "name": "mlRequest",
-        "requiredServices": ["ml-anonymize-dataset", "model-training"],
+        "requiredServices": ["ml-merge-datasets", "ml-anonymize-dataset", "model-training"],
         "optionalServices": {
-            "synthetic-dataset-generation": "synthetic-dataset-generation",
+            "ml-synthetic-dataset-generation": "synthetic-dataset-generation",
             "ml-differential-privacy": "differential-privacy"
         }
     }

@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-targets := sql-query ml-differential-privacy ml-model-training ml-merge-datasets ml-anonymize-dataset
+targets := sql-query ml-differential-privacy ml-model-training ml-merge-datasets ml-anonymize-dataset ml-synthetic-dataset-generation
 datasets := "../configuration/datasets/"
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
 dockerhub_account := dynamos1

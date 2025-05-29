@@ -175,18 +175,19 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
 
             logger.debug(f"msComm: {msComm}")
             logger.debug(f"msComm.data: {msComm.data}")
-            logger.debug(f"df head: {protobuf_to_dataframe(msComm.data, msComm.metadata).head()}")
+            data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
+            logger.debug(f"df head: {data_df.head()}")
 
-            # TODO:
-            data = {
-                'trace': [service_name],
-                'test': [25],
-            }
+            # Check if "trace" is a column
+            if "trace" in data_df.columns:
+                # Append a new row with only "trace" value
+                new_row = pd.DataFrame([{"trace": service_name}])
+                data_df = pd.concat([data_df, new_row], ignore_index=True)
+            else:
+                # Create a new DataFrame with only the "trace" column
+                data_df = pd.DataFrame([{"trace": service_name}])
 
-            dummy_df = pd.DataFrame(data)
-            data, metadata = dataframe_to_protobuf(dummy_df)
-
-
+            data, metadata = dataframe_to_protobuf(data_df)
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
             # data, metadata = process_sql_data_request(sqlDataRequest, ctx)
