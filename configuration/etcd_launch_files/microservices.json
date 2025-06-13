@@ -57,23 +57,23 @@
     {
         "name": "ml-anonymize-dataset",
         "label": "computeProvider",
-        "allowedOutputs": ["ml-synthetic-dataset-generation", "ml-differential-privacy","model-training"],
+        "allowedOutputs": ["ml-synthetic-dataset-generation", "ml-differential-privacy","ml-model-training"],
         "invalidArchetypes": []
     },
     {
         "name": "ml-synthetic-dataset-generation",
         "label": "computeProvider",
-        "allowedOutputs": ["model-training"],
+        "allowedOutputs": ["ml-model-training"],
         "invalidArchetypes": []
     },
     {
         "name": "ml-differential-privacy",
         "label": "computeProvider",
-        "allowedOutputs": ["model-training"],
+        "allowedOutputs": ["ml-model-training"],
         "invalidArchetypes": []
     },
     {
-        "name": "model-training",
+        "name": "ml-model-training",
         "label": "computeProvider",
         "allowedOutputs": [],
         "invalidArchetypes": []
