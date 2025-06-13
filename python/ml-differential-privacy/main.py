@@ -19,6 +19,7 @@ import threading
 import time
 import sys
 from opentelemetry.context.context import Context
+import numpy as np
 
 from config_prod import service_name
 
@@ -58,6 +59,28 @@ test = args.test
 
 #--------------------------------
 
+def add_laplace_noise(df: pd.DataFrame, epsilon: float = 1.0, sensitivity: float = 1.0) -> pd.DataFrame:
+    """
+    Adds Laplace noise for differential privacy.
+    :param df: pandas DataFrame
+    :param epsilon: privacy parameter (smaller = more noise)
+    :param sensitivity: sensitivity of the query (max value change by changing a single row)
+    :return: new DataFrame with noisy columns
+    """
+    try:
+        numerical_cols = df.select_dtypes(include='number').columns.tolist()
+        if "building_id" in numerical_cols:
+            numerical_cols.remove("building_id")
+
+        noisy_df = df.copy()
+        scale = sensitivity / epsilon
+        for col in numerical_cols:
+            noise = np.random.laplace(loc=0.0, scale=scale, size=len(df))
+            noisy_df[col] = noisy_df[col] + noise
+        return noisy_df
+    except Exception as e:
+        print(f"Error adding Laplace noise: {e}")
+        return pd.DataFrame()
 
 def load_and_query_csv(file_path_prefix, query):
     # Extract table names from the query
@@ -199,17 +222,18 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
             logger.debug(f"df head: {data_df.head()}")
 
-            # Check if "trace" is a column
-            if "trace" in data_df.columns:
-                # Append a new row with only "trace" value
-                new_row = pd.DataFrame([{"trace": service_name}])
-                data_df = pd.concat([data_df, new_row], ignore_index=True)
-            else:
-                # Create a new DataFrame with only the "trace" column
-                data_df = pd.DataFrame([{"trace": service_name}])
+            # # Check if "trace" is a column
+            # if "trace" in data_df.columns:
+            #     # Append a new row with only "trace" value
+            #     new_row = pd.DataFrame([{"trace": service_name}])
+            #     data_df = pd.concat([data_df, new_row], ignore_index=True)
+            # else:
+            #     # Create a new DataFrame with only the "trace" column
+            #     data_df = pd.DataFrame([{"trace": service_name}])
 
-            data, metadata = dataframe_to_protobuf(data_df)
+            noisy_df = add_laplace_noise(data_df)
 
+            data, metadata = dataframe_to_protobuf(noisy_df)
 
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:

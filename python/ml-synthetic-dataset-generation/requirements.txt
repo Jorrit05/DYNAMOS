@@ -3,3 +3,4 @@ dynamos>=0.1
 pandasql>=0.7.3
 opentelemetry-api>=1.19.0
 opentelemetry-instrumentation>=0.40b0
+sdv==1.21.0

@@ -23,6 +23,16 @@ $(targets): proto
 	cp ./dynamos-python-lib/dist/*.whl ./$@
 	cp -r ./dynamos-python-lib/protofiles ./$@
 
+    # create empty folder
+	mkdir -p ./$@/data
+
+	# Only for ml-merge-datasets, copy extra files to ./data
+	if [ "$@" = "ml-merge-datasets" ]; then \
+		mkdir -p ./$@/data; \
+		cp ./datasets/yearly_weather.csv ./$@/data/; \
+		cp ./datasets/yearly_building.csv ./$@/data/; \
+	fi
+
 	@trap 'rm -f ./$@/Dockerfile; rm -rf ./$@/*.whl; rm -rf ./$@/datasets; rm -rf ./$@/protofiles' EXIT;  \
 	WHEEL_NAME=$$(ls ./$@/*.whl); \
 	BASE=$$(basename $$WHEEL_NAME); \

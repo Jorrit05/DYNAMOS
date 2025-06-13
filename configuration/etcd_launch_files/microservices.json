@@ -50,7 +50,7 @@
     },
     {
         "name": "ml-merge-datasets",
-        "label": "computeProvider",
+        "label": "dataProvider",
         "allowedOutputs": ["ml-anonymize-dataset"],
         "invalidArchetypes": []
     },
@@ -62,13 +62,13 @@
     },
     {
         "name": "ml-synthetic-dataset-generation",
-        "label": "dataProvider",
+        "label": "computeProvider",
         "allowedOutputs": ["model-training"],
         "invalidArchetypes": []
     },
     {
         "name": "ml-differential-privacy",
-        "label": "dataProvider",
+        "label": "computeProvider",
         "allowedOutputs": ["model-training"],
         "invalidArchetypes": []
     },

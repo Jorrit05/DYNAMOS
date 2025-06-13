@@ -11,6 +11,7 @@ from dynamos.ms_init import NewConfiguration
 from dynamos.signal_flow import signal_continuation, signal_wait
 from dynamos.logger import InitLogger
 from dynamos.tracer import InitTracer
+from typing import Optional
 
 from google.protobuf.empty_pb2 import Empty
 import microserviceCommunication_pb2 as msCommTypes
@@ -57,6 +58,38 @@ args = parser.parse_args()
 test = args.test
 
 #--------------------------------
+
+
+def load_and_merge_datasets(building_data_path:str, weather_data_path:str) -> Optional[pd.DataFrame]:
+    """
+    Loads building and weather datasets from the given file paths,
+    merges them on 'building_id', and returns the merged DataFrame.
+    """
+
+    try:
+        logger.info("Loading building dataset from %s", building_data_path)
+        building_df = pd.read_csv(building_data_path)
+        logger.info("Loading weather dataset from %s", weather_data_path)
+        weather_df = pd.read_csv(weather_data_path)
+
+        if 'building_id' not in building_df.columns:
+            raise KeyError("'building_id' column missing from building dataset.")
+        if 'building_id' not in weather_df.columns:
+            raise KeyError("'building_id' column missing from weather dataset.")
+
+        logger.info("Merging datasets on 'building_id'")
+        merged_df = pd.merge(building_df, weather_df, on='building_id', how='inner')
+
+        logger.info("Merged DataFrame info:")
+        logger.info(merged_df.info())
+        logger.info("Merged DataFrame summary statistics:")
+        logger.info("\n%s", merged_df.describe())
+
+        return merged_df
+
+    except Exception as e:
+        logger.error(f"Error in loading or merging datasets: {e}")
+        return None
 
 
 def load_and_query_csv(file_path_prefix, query):
@@ -178,14 +211,19 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
             logger.debug(f"df head: {data_df.head()}")
 
-            # Check if "trace" is a column
-            if "trace" in data_df.columns:
-                # Append a new row with only "trace" value
-                new_row = pd.DataFrame([{"trace": service_name}])
-                data_df = pd.concat([data_df, new_row], ignore_index=True)
-            else:
-                # Create a new DataFrame with only the "trace" column
-                data_df = pd.DataFrame([{"trace": service_name}])
+            # # Check if "trace" is a column
+            # if "trace" in data_df.columns:
+            #     # Append a new row with only "trace" value
+            #     new_row = pd.DataFrame([{"trace": service_name}])
+            #     data_df = pd.concat([data_df, new_row], ignore_index=True)
+            # else:
+            #     # Create a new DataFrame with only the "trace" column
+            #     data_df = pd.DataFrame([{"trace": service_name}])
+
+            data_df = load_and_merge_datasets(
+                building_data_path='./data/yearly_building.csv',
+                weather_data_path='./data/yearly_weather.csv'
+            )
 
             data, metadata = dataframe_to_protobuf(data_df)
 

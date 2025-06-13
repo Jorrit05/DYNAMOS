@@ -35,6 +35,17 @@ else:
 logger = InitLogger()
 # tracer = InitTracer(config.service_name, config.tracing_host)
 
+# FOR TESTING i PUT IT AFTER THE LOGGER
+logger.debug("before sdv import")
+
+from sdv.datasets.local import load_csvs
+from sdv.metadata import SingleTableMetadata
+from sdv.single_table import GaussianCopulaSynthesizer
+
+logger.debug("sdv imported OK")
+
+# ###
+
 # Events to start the shutdown of this Microservice, can be used to call 'signal_shutdown'
 stop_event = threading.Event()
 stop_microservice_condition = threading.Condition()
@@ -58,6 +69,45 @@ test = args.test
 
 #--------------------------------
 
+
+def generate_synthetic_dataset(data_df: pd.DataFrame) -> pd.DataFrame:
+    try:
+        temp_data_path = "./temp/data/"
+        temp_path = "./temp"
+        # create temp dir if not exists
+        os.makedirs(temp_path, exist_ok=True)
+        os.makedirs(temp_data_path, exist_ok=True)
+
+        data_file = os.path.join(temp_data_path, "yearly_anonymized.csv")
+        data_df.to_csv(data_file, index=False)
+
+        data = load_csvs(temp_data_path)
+        data = data["yearly_anonymized"]
+
+        metadata = SingleTableMetadata()
+        metadata.detect_from_dataframe(data)
+        metadata.validate()
+        metadata.validate_data(data=data)
+
+        metadata_file = os.path.join(temp_path, "metadata.json")
+        if os.path.exists(metadata_file):
+            logger.debug(f"deleting existing metadata file: {metadata_file}")
+            os.remove(metadata_file)
+
+        metadata.save_to_json(metadata_file)
+
+        synthesizer = GaussianCopulaSynthesizer(metadata)
+        synthesizer.fit(data)
+
+        synthetic_data = synthesizer.sample(num_rows=100)
+        synthetic_data.describe()
+        synthetic_data.columns
+
+        return synthetic_data
+
+    except Exception as e:
+        logger.error(f"Error in generating synthetic dataset: {e}")
+        return pd.DataFrame()
 
 def load_and_query_csv(file_path_prefix, query):
     # Extract table names from the query
@@ -177,16 +227,18 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
             logger.debug(f"df head: {data_df.head()}")
 
-            # Check if "trace" is a column
-            if "trace" in data_df.columns:
-                # Append a new row with only "trace" value
-                new_row = pd.DataFrame([{"trace": service_name}])
-                data_df = pd.concat([data_df, new_row], ignore_index=True)
-            else:
-                # Create a new DataFrame with only the "trace" column
-                data_df = pd.DataFrame([{"trace": service_name}])
+            # # Check if "trace" is a column
+            # if "trace" in data_df.columns:
+            #     # Append a new row with only "trace" value
+            #     new_row = pd.DataFrame([{"trace": service_name}])
+            #     data_df = pd.concat([data_df, new_row], ignore_index=True)
+            # else:
+            #     # Create a new DataFrame with only the "trace" column
+            #     data_df = pd.DataFrame([{"trace": service_name}])
 
-            data, metadata = dataframe_to_protobuf(data_df)
+            synthetic_df = generate_synthetic_dataset(data_df)
+
+            data, metadata = dataframe_to_protobuf(synthetic_df)
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
             # data, metadata = process_sql_data_request(sqlDataRequest, ctx)

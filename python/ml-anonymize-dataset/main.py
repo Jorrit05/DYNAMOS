@@ -21,6 +21,8 @@ import sys
 from opentelemetry.context.context import Context
 
 from config_prod import service_name
+import hashlib
+import random
 
 # from pathlib import Path
 # __file__ is the path to the current script (main.py)
@@ -57,6 +59,37 @@ args = parser.parse_args()
 test = args.test
 
 #--------------------------------
+
+
+
+def anonymize_building_ids(df: pd.DataFrame, column: str = 'building_id', seed: int = None) -> pd.DataFrame:
+    """
+    Replace building_id values with a hashed anonymized version using a random seed.
+    Returns: (anonymized_df, mapping, seed)
+    If anonymization fails, returns (empty DataFrame, empty dict, None) and logs an error.
+    """
+    try:
+        if seed is None:
+            seed = random.randint(0, int(1e9))
+        rng = random.Random(seed)
+        salt = str(rng.random())
+
+        def hash_id(x):
+            # Combine salt with building_id, encode, and hash
+            return hashlib.sha256(f"{salt}_{x}".encode()).hexdigest()
+
+        # Map original ids to anonymized ids
+        unique_ids = df[column].unique()
+        mapping = {orig_id: hash_id(orig_id) for orig_id in unique_ids}
+
+        # Replace the column in the DataFrame
+        anonymized_df = df.copy()
+        anonymized_df[column] = anonymized_df[column].map(mapping)
+        return anonymized_df
+
+    except Exception as e:
+        logger.error(f"Anonymization failed: {e}")
+        return pd.DataFrame()
 
 
 def load_and_query_csv(file_path_prefix, query):
@@ -178,16 +211,18 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
             logger.debug(f"df head: {data_df.head()}")
 
-            # Check if "trace" is a column
-            if "trace" in data_df.columns:
-                # Append a new row with only "trace" value
-                new_row = pd.DataFrame([{"trace": service_name}])
-                data_df = pd.concat([data_df, new_row], ignore_index=True)
-            else:
-                # Create a new DataFrame with only the "trace" column
-                data_df = pd.DataFrame([{"trace": service_name}])
+            # # Check if "trace" is a column
+            # if "trace" in data_df.columns:
+            #     # Append a new row with only "trace" value
+            #     new_row = pd.DataFrame([{"trace": service_name}])
+            #     data_df = pd.concat([data_df, new_row], ignore_index=True)
+            # else:
+            #     # Create a new DataFrame with only the "trace" column
+            #     data_df = pd.DataFrame([{"trace": service_name}])
 
-            data, metadata = dataframe_to_protobuf(data_df)
+            anonymized_df = anonymize_building_ids(data_df, seed=int(time.time()))
+
+            data, metadata = dataframe_to_protobuf(anonymized_df)
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
             # data, metadata = process_sql_data_request(sqlDataRequest, ctx)
