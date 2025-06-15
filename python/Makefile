@@ -3,6 +3,7 @@ targets := sql-query ml-differential-privacy ml-model-training ml-merge-datasets
 datasets := "../configuration/datasets/"
 branch_name := $(shell git rev-parse --abbrev-ref HEAD)
 dockerhub_account := dynamos1
+PUSH ?= 1  # <-- Add this line; default is 1 (do push)
 
 .PHONY: proto $(targets) dynamos
 
@@ -37,6 +38,8 @@ $(targets): proto
 	WHEEL_NAME=$$(ls ./$@/*.whl); \
 	BASE=$$(basename $$WHEEL_NAME); \
 	docker build --build-arg NAME=$@ -t $(dockerhub_account)/$@:$(branch_name) --build-arg WHEEL_NAME=$$BASE -t $(dockerhub_account)/$@:latest ./$@/
-	docker push $(dockerhub_account)/$@:$(branch_name)
-	docker push $(dockerhub_account)/$@:latest
+	if [ "$(PUSH)" = "1" ]; then \
+		docker push $(dockerhub_account)/$@:$(branch_name); \
+		docker push $(dockerhub_account)/$@:latest; \
+	fi
 all: all $(targets) $(proto)

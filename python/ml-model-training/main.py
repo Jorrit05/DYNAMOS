@@ -1,5 +1,4 @@
 import pandas as pd
-from pandasql import sqldf
 import re
 import time
 import sys
@@ -21,6 +20,13 @@ import sys
 from opentelemetry.context.context import Context
 
 from config_prod import service_name
+
+# for the model training functionality
+import joblib  # For saving the model
+import pandas as pd
+from xgboost import XGBRegressor
+from sklearn.model_selection import cross_val_score, KFold
+from sklearn.metrics import mean_squared_error, make_scorer
 
 # from pathlib import Path
 # __file__ is the path to the current script (main.py)
@@ -57,38 +63,6 @@ args = parser.parse_args()
 test = args.test
 
 #--------------------------------
-
-
-def load_and_query_csv(file_path_prefix, query):
-    # Extract table names from the query
-    table_names = re.findall(r'FROM (\w+)', query) + re.findall(r'JOIN (\w+)', query)
-    # Create a dictionary to hold DataFrames, keyed by table name
-    dfs = {}
-    DATA_STEWARD_NAME = os.getenv("DATA_STEWARD_NAME")
-    if DATA_STEWARD_NAME == "":
-        logger.error(f"DATA_STEWARD_NAME not set.")
-
-
-    for table_name in table_names:
-        try:
-            file_name = f"{file_path_prefix}{table_name}_{DATA_STEWARD_NAME}.csv"
-            logger.debug(f"Loading file {file_name}")
-            dfs[table_name] = pd.read_csv(file_name, delimiter=';')
-            logger.debug(f"after read csv")
-        except FileNotFoundError:
-            logger.error(f"CSV file for table {table_name}_{DATA_STEWARD_NAME} not found.")
-            return None
-
-    try:
-        # Use pandasql's sqldf function to execute the SQL query
-        result_df = sqldf(query, dfs)
-    except Exception as e:
-        logger.error(f"An error occurred while executing the query: {str(e)}")
-
-    logger.debug(f"after result_df")
-
-    return result_df
-
 
 def dataframe_to_protobuf(df):
     # Convert the DataFrame to a dictionary of lists (one for each column)
@@ -139,25 +113,77 @@ def protobuf_to_dataframe(data_struct: Struct, metadata: dict = None) -> pd.Data
 
     return pd.DataFrame(data)
 
-def process_sql_data_request(sqlDataRequest, ctx):
-    global config
-    logger.debug("Start process_sql_data_request")
-
-    try:
-        result = load_and_query_csv(config.dataset_filepath, sqlDataRequest.query)
-        logger.debug("after load and query csv")
-        data, metadata = dataframe_to_protobuf(result)
-
-        return data, metadata
-    except FileNotFoundError:
-        logger.error(f"File not found at path {config.dataset_filepath}")
-        return None, {}
-    except Exception as e:
-        logger.error(f"An error occurred: {str(e)}")
-        return None, {}
-
-
 # ---  DYNAMOS Interface code At the Bottom -----------------------------------------------------
+
+def train_model(df:pd.DataFrame):
+    """
+    python -m pip install xgboost==2.1.4
+    python -m pip install scikit-learn==1.3.2
+    """
+
+    # df = synthetic_data
+    if "building_id" in df.columns:
+        df.drop(columns=["building_id"], inplace=True)
+    # Split features and target
+    X = df.drop(columns=['consumption'])
+    y = df['consumption']
+
+    X = pd.get_dummies(X, columns=["primary_use"])
+
+    # Define XGBoost regressor from sklearn API
+    xgb_reg = XGBRegressor(
+        n_estimators=100,
+        learning_rate=0.1,
+        max_depth=6,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    # Define cross-validation strategy
+    kf = KFold(n_splits=5, shuffle=True, random_state=42)
+
+    # Use negative mean squared error for regression
+    scorer = make_scorer(mean_squared_error, greater_is_better=False)
+
+    # Perform cross-validation
+    logger.info("Validating model...")
+    cv_scores = cross_val_score(xgb_reg, X, y, cv=kf, scoring=scorer)
+
+    # logger.info(f"Cross-validated MSE scores: {-cv_scores}")
+    # logger.info(f"Average MSE: {-cv_scores.mean()}")
+    # logger.info(f"Average RMSE: {(-cv_scores.mean())**0.5}")
+
+    evaluation = {
+        "mse_scores": str((-cv_scores)),
+        "avg_mse": -cv_scores.mean(),
+        "avg_rmse": (-cv_scores.mean()) ** 0.5,
+    }
+
+    logger.info("evaluation: " + json.dumps(evaluation, indent=2))
+
+    # Original merged dataset
+    # Average MSE: 3315628410515.4336
+    # Average RMSE: 1820886.7099617794
+
+    # Synthetic dataset
+    # Average MSE: 5197084552824.165
+    # Average RMSE: 2279711.506490276
+
+    # Both synthetic and DP:
+    #  Average MSE: 3832433857370.583
+    #  Average RMSE: 1957660.3018324152
+
+    # Optional: Train final model on all data
+    xgb_reg.fit(X, y)
+
+    # Save the model to localhost (current directory)
+    model_path = "xgb_regressor_model.joblib"
+    joblib.dump(xgb_reg, model_path)
+    logger.info(f"Model saved to {model_path}")
+
+    return pd.DataFrame(evaluation)
+
+
 
 def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context=None):
     global ms_config
@@ -174,23 +200,18 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
 
             logger.debug(f"msComm: {msComm}")
             logger.debug(f"msComm.data: {msComm.data}")
-            logger.debug(f"df head: {protobuf_to_dataframe(msComm.data, msComm.metadata).head()}")
+            data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
+            logger.debug(f"df head: {data_df.head()}")
 
-            # TODO:
-            data = {
-                'trace': [service_name],
-                'test': [25],
-            }
+            eval_metrics_df = train_model(data_df)
 
-            dummy_df = pd.DataFrame(data)
-            data, metadata = dataframe_to_protobuf(dummy_df)
-
-
+            data, metadata = dataframe_to_protobuf(eval_metrics_df)
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
             # data, metadata = process_sql_data_request(sqlDataRequest, ctx)
                 # span1.set_attribute("handleMsCommunication finished:", metadata)
 
+            logger.debug(f"Forwarding result, dataframe: {eval_metrics_df}")
             logger.debug(f"Forwarding result, metadata: {metadata}")
             ms_config.next_client.ms_comm.send_data(msComm, data, metadata)
             signal_continuation(stop_event, stop_microservice_condition)

@@ -1,5 +1,8 @@
-pandas>=2.2.2
+numpy==2.3.0
+joblib==1.4.2
+pandas>=2.0.3
+scikit-learn==1.7.0
+xgboost==3.0.2
 dynamos>=0.1
-pandasql>=0.7.3
 opentelemetry-api>=1.19.0
 opentelemetry-instrumentation>=0.40b0
