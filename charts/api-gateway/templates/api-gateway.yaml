@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: {{ .Values.dockerArtifactAccount }}/api-gateway:new-service-test
-        imagePullPolicy: Always
+        image: {{ .Values.dockerArtifactAccount }}/api-gateway:new_use_case
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
         env:
@@ -30,7 +30,7 @@ spec:
         #     memory: "256Mi"
       - name: sidecar
         image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: AMQ_PASSWORD
           valueFrom:

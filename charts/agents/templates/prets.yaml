@@ -19,7 +19,7 @@ spec:
       containers:
         - name: prets
           image: {{ .Values.dockerArtifactAccount }}/agent:new_use_case
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
@@ -34,7 +34,7 @@ spec:
           #     memory: "256Mi"
         - name: sidecar
           image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: AMQ_PASSWORD
               valueFrom:

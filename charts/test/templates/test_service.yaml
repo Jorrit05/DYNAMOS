@@ -16,4 +16,4 @@ spec:
       containers:
       - name: testservice
         image: test_service:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent

@@ -207,6 +207,10 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             msComm.original_request.Unpack(sqlDataRequest)
 
             logger.debug(f"msComm: {msComm}")
+
+            mscomm_metadata = dict(msComm.metadata)
+            logger.debug(f"msComm: {str(mscomm_metadata)}")
+
             logger.debug(f"msComm.data: {msComm.data}")
             data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
             logger.debug(f"df head: {data_df.head()}")

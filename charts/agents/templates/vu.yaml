@@ -19,7 +19,7 @@ spec:
       containers:
       - name: vu
         image: {{ .Values.dockerArtifactAccount }}/agent:{{ .Values.branchNameTag }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: DATA_STEWARD_NAME
           value: VU
@@ -27,7 +27,7 @@ spec:
           value: {{ .Values.tracingEndpoint }}
       - name: sidecar
         image: {{ .Values.dockerArtifactAccount }}/sidecar:{{ .Values.branchNameTag }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: AMQ_PASSWORD
           valueFrom:
