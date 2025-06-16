@@ -115,6 +115,21 @@ def protobuf_to_dataframe(data_struct: Struct, metadata: dict = None) -> pd.Data
 
 # ---  DYNAMOS Interface code At the Bottom -----------------------------------------------------
 
+def register_service_on_metadata(metadata:dict, service_name:str) -> dict:
+    """
+    Adds a JSON encoded list of the services that took place on the field "services".
+    """
+    if "services" in metadata:
+        services = json.loads(metadata["services"])
+        services.append(service_name)
+        metadata["services"] = json.dumps(services)
+        return metadata
+
+    metadata["services"] = json.dumps([service_name])
+
+    return metadata
+
+
 def train_model(df:pd.DataFrame):
     """
     python -m pip install xgboost==2.1.4
@@ -154,9 +169,9 @@ def train_model(df:pd.DataFrame):
     # logger.info(f"Average RMSE: {(-cv_scores.mean())**0.5}")
 
     evaluation = {
-        "mse_scores": str((-cv_scores)),
-        "avg_mse": -cv_scores.mean(),
-        "avg_rmse": (-cv_scores.mean()) ** 0.5,
+        "mse_scores": [str((-cv_scores))],
+        "avg_mse": [-cv_scores.mean()],
+        "avg_rmse": [(-cv_scores.mean()) ** 0.5],
     }
 
     logger.info("evaluation: " + json.dumps(evaluation, indent=2))
@@ -198,22 +213,30 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
 
-            logger.debug(f"msComm: {msComm}")
-            logger.debug(f"msComm.data: {msComm.data}")
-            data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
+            # logger.debug(f"msComm: {msComm}")
+            # logger.debug(f"msComm.data: {msComm.data}")
+
+            mscomm_metadata = dict(msComm.metadata)
+            logger.debug(f"msComm metadata original: {str(mscomm_metadata)}")
+            mscomm_metadata = register_service_on_metadata(mscomm_metadata, service_name=service_name)
+            logger.debug(f"msComm metadata updated: {str(mscomm_metadata)}")
+
+            dataframe_metadata_dict = json.loads(msComm.metadata['dataframe_metadata'])
+            data_df = protobuf_to_dataframe(msComm.data, dataframe_metadata_dict)
             logger.debug(f"df head: {data_df.head()}")
 
             eval_metrics_df = train_model(data_df)
 
-            data, metadata = dataframe_to_protobuf(eval_metrics_df)
+            data, dataframe_metadata = dataframe_to_protobuf(eval_metrics_df)
+            mscomm_metadata['dataframe_metadata'] = json.dumps(dataframe_metadata)
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
             # data, metadata = process_sql_data_request(sqlDataRequest, ctx)
                 # span1.set_attribute("handleMsCommunication finished:", metadata)
 
             logger.debug(f"Forwarding result, dataframe: {eval_metrics_df}")
-            logger.debug(f"Forwarding result, metadata: {metadata}")
-            ms_config.next_client.ms_comm.send_data(msComm, data, metadata)
+            logger.debug(f"Forwarding result, metadata: {mscomm_metadata}")
+            ms_config.next_client.ms_comm.send_data(msComm, data, mscomm_metadata)
             signal_continuation(stop_event, stop_microservice_condition)
 
         else:

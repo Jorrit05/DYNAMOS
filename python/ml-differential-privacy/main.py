@@ -23,6 +23,8 @@ import numpy as np
 
 from config_prod import service_name
 
+from diffprivlib.mechanisms import Laplace
+
 # from pathlib import Path
 # __file__ is the path to the current script (main.py)
 # service_name = Path(__file__).parent.name  # proxy for service name assuming
@@ -59,9 +61,32 @@ test = args.test
 
 #--------------------------------
 
-def add_laplace_noise(df: pd.DataFrame, epsilon: float = 1.0, sensitivity: float = 1.0) -> pd.DataFrame:
+# def add_laplace_noise(df: pd.DataFrame, epsilon: float = 1.0, sensitivity: float = 1.0) -> pd.DataFrame:
+#     """
+#     Adds Laplace noise for differential privacy.
+#     :param df: pandas DataFrame
+#     :param epsilon: privacy parameter (smaller = more noise)
+#     :param sensitivity: sensitivity of the query (max value change by changing a single row)
+#     :return: new DataFrame with noisy columns
+#     """
+#     try:
+#         numerical_cols = df.select_dtypes(include='number').columns.tolist()
+#         if "building_id" in numerical_cols:
+#             numerical_cols.remove("building_id")
+#
+#         noisy_df = df.copy()
+#         scale = sensitivity / epsilon
+#         for col in numerical_cols:
+#             noise = np.random.laplace(loc=0.0, scale=scale, size=len(df))
+#             noisy_df[col] = noisy_df[col] + noise
+#         return noisy_df
+#     except Exception as e:
+#         print(f"Error adding Laplace noise: {e}")
+#         return pd.DataFrame()
+
+def add_laplace_noise_dp(df: pd.DataFrame, epsilon: float = 1.0, sensitivity: float = 1.0) -> pd.DataFrame:
     """
-    Adds Laplace noise for differential privacy.
+    Adds Laplace noise using diffprivlib for differential privacy.
     :param df: pandas DataFrame
     :param epsilon: privacy parameter (smaller = more noise)
     :param sensitivity: sensitivity of the query (max value change by changing a single row)
@@ -74,12 +99,17 @@ def add_laplace_noise(df: pd.DataFrame, epsilon: float = 1.0, sensitivity: float
 
         noisy_df = df.copy()
         scale = sensitivity / epsilon
+
         for col in numerical_cols:
-            noise = np.random.laplace(loc=0.0, scale=scale, size=len(df))
-            noisy_df[col] = noisy_df[col] + noise
+            mechanism = Laplace(epsilon=epsilon, delta=0.0, sensitivity=sensitivity)
+            noisy_values = []
+            for v in noisy_df[col]:
+                noisy_values.append(mechanism.randomise(v))
+            noisy_df[col] = noisy_values
+
         return noisy_df
     except Exception as e:
-        print(f"Error adding Laplace noise: {e}")
+        print(f"Error adding Laplace noise with diffprivlib: {e}")
         return pd.DataFrame()
 
 def load_and_query_csv(file_path_prefix, query):
@@ -182,6 +212,21 @@ def process_sql_data_request(sqlDataRequest, ctx):
 
 # ---  DYNAMOS Interface code At the Bottom -----------------------------------------------------
 
+def register_service_on_metadata(metadata:dict, service_name:str) -> dict:
+    """
+    Adds a JSON encoded list of the services that took place on the field "services".
+    """
+    if "services" in metadata:
+        services = json.loads(metadata["services"])
+        services.append(service_name)
+        metadata["services"] = json.dumps(services)
+        return metadata
+
+    metadata["services"] = json.dumps([service_name])
+
+    return metadata
+
+
 def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context=None):
     global ms_config
     logger.info(f"Received original request type: {msComm.request_type}")
@@ -195,8 +240,8 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
 
-            logger.debug(f"msComm: {msComm}")
-            logger.debug(f"msComm.data: {msComm.data}")
+            # logger.debug(f"msComm: {msComm}")
+            # logger.debug(f"msComm.data: {msComm.data}")
             """
             fields {
               key: "trace"
@@ -219,7 +264,14 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
               }
             }
             """
-            data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
+            mscomm_metadata = dict(msComm.metadata)
+            logger.debug(f"msComm metadata original: {str(mscomm_metadata)}")
+            mscomm_metadata = register_service_on_metadata(mscomm_metadata, service_name=service_name)
+            logger.debug(f"msComm metadata updated: {str(mscomm_metadata)}")
+
+
+            dataframe_metadata_dict = json.loads(msComm.metadata['dataframe_metadata'])
+            data_df = protobuf_to_dataframe(msComm.data, dataframe_metadata_dict)
             logger.debug(f"df head: {data_df.head()}")
 
             # # Check if "trace" is a column
@@ -231,17 +283,19 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             #     # Create a new DataFrame with only the "trace" column
             #     data_df = pd.DataFrame([{"trace": service_name}])
 
-            noisy_df = add_laplace_noise(data_df)
+            noisy_df = add_laplace_noise_dp(data_df)
 
-            data, metadata = dataframe_to_protobuf(noisy_df)
+            # data, metadata = dataframe_to_protobuf(noisy_df)
+            data, dataframe_metadata = dataframe_to_protobuf(noisy_df)
+            mscomm_metadata['dataframe_metadata'] = json.dumps(dataframe_metadata)
 
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
             # data, metadata = process_sql_data_request(sqlDataRequest, ctx)
                 # span1.set_attribute("handleMsCommunication finished:", metadata)
 
-            logger.debug(f"Forwarding result, metadata: {metadata}")
-            ms_config.next_client.ms_comm.send_data(msComm, data, metadata)
+            logger.debug(f"Forwarding result, metadata: {mscomm_metadata}")
+            ms_config.next_client.ms_comm.send_data(msComm, data, mscomm_metadata)
             signal_continuation(stop_event, stop_microservice_condition)
 
         else:

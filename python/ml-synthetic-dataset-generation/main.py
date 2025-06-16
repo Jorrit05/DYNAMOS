@@ -209,6 +209,21 @@ def process_sql_data_request(sqlDataRequest, ctx):
 
 # ---  DYNAMOS Interface code At the Bottom -----------------------------------------------------
 
+def register_service_on_metadata(metadata:dict, service_name:str) -> dict:
+    """
+    Adds a JSON encoded list of the services that took place on the field "services".
+    """
+    if "services" in metadata:
+        services = json.loads(metadata["services"])
+        services.append(service_name)
+        metadata["services"] = json.dumps(services)
+        return metadata
+
+    metadata["services"] = json.dumps([service_name])
+
+    return metadata
+
+
 def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context=None):
     global ms_config
     logger.info(f"Received original request type: {msComm.request_type}")
@@ -222,9 +237,16 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
             sqlDataRequest = rabbitTypes.SqlDataRequest()
             msComm.original_request.Unpack(sqlDataRequest)
 
-            logger.debug(f"msComm: {msComm}")
-            logger.debug(f"msComm.data: {msComm.data}")
-            data_df = protobuf_to_dataframe(msComm.data, msComm.metadata)
+
+            mscomm_metadata = dict(msComm.metadata)
+            logger.debug(f"msComm metadata original: {str(mscomm_metadata)}")
+            mscomm_metadata = register_service_on_metadata(mscomm_metadata, service_name=service_name)
+            logger.debug(f"msComm metadata updated: {str(mscomm_metadata)}")
+
+            # logger.debug(f"msComm: {msComm}")
+            # logger.debug(f"msComm.data: {msComm.data}")
+            dataframe_metadata_dict = json.loads(msComm.metadata['dataframe_metadata'])
+            data_df = protobuf_to_dataframe(msComm.data, dataframe_metadata_dict)
             logger.debug(f"df head: {data_df.head()}")
 
             # # Check if "trace" is a column
@@ -238,14 +260,15 @@ def request_handler(msComm : msCommTypes.MicroserviceCommunication, ctx: Context
 
             synthetic_df = generate_synthetic_dataset(data_df)
 
-            data, metadata = dataframe_to_protobuf(synthetic_df)
+            data, dataframe_metadata = dataframe_to_protobuf(synthetic_df)
+            mscomm_metadata['dataframe_metadata'] = json.dumps(dataframe_metadata)
 
             # # with tracer.start_as_current_span("process_sql_data_request", context=ctx) as span1:
             # data, metadata = process_sql_data_request(sqlDataRequest, ctx)
                 # span1.set_attribute("handleMsCommunication finished:", metadata)
 
-            logger.debug(f"Forwarding result, metadata: {metadata}")
-            ms_config.next_client.ms_comm.send_data(msComm, data, metadata)
+            logger.debug(f"Forwarding result, metadata: {mscomm_metadata}")
+            ms_config.next_client.ms_comm.send_data(msComm, data, mscomm_metadata)
             signal_continuation(stop_event, stop_microservice_condition)
 
         else:
