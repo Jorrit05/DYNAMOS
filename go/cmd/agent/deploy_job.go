@@ -268,5 +268,5 @@ func getMicroserviceTag(msName string) string {
 		return tag
 	}
 
-	return "issue/19-improve-dynamos-instability"
+	return "issue-19-improve-dynamos-instability"
 }
