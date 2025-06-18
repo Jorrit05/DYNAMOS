@@ -160,6 +160,8 @@ To delete a job that keeps running (e.g., when it did not finish successfully), 
 kubectl describe pod jorrit-stutterheim-3539f61fuva1-lcp8 -n uva
 # Or alternatively use the following command to get the jobs in a specific namespace:
 kubectl get jobs -n uva
+# Or all namespaces (-A is the same as --all-namespaces (use kubectl get jobs --help for explanation)):
+kubectl get jobs -A
 ```
 2. Delete the job returned from the previous step (for example in the labels you can see "job-name=jorrit-stutterheim-3539f61fuva1"), then the command would be:
 ```sh
