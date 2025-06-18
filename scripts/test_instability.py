@@ -83,8 +83,21 @@ def handle_request_response(response):
     Handles response from approval and data request, logs status, time, and content size.
     Returns execution time.
     """
+    # Get the execution time and status code
     exec_time = response.elapsed.total_seconds()
-    print(f"Status {response.status_code}, Time {exec_time}s, Size {len(response.content)} bytes")
+    status = response.status_code
+
+    # Get the size of the returned data (the data is inside the responses field of the JSON response, such as "responses": [""])
+    try:
+        json_data = response.json()
+        responses = json_data.get("responses", [])
+        response_sizes = [len(r.encode("utf-8")) for r in responses if isinstance(r, str)]
+        total_size = sum(response_sizes)
+    except Exception as e:
+        total_size = 0
+        print(f"[!] Failed to parse response JSON or measure size: {e}")
+
+    print(f"Status: {status}, Time: {exec_time:.3f}s, Returned data size: {total_size} bytes")
 
 def run_test():
     """
@@ -92,6 +105,9 @@ def run_test():
     Each archetype is tested with both standard and modified approval request bodies.
     """
     # Iterate through the first two archetypes (e.g., ComputeToData, DataThroughTTP)
+    # Change below to a specific archetype to only test that one, such as removing the for loop and adding:
+    # archetype = "DataThroughTTP"
+    # idx = 1
     for idx, archetype in enumerate(ARCHETYPES[:2]):
         print(f"\n========== SETUP {idx+1} | Archetype: {archetype} ==========")
         
