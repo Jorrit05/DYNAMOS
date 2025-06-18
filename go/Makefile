@@ -7,7 +7,7 @@ sql_microservices := sql-algorithm sql-anonymize sql-aggregate sql-test
 # List of DYNAMOS core services
 dynamos := sidecar policy-enforcer orchestrator agent api-gateway
 # Docker Hub account for tagging and pushing images
-dockerhub_account := dynamos1
+dockerhub_account := poetoec
 
 # Prepare Go project dependencies
 # Clean and verify Go module dependencies

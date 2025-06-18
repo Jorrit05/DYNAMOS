@@ -4,7 +4,7 @@ set -e
 
 # Change this to the path of the DYNAMOS repository on your disk
 echo "Setting up paths..."
-DYNAMOS_ROOT="${HOME}/DYNAMOS"
+DYNAMOS_ROOT="/mnt/c/Users/cpoet/VSC_Projs/DYNAMOS"
 
 # Charts
 charts_path="${DYNAMOS_ROOT}/charts"

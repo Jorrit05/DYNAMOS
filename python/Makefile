@@ -7,7 +7,7 @@ datasets := "../configuration/datasets/"
 # Replace slashes in the current Git branch name with dashes (e.g., issue/123 -> issue-123)
 branch_name := $(shell git rev-parse --abbrev-ref HEAD | sed 's#/#-#g')
 # Docker Hub account name used for tagging and pushing Docker images
-dockerhub_account := dynamos1
+dockerhub_account := poetoec
 
 # Compile .proto files into Python and gRPC source code
 # This target uses grpc_tools.protoc to generate both:
