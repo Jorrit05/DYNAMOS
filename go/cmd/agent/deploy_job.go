@@ -104,7 +104,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 
 		fullImage := fmt.Sprintf("%s/%s:%s", repositoryName, microservice.Name, microserviceTag)
 		logger.Sugar().Debugf("FullImage name: %s", fullImage)
-		logger.Sugar().Debugf("FullImage name: %s", jobName)
+		logger.Sugar().Debugf("Job name: %s", jobName)
 
 		container := v1.Container{
 			Name:            microservice.Name,
@@ -158,7 +158,7 @@ func addSidecar() v1.Container {
 	sidecarTag := getMicroserviceTag(sidecarName)
 
 	fullImage := fmt.Sprintf("%s/%s:%s", repositoryName, sidecarName, sidecarTag)
-	logger.Sugar().Debugf("Sidecar name: %s", fullImage)
+	logger.Sugar().Debugf("Sidecar image name: %s", fullImage)
 
 	return v1.Container{
 		Name:            sidecarName,
@@ -263,6 +263,7 @@ func replaceLastCharacter(name string, replaceWith int) string {
 
 func getMicroserviceTag(msName string) string {
 	tag := os.Getenv(fmt.Sprintf("%s_TAG", strings.ToUpper(msName)))
+	logger.Sugar().Debugf("Tag in getMicroserviceTag: %s", tag)
 
 	if tag != "" {
 		return tag
