@@ -16,6 +16,7 @@ import grpc
 import time
 from .base_client import BaseClient
 from .rabbit_client import RabbitClient
+from .mbt_communication import TestQueuePublisher
 from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
 
 import health_pb2_grpc as healthServer
@@ -107,6 +108,7 @@ class MicroserviceClient:
         self.channel = channel
         self.service_name = service_name
         self.stub = msCommServer.MicroserviceStub(self.channel)
+        self.test_queue_publisher = TestQueuePublisher()
 
     # Define microservice-specific methods here
     def send_data(self, msComm, data, metadata):
@@ -138,6 +140,8 @@ class MicroserviceClient:
 
         self.logger.debug(f"Sending message to {self.stub}")
         self.stub.SendData(msComm)
+
+        self.test_queue_publisher.send_message_async("pythonMicroserviceCommunication", msComm)
 
 
 class HealthClient:

@@ -21,6 +21,7 @@ setup(
         'opentelemetry-exporter-otlp-proto-grpc==1.19.0',
         # 'opentelemetry-proto==1.19.0',
         'opentelemetry-sdk==1.19.0',
+        'pika>=1.3.0',
     ],
     author='Jorrit S.',
     author_email='',
