@@ -179,7 +179,7 @@ func (s *serverInstance) SendData(ctx context.Context, data *pb.MicroserviceComm
 	}
 	defer span.End()
 
-	go SendMSCommDataToTestingQueue(ctx, data, s)
+	go lib.SendToTestQueue(ctx, "microserviceCommunication", data)
 
 	if _, err := SendDataThroughAMQ(ctx, data, s); err != nil {
 		logger.Sugar().Errorf("Callback Error: %v", err)

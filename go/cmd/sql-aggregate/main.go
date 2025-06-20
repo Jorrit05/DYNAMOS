@@ -88,6 +88,7 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 			return nil
 		}
 
+		go lib.SendToTestQueue(ctx, "microserviceCommunication", msComm)
 		config.NextClient.SendData(ctx, msComm)
 
 		close(config.StopMicroservice)

@@ -34,6 +34,7 @@ __debug_bin
 node_modules
 .env.local
 datasets/*.csv
+**/venv
 
 *.drawio.bkp
 *.drawio.dtmp

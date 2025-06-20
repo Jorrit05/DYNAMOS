@@ -70,8 +70,8 @@ class RabbitMQService
     # Step 1: Parse the outer JSON
     parsed = JSON.parse(json_message)
 
-    type = parsed['Type']
-    base64_body = parsed['Body']
+    type = parsed['type']
+    base64_body = parsed['body']
 
     # Step 2: Decode the base64-encoded protobuf binary
     proto_binary = Base64.decode64(base64_body)

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Jorrit05/DYNAMOS/pkg/etcd"
+	"github.com/Jorrit05/DYNAMOS/pkg/lib"
 	pb "github.com/Jorrit05/DYNAMOS/pkg/proto"
 	bo "github.com/cenkalti/backoff/v4"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -127,9 +128,6 @@ func send(ctx context.Context, message amqp.Publishing, target string, s *server
 	backoff.MaxInterval = retryOpts.MaxInterval
 	backoff.MaxElapsedTime = retryOpts.MaxElapsedTime
 
-	logger.Sugar().Debugf("Attempting to send data to test queue")
-	go sendToTestQueue(ctx, message, s)
-
 	err := bo.Retry(operation, backoff)
 	logger.Sugar().Debugf("Backoff!!")
 	if err != nil {
@@ -157,6 +155,8 @@ func (s *serverInstance) SendRequestApproval(ctx context.Context, in *pb.Request
 	}
 
 	go send(ctx, message, in.DestinationQueue, s)
+	go lib.SendToTestQueue(ctx, message.Type, in)
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -175,6 +175,8 @@ func (s *serverInstance) SendValidationResponse(ctx context.Context, in *pb.Vali
 	}
 
 	go send(ctx, message, "orchestrator-in", s)
+	go lib.SendToTestQueue(ctx, message.Type, in)
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -193,6 +195,8 @@ func (s *serverInstance) SendCompositionRequest(ctx context.Context, in *pb.Comp
 	}
 
 	go send(ctx, message, in.DestinationQueue, s)
+	go lib.SendToTestQueue(ctx, message.Type, in)
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -213,6 +217,8 @@ func (s *serverInstance) SendSqlDataRequest(ctx context.Context, in *pb.SqlDataR
 
 	logger.Sugar().Debugf("SendSqlDataRequest destination queue: %v", in.RequestMetadata.DestinationQueue)
 	go send(ctx, message, in.RequestMetadata.DestinationQueue, s, etcd.WithMaxElapsedTime(10*time.Second))
+	go lib.SendToTestQueue(ctx, message.Type, in)
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -233,6 +239,8 @@ func (s *serverInstance) SendPolicyUpdate(ctx context.Context, in *pb.PolicyUpda
 
 	logger.Sugar().Debugf("PolicyUpdate destination queue: %s", in.RequestMetadata.DestinationQueue)
 	go send(ctx, message, in.RequestMetadata.DestinationQueue, s, etcd.WithMaxElapsedTime(10*time.Second))
+	go lib.SendToTestQueue(ctx, message.Type, in)
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -250,6 +258,7 @@ func (s *serverInstance) SendMicroserviceComm(ctx context.Context, in *pb.Micros
 	}
 	logger.Sugar().Debugf("SendMicroserviceComm destination queue: %s", in.RequestMetadata.DestinationQueue)
 	go send(ctx, message, in.RequestMetadata.DestinationQueue, s, etcd.WithMaxElapsedTime(10*time.Second), etcd.WithJsonTrace())
+	go lib.SendToTestQueue(ctx, message.Type, in)
 
 	return &emptypb.Empty{}, nil
 }
@@ -269,6 +278,8 @@ func (s *serverInstance) SendTest(ctx context.Context, in *pb.SqlDataRequest) (*
 		Type:          "testSet",
 	}
 	go send(ctx, message, "no existss", s, etcd.WithMaxElapsedTime(10*time.Second))
+	go lib.SendToTestQueue(ctx, message.Type, in)
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -287,5 +298,7 @@ func (s *serverInstance) SendRequestApprovalResponse(ctx context.Context, in *pb
 	}
 
 	go send(ctx, message, in.RequestMetadata.DestinationQueue, s)
+	go lib.SendToTestQueue(ctx, message.Type, in)
+
 	return &emptypb.Empty{}, nil
 }
