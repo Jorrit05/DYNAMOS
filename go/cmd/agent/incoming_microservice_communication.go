@@ -19,6 +19,14 @@ func isJobWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, cor
 	waitingJob, ok := waitingJobMap[correlationId]
 	waitingJobMutex.Unlock()
 
+	// Add additional trace attributes for debugging
+	span.AddAttributes(trace.StringAttribute("correlationId", correlationId), trace.BoolAttribute("jobFound", ok))
+	// Add waiting job attributes only if it is not nil
+	if ok && waitingJob != nil {
+		span.AddAttributes(trace.Int64Attribute("nrOfDataStewards", int64(waitingJob.nrOfDataStewards)))
+	}
+	logger.Sugar().Debugf("isJobWaiting: correlationId=%s, jobFound=%t, nrOfDataStewards=%v", correlationId, ok, waitingJob)
+
 	if ok && waitingJob.nrOfDataStewards > 0 {
 		logger.Sugar().Infof("Nr. of stewards: %d", waitingJob.nrOfDataStewards)
 		handleFurtherProcessing(ctx, waitingJob.job.Name, msComm)
@@ -45,6 +53,9 @@ func isHttpWaiting(ctx context.Context, msComm *pb.MicroserviceCommunication, co
 	// Look up the corresponding channel in the request map
 	dataResponseChan, ok := responseMap[correlationId]
 	mutex.Unlock()
+
+	// Add additional trace attributes for debugging
+	span.AddAttributes(trace.StringAttribute("correlationId", correlationId), trace.BoolAttribute("httpChannelFound", ok))
 
 	if ok {
 		logger.Sugar().Info("Sending requestData to channel")
@@ -73,6 +84,9 @@ func isThirdPartyWaiting(ctx context.Context, msComm *pb.MicroserviceCommunicati
 	ttpMutex.Lock()
 	returnAddress, ok := thirdPartyMap[correlationId]
 	ttpMutex.Unlock()
+
+	// Add additional trace attributes for debugging
+	span.AddAttributes(trace.StringAttribute("correlationId", correlationId), trace.BoolAttribute("thirdPartyFound", ok))
 
 	if ok {
 		logger.Sugar().Infof("Sending sql response to returnAddress: %s", returnAddress)
