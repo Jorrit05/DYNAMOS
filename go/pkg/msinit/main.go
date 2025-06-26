@@ -43,6 +43,8 @@ type Configuration struct {
 	NextClientConnection      *grpc.ClientConn
 	RabbitMsgClient           pb.RabbitMQClient
 	NextClient                pb.MicroserviceClient
+	// Custom message variables to handle the expected messages, such as when multiple messages are expected
+	ExpectedMessages int32
 }
 
 func NewConfiguration(
@@ -79,7 +81,36 @@ func NewConfiguration(
 	// All other cases keep it as the default of 1 to avoid breaking anything.
 	// TODO: then further add logic in all other services like sql-algorithm, etc. 
 	// Sql-query should be fine and not affected, as this is not part of the compute provider, add that as a comment
+	// TODO: likely sql-anonymize as well as this is only used by the data provider, not compute provider.
 
+	// Set default expected messages to 1 for other cases
+	expectedMessages := int32(1)
+
+	// Check if the agent is acting as a compute provider. This logic is specific to the trusted third party use case, 
+	// where the compute provider might receive messages from multiple data providers. In that case, the deployed microservice(s)
+	// need to receive multiple messages (one for each data provider) before processing can continue.
+	if os.Getenv("AGENT_ROLE") == "computeProvider" {
+		// Retrieve the number of expected data providers from the environment
+		if val := os.Getenv("NR_OF_DATA_PROVIDERS"); val != "" {
+			// Try to convert the value to an integer
+			if num, err := strconv.Atoi(val); err == nil && num > 0 {
+				// Set expectedMessages based on the number of data providers
+				expectedMessages = int32(num)
+				logger.Sugar().Infof("computeProvider detected, expecting %d messages", expectedMessages)
+			} else {
+				// Log a warning if the value is invalid (e.g., non-integer or <= 0)
+				logger.Sugar().Warnf("Invalid NR_OF_DATA_PROVIDERS value: %s", val)
+			}
+
+		} else {
+			// Log a warning if the variable is not set
+			logger.Sugar().Warn("NR_OF_DATA_PROVIDERS not set for computeProvider")
+		}
+	} else {
+		logger.Sugar().Infof("Default message expectation: %d", expectedMessages)
+	}
+
+	// Create a new configuration instance with the provided parameters
 	conf := &Configuration{
 		Port:                      uint32(port),
 		FirstService:              firstService > 0,
@@ -92,7 +123,12 @@ func NewConfiguration(
 		MessageHandler:            messageHandler,
 		StopMicroservice:          make(chan struct{}), // Continue the main routine to kill the MS
 		GrpcServer:                nil,
+		// Number of expected messages for this service, used to determine when to stop receiving messages.
+		ExpectedMessages:          expectedMessages,
 	}
+
+	// Debug for printing message variables from the configuration
+	logger.Sugar().Debugf("ExpectedMessages: %d", conf.ExpectedMessages)
 
 	if conf.FirstService {
 		conf.GrpcServer = grpc.NewServer()

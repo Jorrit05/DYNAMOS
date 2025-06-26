@@ -22,20 +22,19 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
-	// TODO: get number of data providers and add to NewConfiguration function, use from sql-aggregate/main.go the nr of data stewards.
-	// TODO: should add here some logic if a trusted third party is used?
-
+	// Initialize the configuration for the microservice
 	config, err := msinit.NewConfiguration(context.Background(), serviceName, grpcAddr, COORDINATOR, messageHandler)
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
 	}
 
-	// Wait here until the message arrives in the messageHandler
+	// Wait here until the StopMicroservice channel is closed by the messageHandler
 	<-config.StopMicroservice
 
 	config.SafeExit(oce, serviceName)
 	os.Exit(0)
 }
+
 
 func messageHandler(config *msinit.Configuration) func(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
 	return func(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
@@ -48,6 +47,9 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 		// Wait till all services and connections have started
 		<-COORDINATOR
 
+		// TODO: here wait until all messages are received before further processing. Edit the handleSqlDataRequest function to
+		// allow multiple messages to be processed at once. Then can do SendData to the next service with the merged and processed data.
+
 		switch msComm.RequestType {
 		case "sqlDataRequest":
 			err := handleSqlDataRequest(ctx, msComm)
@@ -59,13 +61,10 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 			logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
 		}
 
-		// TODO: the third party needs to handle more incoming data before it is stopped, it needs to handle it from the second data provider as well.
-		// so, it should not be stopped just yet, add custom logic to allow for receiving more.
-		// TODO: I think SendData can be used, but the next service should also wait then for the next response I think.
-
+		// Send the data to the next microservice
 		config.NextClient.SendData(ctx, msComm)
 
-		// Stop the microservice gracefully
+		// Close the channel (i.e., tell the waiting routine that processing is done)
 		close(config.StopMicroservice)
 		return nil
 	}
