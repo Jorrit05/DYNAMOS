@@ -119,6 +119,8 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 				{Name: "SIDECAR_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 				{Name: "OC_AGENT_HOST", Value: tracingHost},
 				{Name: "NR_OF_DATA_PROVIDERS", Value: strconv.Itoa(nr_of_data_providers)},
+				// Add the role to allow further processing based on the role of the agent containing this microservice, such as dataProvider or computeProvider
+				{Name: "AGENT_ROLE", Value: compositionRequest.Role},
 			},
 			// Add additional container configuration here as needed
 		}

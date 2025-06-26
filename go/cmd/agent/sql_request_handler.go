@@ -206,6 +206,9 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 		// The other agent, will reset the address to get the message from the job.
 		sqlDataRequest.RequestMetadata.ReturnAddress = agentConfig.RoutingKey
 
+		// TODO: somewhere here it has to change with the correlationId, maybe make separate ids for each data provider
+		// and then at the end do use the correlationId for SURF?
+
 		sqlDataRequest.RequestMetadata.CorrelationId = correlationId
 		sqlDataRequest.RequestMetadata.JobName = compositionRequest.JobName
 		logger.Sugar().Debugf("Sending sqlDataRequest to: %s", sqlDataRequest.RequestMetadata.DestinationQueue)

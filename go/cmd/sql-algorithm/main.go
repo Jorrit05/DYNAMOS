@@ -22,6 +22,9 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
+	// TODO: get number of data providers and add to NewConfiguration function, use from sql-aggregate/main.go the nr of data stewards.
+	// TODO: should add here some logic if a trusted third party is used?
+
 	config, err := msinit.NewConfiguration(context.Background(), serviceName, grpcAddr, COORDINATOR, messageHandler)
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
@@ -56,8 +59,13 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 			logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
 		}
 
+		// TODO: the third party needs to handle more incoming data before it is stopped, it needs to handle it from the second data provider as well.
+		// so, it should not be stopped just yet, add custom logic to allow for receiving more.
+		// TODO: I think SendData can be used, but the next service should also wait then for the next response I think.
+
 		config.NextClient.SendData(ctx, msComm)
 
+		// Stop the microservice gracefully
 		close(config.StopMicroservice)
 		return nil
 	}

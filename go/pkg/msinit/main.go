@@ -74,6 +74,12 @@ func NewConfiguration(
 
 	logger.Sugar().Debugf("NewConfiguration %s, firstServer: %s, port: %s. lastservice: %s", serviceName, firstService, port, lastService)
 
+	// TODO: add custom logic here for ExpectedMessages. Use AGENT_ROLE to determine if this is a data provider or compute provider.
+	// For SURF it is compute provider and it should then change the expected messages to nr of data providers. 
+	// All other cases keep it as the default of 1 to avoid breaking anything.
+	// TODO: then further add logic in all other services like sql-algorithm, etc. 
+	// Sql-query should be fine and not affected, as this is not part of the compute provider, add that as a comment
+
 	conf := &Configuration{
 		Port:                      uint32(port),
 		FirstService:              firstService > 0,
