@@ -31,6 +31,16 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 		return nil, ctx, err
 	}
 	logger.Sugar().Infof("Chosen archetype: %s", archetype)
+	// TODO: list archetype used, and if Data through TTP, make sure that if multiple data providers are added, it sets aggregate to true.
+	// // Validate that if archetype is 'dataThroughTtp' and multiple data providers are used,
+	// // the 'aggregate' option must be explicitly set to true
+	// if archetype == "dataThroughTtp" && len(authorizedProviders) > 1 {
+	// 	aggregate, ok := validationResponse.Options["aggregate"]
+	// 	if !ok || !aggregate {
+	// 		return nil, ctx, fmt.Errorf("Archetype 'dataThroughTtp' with multiple data providers requires the 'aggregate' option to be true. Without it, the request will only return the data of one of the data providers, which is an unreliable result.")
+	// 	}
+	// }
+	// TODO: make this so that it somehow changes the aggregate option to true if this setup is used, then it will fix the issue.
 
 	var archetypeConfig api.Archetype
 	_, err = etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/archetypes/%s", archetype), &archetypeConfig)
