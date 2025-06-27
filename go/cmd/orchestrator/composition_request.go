@@ -31,16 +31,6 @@ func startCompositionRequest(ctx context.Context, validationResponse *pb.Validat
 		return nil, ctx, err
 	}
 	logger.Sugar().Infof("Chosen archetype: %s", archetype)
-	// TODO: list archetype used, and if Data through TTP, make sure that if multiple data providers are added, it sets aggregate to true.
-	// // Validate that if archetype is 'dataThroughTtp' and multiple data providers are used,
-	// // the 'aggregate' option must be explicitly set to true
-	// if archetype == "dataThroughTtp" && len(authorizedProviders) > 1 {
-	// 	aggregate, ok := validationResponse.Options["aggregate"]
-	// 	if !ok || !aggregate {
-	// 		return nil, ctx, fmt.Errorf("Archetype 'dataThroughTtp' with multiple data providers requires the 'aggregate' option to be true. Without it, the request will only return the data of one of the data providers, which is an unreliable result.")
-	// 	}
-	// }
-	// TODO: make this so that it somehow changes the aggregate option to true if this setup is used, then it will fix the issue.
 
 	var archetypeConfig api.Archetype
 	_, err = etcd.GetAndUnmarshalJSON(etcdClient, fmt.Sprintf("/archetypes/%s", archetype), &archetypeConfig)
@@ -147,20 +137,45 @@ func getArchetypeBasedOnOptions(validationResponse *pb.ValidationResponse, autho
 			// If aggregate is enabled, it will select the 'dataThroughTtp' archetype, if this is allowed on all the authorizedDataProviders
 			if value {
 				allowed := true
+				// Check if all authorized data providers allow the archetype
 				for provider, _ := range authorizedDataProviders {
 					if !slices.Contains(validationResponse.ValidArchetypes.Archetypes[provider].Archetypes, "dataThroughTtp") {
 						logger.Sugar().Debugf("allowed false, slice: %v", validationResponse.ValidArchetypes.Archetypes[provider].Archetypes)
-
+						// Set allowed to false if any provider does not allow the archetype
 						allowed = false
+						// Break out of the loop if one provider does not allow it to avoid unnecessary checks
+						break
 					}
 				}
-
+				// If alllowed, return the 'dataThroughTtp' archetype
 				if allowed {
 					return "dataThroughTtp"
+				}
+			} else if len(authorizedDataProviders) > 1 { // aggregate is false here as the previous condition (is true) is not met
+			// If aggregate is not enabled and multiple data providers are used, enforce the 'computeToData' archetype
+			// This is because without the aggregate option, the 'dataThroughTtp' would only use the data of one data provider, which 
+			// does not make sense. Also, this is the counterpart of the above option that enables the 'dataThroughTtp' archetype when aggregate is true.
+				
+				// Check if all authorized data providers allow the archetype				
+				allowed := true
+				for provider := range authorizedDataProviders {
+					if !slices.Contains(validationResponse.ValidArchetypes.Archetypes[provider].Archetypes, "computeToData") {
+						logger.Sugar().Debugf("computeToData not allowed for provider %v: %v", provider, validationResponse.ValidArchetypes.Archetypes[provider].Archetypes)
+						// Set allowed to false if any provider does not allow the archetype
+						allowed = false
+						// Break out of the loop if one provider does not allow it to avoid unnecessary checks
+						break
+					}
+				}
+				// If allowed, return the 'computeToData' archetype
+				if allowed {
+					return "computeToData"
 				}
 			}
 		}
 	}
+
+	// Return an empty string if no archetype is selected based on the options
 	return ""
 }
 
