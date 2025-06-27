@@ -14,6 +14,7 @@ HEADERS = {
 }
 DATA_REQ_URL = "http://api-gateway.api-gateway.svc.cluster.local:80/api/v1/requestApproval"
 DATA_REQ_HEADERS = {"Content-Type": "application/json"}
+# Use the default DYNAMOS request (no additional options used), as this is the setup most users will use
 REQUEST_BODY_DATA_REQ = {
     "type": "sqlDataRequest",
     "user": {"id": "12324", "userName": "jorrit.stutterheim@cloudnation.nl"},
