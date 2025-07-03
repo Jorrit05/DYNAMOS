@@ -104,7 +104,7 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 
 		fullImage := fmt.Sprintf("%s/%s:%s", repositoryName, microservice.Name, microserviceTag)
 		logger.Sugar().Debugf("FullImage name: %s", fullImage)
-		logger.Sugar().Debugf("FullImage name: %s", jobName)
+		logger.Sugar().Debugf("Job name: %s", jobName)
 
 		container := v1.Container{
 			Name:            microservice.Name,
@@ -119,6 +119,8 @@ func deployJob(ctx context.Context, msChain []mschain.MicroserviceMetadata, jobN
 				{Name: "SIDECAR_PORT", Value: strconv.Itoa(firstPortMicroservice - 1)},
 				{Name: "OC_AGENT_HOST", Value: tracingHost},
 				{Name: "NR_OF_DATA_PROVIDERS", Value: strconv.Itoa(nr_of_data_providers)},
+				// Add the role to allow further processing based on the role of the agent containing this microservice, such as dataProvider or computeProvider
+				{Name: "AGENT_ROLE", Value: compositionRequest.Role},
 			},
 			// Add additional container configuration here as needed
 		}
@@ -158,7 +160,7 @@ func addSidecar() v1.Container {
 	sidecarTag := getMicroserviceTag(sidecarName)
 
 	fullImage := fmt.Sprintf("%s/%s:%s", repositoryName, sidecarName, sidecarTag)
-	logger.Sugar().Debugf("Sidecar name: %s", fullImage)
+	logger.Sugar().Debugf("Sidecar image name: %s", fullImage)
 
 	return v1.Container{
 		Name:            sidecarName,
@@ -263,6 +265,7 @@ func replaceLastCharacter(name string, replaceWith int) string {
 
 func getMicroserviceTag(msName string) string {
 	tag := os.Getenv(fmt.Sprintf("%s_TAG", strings.ToUpper(msName)))
+	logger.Sugar().Debugf("Tag in getMicroserviceTag: %s", tag)
 
 	if tag != "" {
 		return tag

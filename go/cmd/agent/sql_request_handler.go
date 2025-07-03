@@ -183,6 +183,9 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 	ctx, span := trace.StartSpan(ctx, serviceName+"/func: handleSqlComputeProvider")
 	defer span.End()
 
+	// Debug prints to check the compositionRequest and other related information
+	logger.Sugar().Debugf("Received compositionRequest in handleSqlComputeProvider: %s", protojson.Format(compositionRequest))
+
 	// pack and send request to all data providers, add own routing key as return address
 	// check request and spin up own job (generate mschain, deployjob)
 	if len(compositionRequest.DataProviders) == 0 {
@@ -206,6 +209,9 @@ func handleSqlComputeProvider(ctx context.Context, jobName string, compositionRe
 		sqlDataRequest.RequestMetadata.CorrelationId = correlationId
 		sqlDataRequest.RequestMetadata.JobName = compositionRequest.JobName
 		logger.Sugar().Debugf("Sending sqlDataRequest to: %s", sqlDataRequest.RequestMetadata.DestinationQueue)
+
+		// Debug prints to check the compositionRequest and other related information
+		logger.Sugar().Debugf("sqlDataRequest for: %s, in handleSqlComputeProvider: %v", dataProvider, sqlDataRequest)
 
 		key := fmt.Sprintf("/agents/jobs/%s/queueInfo/%s", serviceName, jobName)
 		err = etcd.PutEtcdWithGrant(ctx, etcdClient, key, jobName, queueDeleteAfter)

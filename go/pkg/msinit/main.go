@@ -74,6 +74,7 @@ func NewConfiguration(
 
 	logger.Sugar().Debugf("NewConfiguration %s, firstServer: %s, port: %s. lastservice: %s", serviceName, firstService, port, lastService)
 
+	// Create a new configuration instance with the provided parameters
 	conf := &Configuration{
 		Port:                      uint32(port),
 		FirstService:              firstService > 0,

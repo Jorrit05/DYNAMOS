@@ -137,20 +137,45 @@ func getArchetypeBasedOnOptions(validationResponse *pb.ValidationResponse, autho
 			// If aggregate is enabled, it will select the 'dataThroughTtp' archetype, if this is allowed on all the authorizedDataProviders
 			if value {
 				allowed := true
+				// Check if all authorized data providers allow the archetype
 				for provider, _ := range authorizedDataProviders {
 					if !slices.Contains(validationResponse.ValidArchetypes.Archetypes[provider].Archetypes, "dataThroughTtp") {
 						logger.Sugar().Debugf("allowed false, slice: %v", validationResponse.ValidArchetypes.Archetypes[provider].Archetypes)
-
+						// Set allowed to false if any provider does not allow the archetype
 						allowed = false
+						// Break out of the loop if one provider does not allow it to avoid unnecessary checks
+						break
 					}
 				}
-
+				// If alllowed, return the 'dataThroughTtp' archetype
 				if allowed {
 					return "dataThroughTtp"
+				}
+			} else if len(authorizedDataProviders) > 1 { // aggregate is false here as the previous condition (is true) is not met
+			// If aggregate is not enabled and multiple data providers are used, enforce the 'computeToData' archetype
+			// This is because without the aggregate option, the 'dataThroughTtp' would only use the data of one data provider, which 
+			// does not make sense. Also, this is the counterpart of the above option that enables the 'dataThroughTtp' archetype when aggregate is true.
+				
+				// Check if all authorized data providers allow the archetype				
+				allowed := true
+				for provider := range authorizedDataProviders {
+					if !slices.Contains(validationResponse.ValidArchetypes.Archetypes[provider].Archetypes, "computeToData") {
+						logger.Sugar().Debugf("computeToData not allowed for provider %v: %v", provider, validationResponse.ValidArchetypes.Archetypes[provider].Archetypes)
+						// Set allowed to false if any provider does not allow the archetype
+						allowed = false
+						// Break out of the loop if one provider does not allow it to avoid unnecessary checks
+						break
+					}
+				}
+				// If allowed, return the 'computeToData' archetype
+				if allowed {
+					return "computeToData"
 				}
 			}
 		}
 	}
+
+	// Return an empty string if no archetype is selected based on the options
 	return ""
 }
 

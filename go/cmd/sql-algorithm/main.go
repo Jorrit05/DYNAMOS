@@ -22,17 +22,19 @@ func main() {
 		logger.Sugar().Fatalf("Failed to create ocagent-exporter: %v", err)
 	}
 
+	// Initialize the configuration for the microservice
 	config, err := msinit.NewConfiguration(context.Background(), serviceName, grpcAddr, COORDINATOR, messageHandler)
 	if err != nil {
 		logger.Sugar().Fatalf("%v", err)
 	}
 
-	// Wait here until the message arrives in the messageHandler
+	// Wait here until the StopMicroservice channel is closed by the messageHandler
 	<-config.StopMicroservice
 
 	config.SafeExit(oce, serviceName)
 	os.Exit(0)
 }
+
 
 func messageHandler(config *msinit.Configuration) func(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
 	return func(ctx context.Context, msComm *pb.MicroserviceCommunication) error {
@@ -56,8 +58,10 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 			logger.Sugar().Errorf("Unknown RequestType type: %v", msComm.RequestType)
 		}
 
+		// Send the data to the next microservice
 		config.NextClient.SendData(ctx, msComm)
 
+		// Close the channel (i.e., tell the waiting routine that processing is done)
 		close(config.StopMicroservice)
 		return nil
 	}

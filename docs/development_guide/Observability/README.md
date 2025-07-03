@@ -25,6 +25,7 @@ In Grafana, you can access the traces by following these steps:
 1. In the Grafana UI, go to Explore > Select Jaeger next to Outline
 2. Create a query by selecting Search as the Query type, and select a service like "api-gateway"
 3. Execute the query and select a trace to display
+Tip: open the traces in a new tab so that you can view the trace in full screen by closing the other menus and only opening the actual trace.
 
 Alternatively, you can port-forward the Jaeger UI to view the logs, as explained in the [Tracing.md file](./Tracing.md)
 
