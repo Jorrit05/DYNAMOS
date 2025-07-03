@@ -47,9 +47,6 @@ func messageHandler(config *msinit.Configuration) func(ctx context.Context, msCo
 		// Wait till all services and connections have started
 		<-COORDINATOR
 
-		// TODO: here wait until all messages are received before further processing. Edit the handleSqlDataRequest function to
-		// allow multiple messages to be processed at once. Then can do SendData to the next service with the merged and processed data.
-
 		switch msComm.RequestType {
 		case "sqlDataRequest":
 			err := handleSqlDataRequest(ctx, msComm)
