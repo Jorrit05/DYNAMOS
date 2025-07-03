@@ -2,7 +2,7 @@
 
 # Define your personal and organizational account names
 PERSONAL_ACCOUNT="jorrit05"
-ORG_ACCOUNT="poetoec"
+ORG_ACCOUNT="dynamos1"
 
 # Define a dictionary mapping old repository names to new repository names
 declare -A IMAGE_MAP=(
