@@ -101,6 +101,28 @@ func requestHandler() http.HandlerFunc {
 				logger.Sugar().Errorf("Error marshalling combined data: %v", err)
 				return
 			}
+			// note: maybe here I need to parse the MScomm and return it to the request response
+			//responseData, err := sendData(endpoint, dataRequestJson)
+			//
+			//if err != nil {
+			//	logger.Sugar().Errorf("Error sending data, %v", err)
+			//} else {
+			//	responseJson := &pb.MicroserviceCommunication{}
+			//	err = json.Unmarshal([]byte(responseData), responseJson)
+			//
+			//	if err != nil {
+			//		logger.Sugar().Error("Unmarshalling response did not go well: ", err)
+			//	}
+			//
+			//	dataJson := responseJson.Data.AsMap()
+			//	trace, ok := dataJson["trace"].(string)
+			//
+			//	if !ok {
+			//		logger.Sugar().Error("No embeddings found in the return data.")
+			//		trace = ""
+			//	}
+			//	responses[target] = trace
+			//}
 
 			logger.Sugar().Infof("Data Prepared jsonData: %s", dataRequestJson)
 			logger.Sugar().Debugf("msg.AuthorizedProviders: %v", msg.AuthorizedProviders)
@@ -119,34 +141,53 @@ func requestHandler() http.HandlerFunc {
 // Use the data request that was previously built and send it to the authorised providers
 // acquired from the request approval
 func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]string, msgType string, jobId string) []byte {
-	// Setup the wait group for async data requests
 	var wg sync.WaitGroup
-	var responses []string
+	responsesMu := sync.Mutex{}
+	responses := make(map[string]string)
 
-	// This will be replaced with AMQ in the future
 	agentPort := "8080"
-	// Iterate over each auth provider
+
 	for auth, url := range authorizedProviders {
 		wg.Add(1)
 		target := strings.ToLower(auth)
-		// Construct the end point
 		endpoint := fmt.Sprintf("http://%s:%s/agent/v1/%s/%s", url, agentPort, msgType, target)
 
 		logger.Sugar().Infof("Sending request to %s.\nEndpoint: %s\nJSON:%v", target, endpoint, string(dataRequest))
 
-		// Async call send the data
-		go func() {
+		go func(target, endpoint string) {
+			defer wg.Done()
 			respData, err := sendData(endpoint, dataRequest)
 			if err != nil {
 				logger.Sugar().Errorf("Error sending data, %v", err)
+				responsesMu.Lock()
+				responses[target] = ""
+				responsesMu.Unlock()
+				return
 			}
-			responses = append(responses, respData)
-			// Signal that the data request has been sent to all auth providers
-			wg.Done()
-		}()
+
+			responseJson := &pb.MicroserviceCommunication{}
+			err = json.Unmarshal([]byte(respData), responseJson)
+			if err != nil {
+				logger.Sugar().Error("Unmarshalling response did not go well: ", err)
+				responsesMu.Lock()
+				responses[target] = ""
+				responsesMu.Unlock()
+				return
+			}
+
+			dataJson := responseJson.Data.AsMap()
+			embeddings, ok := dataJson["embeddings"].(string)
+			if !ok {
+				logger.Sugar().Error("No embeddings found in the return data.")
+				embeddings = ""
+			}
+
+			responsesMu.Lock()
+			responses[target] = embeddings
+			responsesMu.Unlock()
+		}(target, endpoint)
 	}
 
-	// Wait until all the requests are complete
 	wg.Wait()
 	logger.Sugar().Debug("Returning responses")
 
@@ -155,8 +196,6 @@ func sendDataToAuthProviders(dataRequest []byte, authorizedProviders map[string]
 		"responses": responses,
 	}
 
-	// jsonResponse, _ := json.Marshal(responseMap)
-	// return jsonResponse
 	return cleanupAndMarshalResponse(responseMap)
 }
 
@@ -179,6 +218,8 @@ func sendData(endpoint string, jsonData []byte) (string, error) {
 		return "", err
 	}
 
+	// TODO: unmarshal and then return to the original request
+	//     check jake's code
 	// Here we should send the request over the socket
 	// For now we should append it to a list so that we gather all responses and send them in bulk
 	logger.Sugar().Infof("Body: %v", body)
